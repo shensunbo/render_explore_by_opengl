@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "log/mylog.h"
 
 
 // 窗口大小
@@ -74,6 +75,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    mylog(LogLevel::I, "render loop start");
     // 渲染循环
     while (!glfwWindowShouldClose(window))
     {
