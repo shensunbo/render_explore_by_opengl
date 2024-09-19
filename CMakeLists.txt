@@ -7,5 +7,7 @@ set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_compile_options(-g)
 
+add_definitions(-DROOT_DIR="${ROOT_DIR}")
+
 include(${ROOT_DIR}/CMake/set_variable.cmake)
 add_subdirectory(src)
