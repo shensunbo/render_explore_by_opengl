@@ -10,6 +10,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <learnopengl/assimp_glm_helpers.h>
 
+#include "log/mylog.h"
+
 struct KeyPosition
 {
 	glm::vec3 position;

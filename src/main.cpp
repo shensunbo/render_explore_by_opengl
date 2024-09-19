@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+#include "log/mylog.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -48,7 +50,7 @@ int main()
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
+        mylog(LogLevel::E, "Failed to create GLFW window");
         glfwTerminate();
         return -1;
     }
@@ -64,7 +66,7 @@ int main()
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        mylog(LogLevel::E, "Failed to initialize GLAD");
         return -1;
     }
 

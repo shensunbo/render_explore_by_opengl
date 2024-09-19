@@ -6,6 +6,8 @@
 #include <array> //std::array
 #include <memory> //std::unique_ptr
 
+#include "log/mylog.h"
+
 class Transform
 {
 protected:

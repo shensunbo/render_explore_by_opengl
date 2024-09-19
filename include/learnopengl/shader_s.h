@@ -8,6 +8,8 @@
 #include <sstream>
 #include <iostream>
 
+#include "log/mylog.h"
+
 class Shader
 {
 public:
@@ -42,7 +44,7 @@ public:
         }
         catch (std::ifstream::failure& e)
         {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+            mylog(LogLevel::E, "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: ", e.what());
         }
         const char* vShaderCode = vertexCode.c_str();
         const char * fShaderCode = fragmentCode.c_str();
@@ -104,7 +106,7 @@ private:
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                mylog(LogLevel::E,  "ERROR::SHADER_COMPILATION_ERROR of type: [%s] \n [%s] ", type.c_str(),infoLog);
             }
         }
         else
@@ -113,7 +115,7 @@ private:
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+                mylog(LogLevel::E,  "ERROR::PROGRAM_LINKING_ERROR of type: [%s] \n [%s] ", type.c_str(),infoLog);
             }
         }
     }

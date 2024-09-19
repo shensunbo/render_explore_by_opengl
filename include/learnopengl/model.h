@@ -20,6 +20,9 @@
 #include <iostream>
 #include <map>
 #include <vector>
+
+#include "log/mylog.h"
+
 using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
@@ -56,7 +59,7 @@ private:
         // check for errors
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+            mylog(LogLevel::E,"ERROR::ASSIMP:: %s, ", importer.GetErrorString());
             return;
         }
         // retrieve the directory path of the filepath
@@ -237,7 +240,7 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
     }
     else
     {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
+        mylog(LogLevel::E, "Texture failed to load at path: %s", path);
         stbi_image_free(data);
     }
 

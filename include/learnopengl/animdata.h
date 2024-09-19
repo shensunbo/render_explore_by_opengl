@@ -1,7 +1,7 @@
 #pragma once
 
 #include<glm/glm.hpp>
-
+#include "log/mylog.h"
 struct BoneInfo
 {
 	/*id is index in finalBoneMatrices*/

@@ -10,6 +10,9 @@
 
 #include <string>
 #include <vector>
+
+#include "log/mylog.h"
+
 using namespace std;
 
 #define MAX_BONE_INFLUENCE 4

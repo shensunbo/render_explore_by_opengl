@@ -7,7 +7,7 @@
 #include <assimp/Importer.hpp>
 #include <learnopengl/animation.h>
 #include <learnopengl/bone.h>
-
+#include "log/mylog.h"
 class Animator
 {
 public:

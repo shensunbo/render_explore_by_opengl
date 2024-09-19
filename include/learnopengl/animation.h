@@ -9,6 +9,8 @@
 #include <learnopengl/animdata.h>
 #include <learnopengl/model_animation.h>
 
+#include "log/mylog.h"
+
 struct AssimpNodeData
 {
 	glm::mat4 transformation;

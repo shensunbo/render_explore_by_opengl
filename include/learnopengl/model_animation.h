@@ -22,6 +22,8 @@
 #include <learnopengl/assimp_glm_helpers.h>
 #include <learnopengl/animdata.h>
 
+#include "log/mylog.h"
+
 using namespace std;
 
 class Model 
@@ -66,7 +68,7 @@ private:
         // check for errors
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+            mylog(LogLevel::E, "ERROR::ASSIMP:: ", importer.GetErrorString());
             return;
         }
         // retrieve the directory path of the filepath
@@ -236,7 +238,7 @@ private:
 		}
 		else
 		{
-			std::cout << "Texture failed to load at path: " << path << std::endl;
+            mylog(LogLevel::E, "Texture failed to load at path: %s",  path);
 			stbi_image_free(data);
 		}
 
