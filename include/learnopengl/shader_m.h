@@ -151,6 +151,7 @@ private:
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
                 mylog(LogLevel::E,  "ERROR::SHADER_COMPILATION_ERROR of type: [%s] \n [%s] ", type.c_str(),infoLog);
+                assert(0);
             }
         }
         else
@@ -160,6 +161,7 @@ private:
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
                 mylog(LogLevel::E,  "ERROR::PROGRAM_LINKING_ERROR of type: [%s] \n [%s] ", type.c_str(),infoLog);
+                assert(0);
             }
         }
     }
