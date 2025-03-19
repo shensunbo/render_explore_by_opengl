@@ -11,3 +11,9 @@ add_definitions(-DROOT_DIR="${ROOT_DIR}")
 
 include(${ROOT_DIR}/CMake/set_variable.cmake)
 add_subdirectory(src)
+
+message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY = ${CMAKE_BINARY_DIR}")
+
+# make install
+set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res )
+install(DIRECTORY ${RESOURCES_DIR} DESTINATION ${CMAKE_BINARY_DIR})

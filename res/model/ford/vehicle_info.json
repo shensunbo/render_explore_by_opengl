@@ -1,0 +1,383 @@
+{
+    "vehicleName": "ford",
+    "format": "fbx",
+
+    "rotatable": {
+        "door": {
+            "front_left":{
+                "components":[
+                    "Door_Front_Left_paint.001",
+                    "Door_Front_Left_Plastic2.001",
+                    "Door_Front_Left_Plastic.001",
+                    "Door_Front_Left_Leather.001",
+                    "Door_Front_Left_Mirror.001",
+                    "Door_Front_Left_Glass2.001",
+                    "Door_Front_Left_Chrome.001",
+                    "Door_Front_Left_Black.001",
+                    "Door_Front_Left_Glass.001"
+                ],
+                "lcl_translation":[86.898, -86.0111, 86.3050],
+                "rotate_axis":[0.0, 1.0, 0.0],
+                "coef":-1.0
+            },
+            "front_right":{
+                "components":[
+                    "Door_Front_Right_Plastic.001",
+                    "Door_Front_Right_Leather.001",
+                    "Door_Front_Right_Paint.001",
+                    "Door_Front_Right_Black.001",
+                    "Door_Front_Right_Plastic2.001",
+                    "Door_Front_Right_Glass.001",
+                    "Door_Front_Right_Mirror.001",
+                    "Door_Front_Right_Chrome.001",
+                    "Door_Front_Right_Glass2.001"
+                ],
+                "lcl_translation":[-86.898, -86.0111, 86.3050],
+                "rotate_axis":[0.0, 1.0, 0.0],
+                "coef":1
+            },
+            "rear_left":{
+                "components":[
+                    "Door_Back_Left_Glass.001",
+                    "Door_Back_Left_Paint.001",
+                    "Door_Back_Left_Plastic.001",
+                    "Door_Back_Left_Black.001",
+                    "Door_Back_Left_Leather.001",
+                    "Door_Back_Left_Plastic2.001"
+                ],
+                "lcl_translation":[87.087, 29.077, 87.229],
+                "rotate_axis":[0.0, 1.0, 0.0],
+                "coef":-1.0
+            },
+            "rear_right":{
+                "components":[
+                    "Door_Back_Right_Paint.001",
+                    "Door_Back_Right_Black.001",
+                    "Door_Back_Right_Plastic.001",
+                    "Door_Back_Right_Plastic2.001",
+                    "Door_Back_Right_Leather.001",
+                    "Door_Back_Right_Glass.001"
+                ],
+                "lcl_translation":[-87.087, 29.077, 87.229],
+                "rotate_axis":[0.0, 1.0, 0.0],
+                "coef":1
+            },
+            "trunk":{
+                "components":[
+                    "Trunk_Paint.001",
+                    "Trunk_Plastic.001",
+                    "Trunk_Logo_Chrome.001",
+                    "Trunk_Cover.001",
+                    "Trunk_Logo_Black.001",
+                    "Trunk_GlassNS.001",
+                    "Trunk_Glass.001",
+                    "Trunk_Chrome.001",
+                    "Trunk_Glass2.001",
+                    "Trunk_PlasticNS.001",
+                    "Trunk_Glass_Red.001"
+                ],
+                "lcl_translation":[-0.0636, 144.2, 150.4],
+                "rotate_axis":[1.0, 0.0, 0.0],
+                "coef":1
+            },
+            "hood":{
+                "components":[
+                    "body_02.001"
+                ],
+                "lcl_translation":[-0.004, -99.0, 93.4],
+                "rotate_axis":[1.0, 0.0, 0.0],
+                "coef":-1.0
+            }
+        },
+        "wheel":{
+            "front_left":{
+                "components":[
+                    "wh_fl_00.001",
+                    "wh_fl_01.001",
+                    "wh_fl_02.001",
+                    "wh_fl_05.001",
+                    "wh_fl_06.001",
+                    "wh_fl_07.001",
+                    "wh_fl_08.001",
+                    "wh_fl_09.001",
+                    "wh_fl_10.001"
+                ],
+                "lcl_translation":[88.7568969726563,-149.301208496094,35.6110191345215],
+                "rotate_axis":[1.0, 0.0, 0.0],
+                "direction_rotate_axis":[0.0, 1.0, 0.0],
+                "coef":1
+            },
+            "front_right":{
+                "components":[
+                    "wh_fr_00.001",
+                    "wh_fr_02.001",
+                    "wh_fr_03.001",
+                    "wh_fr_04.001",
+                    "wh_fr_05.001",
+                    "wh_fr_07.001",
+                    "wh_fr_08.001",
+                    "wh_fr_09.001",
+                    "wh_fr_10.001"
+                ],
+                "lcl_translation":[-88.7568969726563,-149.301208496094,35.6110191345215],
+                "rotate_axis":[1.0, 0.0, 0.0],
+                "direction_rotate_axis":[0.0, 1.0, 0.0],
+                "coef":1
+            },
+            "rear_left":{
+                "components":[
+                    "wh_rl_01.001",
+                    "wh_rl_02.001",
+                    "wh_rl_04.001",
+                    "wh_rl_05.001",
+                    "wh_rl_06.001",
+                    "wh_rl_07.001",
+                    "wh_rl_08.001",
+                    "wh_rl_10.001"
+                ],
+                "lcl_translation":[89.692810, 149.09875, 35.61102],
+                "rotate_axis":[1.0, 0.0, 0.0],
+                "coef":1
+            },
+            "rear_right":{
+                "components":[
+                    "wh_rr_00.001",
+                    "wh_rr_01.001",
+                    "wh_rr_02.001",
+                    "wh_rr_04.001",
+                    "wh_rr_05.001",
+                    "wh_rr_06.001",
+                    "wh_rr_08.001",
+                    "wh_rr_09.001"
+                ],
+                "lcl_translation":[-89.70243, 149.098754, 35.6110229],
+                "rotate_axis":[1.0, 0.0, 0.0],
+                "coef":1
+            }
+        }
+
+    },
+
+    "color_adjustable":{
+        "light":{
+            "amber":{
+                "components":[
+                    "Mirro_Turn_Lamp_L",
+                    "Mirro_Turn_Lamp_R",
+                    "Daylight_ Turn_Lamp_L",
+                    "Daylight_ Turn_Lamp_R",
+                    "Rear_Turn_Lamp_L",
+                    "Rear_Turn_Lamp_R",
+                    "Trunk_Turn_Lamp_L",
+                    "Trunk_Turn_Lamp_R",
+                    "Whole climate",
+                    "Foglight",
+                    "Wheel eyebrow lamp"
+                ],
+                "off_color":[
+                    0.6, 0.6, 0.6
+                ],
+                "on_color":[
+                    1.0, 0.647, 0.0
+                ]
+            },
+            "red":{
+                "components":[
+                    "Positionlight_Red",
+                    "Breaklight",
+                    "Reversing_lamp"
+                ],
+                "off_color":[
+                    0.573, 0.004, 0.004
+                ],
+                "on_color":[
+                    1.0, 0.004, 0.004
+                ]
+            },
+            "white":{
+                "components":[
+                    "High_Beam",
+                    "Low_Beam"
+                ],
+                "off_color":[
+                    0.6, 0.6, 0.6
+                ],
+                "on_color":[
+                    1.0, 1.0, 1.0
+                ]
+            }
+        },
+
+        "car_paint":{
+            "components":[
+                "Car_Body"
+            ],
+            "material": "carpaint",
+            "color":{
+                "default":[
+                    1.0, 1.0, 1.0
+                ],
+                "color1":[
+                    1.0, 1.0, 1.0
+                ]
+            },
+            "display_color": "default"
+        }
+    },
+
+    "texture":{
+        "diffuse":{
+            "file_list":["APTIV.png"],
+            "APTIV.png":{
+                "components":[
+                    {
+                        "mesh_name":"Door_Front_Left_paint.001",
+                        "material_name":""
+                    },
+                    {
+                        "mesh_name":"Door_Back_Left_Paint.001",
+                        "material_name":""
+                    }
+                ]
+            }
+        }
+    },
+
+    "disabled_meshes":{
+        "mesh_prefix":[
+        ]
+    },
+
+    "transparent_chassis":{
+        "transparent":[
+            "Trunk_Paint.001",
+            "Trunk_Logo_Chrome.001",
+            "Trunk_Cover.001",
+            "Trunk_Logo_Black.001",
+            "Trunk_GlassNS.001",
+            "Trunk_Glass.001",
+            "Trunk_Chrome.001",
+            "Trunk_Glass2.001",
+            "Trunk_Glass_Red.001",
+            "Door_Front_Left_paint.001",
+            "Door_Front_Left_Mirror.001",
+            "Door_Front_Left_Glass2.001",
+            "Door_Front_Left_Chrome.001",
+            "Door_Front_Left_Black.001",
+            "Door_Front_Left_Glass.001",
+            "Door_Back_Left_Glass.001",
+            "Door_Back_Left_Paint.001",
+            "Door_Back_Left_Black.001",
+            "Door_Front_Right_Paint.001",
+            "Door_Front_Right_Black.001",
+            "Door_Front_Right_Glass.001",
+            "Door_Front_Right_Mirror.001",
+            "Door_Front_Right_Chrome.001",
+            "Door_Front_Right_Glass2.001",
+            "Door_Back_Right_Paint.001",
+            "Door_Back_Right_Black.001",
+            "Door_Back_Right_Glass.001",
+            "doors_05.001",
+            "doors_01.001",
+            "doors_02.001",
+            "sunroof.001",
+            "window_00.001",
+            "window_01.001",
+            "window_03.001",
+            "roof_10.001",
+            "roof_01.001",
+            "roof_11.001",
+            "roof_00.001",
+            "roof_13.001",
+            "hood_black.001",
+            "body_08.001",
+            "body_04.001",
+            "body_03.001",
+            "body_02.001",
+            "body_01.001",
+            "body_00.001"
+        ],
+
+        "not_transparent":[
+            "wh_fl_02.001",
+            "wh_fl_00.001",
+            "wh_fr_10.001",
+            "wh_fr_06.001",
+            "wh_fr_08.001",
+            "wh_fr_00.001",
+            "wh_rr_04.001",
+            "wh_rr_06.001",
+            "wh_rr_09.001",
+            "wh_rr_05.001",
+            "wh_rr_02.001",
+            "wh_rr_08.001",
+            "wh_rr_03.001",
+            "wh_fr_04.001",
+            "wh_fr_05.001",
+            "wh_fr_03.001",
+            "wh_fr_02.001",
+            "wh_fr_07.001",
+            "wh_fl_01.001",
+            "wh_rl_04.001",
+            "wh_rr_01.001",
+            "wh_rl_10.001",
+            "wh_rl_05.001",
+            "wh_fr_09.001",
+            "wh_rr_00.001",
+            "wh_rl_00.001",
+            "wh_rl_07.001",
+            "wh_fl_04.001",
+            "wh_fl_10.001",
+            "wh_rl_06.001",
+            "wh_rl_01.001",
+            "wh_rl_08.001",
+            "wh_rl_02.001",
+            "wh_fl_08.001",
+            "wh_fl_06.001",
+            "wh_fl_09.001",
+            "wh_fl_07.001",
+            "wh_fl_05.001"
+        ],
+
+        "hide":[
+            "Seat_",
+            "dashboard",
+            "console",
+            "steerling_wheel",
+            "bumper",
+            "light",
+            "Interior",
+            "bottom",
+            "cam",
+            "radiator",
+            "logo_face",
+            "ruber",
+            "yelement_wiper",
+            "Plastic",
+            "Leather"
+
+        ]
+    },
+
+    "vehicle_params":{
+        "min_x": -93.82,
+        "max_x": 93.82,
+        "min_y": -230.67,
+        "max_y": 230.67,
+        "min_z": -64.41,
+        "max_z": 64.41,
+        "coordinate_scale_to_mm": 10,
+
+        "layout":{
+            "scale_x": 0.00010,
+            "scale_y": 0.00010,
+            "scale_z": 0.00010,
+            "rotation_axis_x": 90.0,
+            "rotation_axis_y": 0.0,
+            "rotation_axis_z": 0.0,
+            "translation_x": 0.0,
+            "translation_y": 0.0,
+            "translation_z": -93.82
+        }
+    }
+}

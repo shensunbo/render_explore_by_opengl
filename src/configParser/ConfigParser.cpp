@@ -1,0 +1,644 @@
+#include "ConfigParser.h"
+#include "log/mylog.h"
+#include <fstream>
+
+bool CarModelConfigParser::loadConfigFile(const std::string& config_file_path){
+    std::ifstream file(config_file_path);
+    if (!file.is_open()) {
+        mylog(LogLevel::E, "%s open failed", config_file_path.c_str());
+        return false;
+    }
+
+    nlohmann::json js;
+    try {
+        file >> js;
+        file.close();
+    } catch (const nlohmann::json::parse_error& e) {
+        mylog(LogLevel::E, "error %s ", e.what());
+        return false;
+    }
+
+    m_vehicle_name = js.at("vehicleName").get<std::string>();
+
+    auto door = js.at("rotatable").at("door");
+    parserDoorMeshes(door);
+
+    auto wheel = js.at("rotatable").at("wheel");
+    parserWheelMeshes(wheel);
+
+    auto light = js.at("color_adjustable").at("light");
+    parserLightMeshes(light);
+
+    auto carPaint = js.at("color_adjustable").at("car_paint");
+    parserCarPaintMeshes(carPaint);
+
+    auto texture = js.at("texture");
+    parserTextureData(texture);
+
+    auto disabledMeshes = js.at("disabled_meshes");
+    parserDisabledMeshes(disabledMeshes);
+
+    auto transparentChassis = js.at("transparent_chassis");
+    parserTransparentChassisMeshes(transparentChassis);
+
+    auto vehicleParam = js.at("vehicle_params");
+    parserVehicleParam(vehicleParam);
+
+    meshSetInit();
+ 
+    return true;
+}
+
+bool CarModelConfigParser::parserDoorMeshes(const nlohmann::json& door){
+    glm::vec3 tmpTranslation = glm::vec3(1.0f);
+    glm::vec3 tmpAxis = glm::vec3(0.0f);
+    int coef = 1;
+    RotateData tmpRotateData{glm::vec3(0.0f), glm::vec3(0.0f), 0, 0, 0};
+
+    {
+        std::vector<float> translation = door.at("front_left").at("lcl_translation").get<std::vector<float>>();
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = door.at("front_left").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = door.at("front_left").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+        
+        auto components = door.at("front_left").at("components");
+        for (auto& component : components) {
+            m_fl_door_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    {
+        std::vector<float> translation = door.at("front_right").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = door.at("front_right").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = door.at("front_right").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = door.at("front_right").at("components");
+        for (auto& component : components) {
+            m_fr_door_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    {
+        std::vector<float> translation = door.at("rear_left").at("lcl_translation"); 
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = door.at("rear_left").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = door.at("rear_left").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = door.at("rear_left").at("components");
+        for (auto& component : components) {
+            m_rl_door_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    {
+        std::vector<float> translation = door.at("rear_right").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = door.at("rear_right").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = door.at("rear_right").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = door.at("rear_right").at("components");
+        for (auto& component : components) {
+            m_rr_door_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    {
+        std::vector<float> translation = door.at("hood").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = door.at("hood").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = door.at("hood").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = door.at("hood").at("components");
+        for (auto& component : components) {
+            m_hood_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    {
+        std::vector<float> translation = door.at("trunk").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = door.at("trunk").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = door.at("trunk").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = door.at("trunk").at("components");
+        for (auto& component : components) {
+            m_trunk_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    return true;
+}
+
+bool CarModelConfigParser::parserWheelMeshes(const nlohmann::json& wheel){
+    glm::vec3 tmpTranslation = glm::vec3(1.0f);
+    glm::vec3 tmpAxis = glm::vec3(0.0f);
+    int coef = 1;
+    RotateData tmpRotateData{glm::vec3(0.0f), glm::vec3(0.0f), 0, 0, 0};
+
+    {
+        std::vector<float> translation = wheel.at("front_left").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = wheel.at("front_left").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+        
+        coef = wheel.at("front_left").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        std::vector<float> direction_axis = wheel.at("front_left").at("direction_rotate_axis").get<std::vector<float>>();
+
+        auto components = wheel.at("front_left").at("components");
+        for (auto& component : components) {
+            m_fl_wheel_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+            front_wheel_direction_axis[component] = glm::vec3(direction_axis.at(0), direction_axis.at(1), direction_axis.at(2));
+        }
+    }
+
+    {
+        std::vector<float> translation = wheel.at("front_right").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = wheel.at("front_right").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = wheel.at("front_left").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        std::vector<float> direction_axis = wheel.at("front_right").at("direction_rotate_axis").get<std::vector<float>>();
+
+        auto components = wheel.at("front_right").at("components");
+        for (auto& component : components) {
+            m_fr_wheel_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+            front_wheel_direction_axis[component] = glm::vec3(direction_axis.at(0), direction_axis.at(1), direction_axis.at(2));
+        }
+    }
+
+    {
+        std::vector<float> translation = wheel.at("rear_left").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = wheel.at("rear_left").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = wheel.at("front_left").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = wheel.at("rear_left").at("components");
+        for (auto& component : components) {
+            m_rl_wheel_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    {
+        std::vector<float> translation = wheel.at("rear_right").at("lcl_translation");
+        tmpTranslation = glm::vec3(translation.at(0), translation.at(1), translation.at(2));
+
+        std::vector<float> axis = wheel.at("rear_right").at("rotate_axis").get<std::vector<float>>();
+        tmpAxis = glm::vec3(axis.at(0), axis.at(1), axis.at(2));
+
+        coef = wheel.at("front_left").at("coef").get<int>();
+
+        tmpRotateData.translation = tmpTranslation;
+        tmpRotateData.axis = tmpAxis;
+        tmpRotateData.coef = coef;
+
+        auto components = wheel.at("rear_right").at("components");
+        for (auto& component : components) {
+            m_rr_wheel_meshes.insert(component);
+            m_rotatable_meshes_transforms[component] = tmpRotateData;
+        }
+    }
+
+    return true;
+}
+
+bool CarModelConfigParser::parserLightMeshes(const nlohmann::json& light){
+    std::array<glm::vec3, 2> tmpColor = {glm::vec3(0.0f), glm::vec3(0.0f)};
+   {
+        std::vector<float> off_color = light.at("amber").at("off_color");
+        tmpColor[0] = glm::vec3(off_color.at(0), off_color.at(1), off_color.at(2));
+        std::vector<float> on_color = light.at("amber").at("on_color");
+        tmpColor[1] = glm::vec3(on_color.at(0), on_color.at(1), on_color.at(2));
+
+        auto components = light.at("amber").at("components");
+        for (auto& component : components) {
+            m_amber_light_meshes.insert(component);
+            m_light_meshes_color[component] = tmpColor;
+        }
+    }
+
+    {
+        std::vector<float> off_color = light.at("red").at("off_color");
+        tmpColor[0] = glm::vec3(off_color.at(0), off_color.at(1), off_color.at(2));
+        std::vector<float> on_color = light.at("red").at("on_color");
+        tmpColor[1] = glm::vec3(on_color.at(0), on_color.at(1), on_color.at(2));
+
+        auto components = light.at("red").at("components");
+        for (auto& component : components) {
+            m_red_light_meshes.insert(component);
+            m_light_meshes_color[component] = tmpColor;
+        }
+    }
+
+    {
+        std::vector<float> off_color = light.at("white").at("off_color");
+        tmpColor[0] = glm::vec3(off_color.at(0), off_color.at(1), off_color.at(2));
+        std::vector<float> on_color = light.at("white").at("on_color");
+        tmpColor[1] = glm::vec3(on_color.at(0), on_color.at(1), on_color.at(2));
+    
+        auto components = light.at("white").at("components");
+        for (auto& component : components) {
+            m_white_light_meshes.insert(component);
+            m_light_meshes_color[component] = tmpColor;
+        }
+    }
+
+    return true;
+}
+
+bool CarModelConfigParser::parserCarPaintMeshes(const nlohmann::json& carPaint){
+    std::string materialName = carPaint.at("material").get<std::string>();
+    std::vector<float> defaultColor = carPaint.at("color").at("default").get<std::vector<float>>();
+
+    m_car_paint_color[materialName]  = glm::vec3(defaultColor.at(0), defaultColor.at(1), defaultColor.at(2));;
+    m_current_car_paint = std::make_pair(materialName, m_car_paint_color[materialName]);
+    return true;
+}
+
+bool CarModelConfigParser::parserTextureData(const nlohmann::json& texture){
+    std::vector<std::string> fileName = texture.at("diffuse").at("file_list").get<std::vector<std::string>>();
+    auto diffuseNode = texture.at("diffuse");
+
+    for (auto& file : fileName) {
+        auto components = diffuseNode.at(file).at("components");
+        for (auto& component : components) {
+            std::string meshname = component.at("mesh_name");
+            std::string material = component.at("material_name");
+            m_texture_data[std::make_pair(meshname, material)].diffuse = file;
+        }
+    }
+    return true;
+}
+
+bool CarModelConfigParser::parserDisabledMeshes(const nlohmann::json& disabledMeshes){
+    auto components = disabledMeshes.at("mesh_prefix");
+    for (auto& component : components) {
+        m_disabledMeshes.insert(component);
+    }
+    return true;
+}
+
+bool CarModelConfigParser::parserTransparentChassisMeshes(const nlohmann::json& transparentChassis){
+    auto trans = transparentChassis.at("transparent");
+    for (auto component : trans) {
+        m_transparent_chassis_meshes.insert(component);
+    }
+
+    auto notTrans = transparentChassis.at("not_transparent");
+    for (auto component : notTrans) {
+        m_not_transparent_chassis_meshes.insert(component);
+    }
+
+    auto hide = transparentChassis.at("hide");
+    for (auto component : hide) {
+        m_hide_chassis_meshes.insert(component);
+    }
+
+    return true;
+}
+
+bool CarModelConfigParser::parserVehicleParam(const nlohmann::json& vehicleParam){
+    m_vehicle_param.min_x = vehicleParam.at("min_x").get<float>();
+    m_vehicle_param.max_x = vehicleParam.at("max_x").get<float>();
+    m_vehicle_param.min_y = vehicleParam.at("min_y").get<float>();
+    m_vehicle_param.max_y = vehicleParam.at("max_y").get<float>();
+    m_vehicle_param.min_z = vehicleParam.at("min_z").get<float>();
+    m_vehicle_param.max_z = vehicleParam.at("max_z").get<float>();
+    m_vehicle_param.coordinate_scale_to_mm = vehicleParam.at("coordinate_scale_to_mm").get<unsigned int>();
+
+    m_vehicle_param.scale_x_3d = vehicleParam.at("layout").at("scale_x").get<float>();
+    m_vehicle_param.scale_y_3d = vehicleParam.at("layout").at("scale_y").get<float>();
+    m_vehicle_param.scale_z_3d = vehicleParam.at("layout").at("scale_z").get<float>();
+    m_vehicle_param.rotation_axis_x_3d = vehicleParam.at("layout").at("rotation_axis_x").get<float>();
+    m_vehicle_param.rotation_axis_y_3d = vehicleParam.at("layout").at("rotation_axis_y").get<float>();
+    m_vehicle_param.rotation_axis_z_3d = vehicleParam.at("layout").at("rotation_axis_z").get<float>();
+    m_vehicle_param.translation_x_3d = vehicleParam.at("layout").at("translation_x").get<float>();
+    m_vehicle_param.translation_y_3d = vehicleParam.at("layout").at("translation_y").get<float>();
+    m_vehicle_param.translation_z_3d = vehicleParam.at("layout").at("translation_z").get<float>();
+
+    return true;
+}
+
+void CarModelConfigParser::meshSetInit(){
+    //m_rotatableMeshes
+    m_rotatableMeshes.insert(m_fl_door_meshes.begin(), m_fl_door_meshes.end());
+    m_rotatableMeshes.insert(m_fr_door_meshes.begin(), m_fr_door_meshes.end());
+    m_rotatableMeshes.insert(m_rl_door_meshes.begin(), m_rl_door_meshes.end());
+    m_rotatableMeshes.insert(m_rr_door_meshes.begin(), m_rr_door_meshes.end());
+    m_rotatableMeshes.insert(m_hood_meshes.begin(), m_hood_meshes.end());
+    m_rotatableMeshes.insert(m_trunk_meshes.begin(), m_trunk_meshes.end());
+    m_rotatableMeshes.insert(m_fl_wheel_meshes.begin(), m_fl_wheel_meshes.end());
+    m_rotatableMeshes.insert(m_fr_wheel_meshes.begin(), m_fr_wheel_meshes.end());
+    m_rotatableMeshes.insert(m_rl_wheel_meshes.begin(), m_rl_wheel_meshes.end());
+    m_rotatableMeshes.insert(m_rr_wheel_meshes.begin(), m_rr_wheel_meshes.end());
+
+    //m_lightMeshes
+    m_light_meshes.insert(m_amber_light_meshes.begin(), m_amber_light_meshes.end());
+    m_light_meshes.insert(m_red_light_meshes.begin(), m_red_light_meshes.end());
+    m_light_meshes.insert(m_white_light_meshes.begin(), m_white_light_meshes.end());
+
+    //m_adjustableMeshes
+    m_adjustableMeshes.insert(m_rotatableMeshes.begin(), m_rotatableMeshes.end());
+    m_adjustableMeshes.insert(m_light_meshes.begin(), m_light_meshes.end());
+}
+
+
+bool CarModelConfigParser::isAdjustableMesh(const std::string& mesh){
+    return m_adjustableMeshes.find(mesh) != m_adjustableMeshes.end();
+}
+
+bool CarModelConfigParser::isRotatableMesh(const std::string& mesh){
+    return m_rotatableMeshes.find(mesh) != m_rotatableMeshes.end();
+}
+
+bool CarModelConfigParser::isLightMesh(const std::string& mesh){
+    return m_light_meshes.find(mesh) != m_light_meshes.end();
+}
+
+bool CarModelConfigParser::isCarPaintMesh(const std::string& mesh){
+    return m_car_paint_meshes.find(mesh) != m_car_paint_meshes.end();
+}
+
+bool CarModelConfigParser::isFrontWheelMesh(const std::string& mesh){
+    return m_fl_wheel_meshes.find(mesh) != m_fl_wheel_meshes.end() ||
+           m_fr_wheel_meshes.find(mesh) != m_fr_wheel_meshes.end();
+}
+
+bool CarModelConfigParser::isDisabledMesh(const std::string& mesh){
+    return m_disabledMeshes.find(mesh) != m_disabledMeshes.end();
+}
+
+bool CarModelConfigParser::isTransparentInChassis(const std::string& mesh){
+    return m_transparent_chassis_meshes.find(mesh) != m_transparent_chassis_meshes.end();
+}
+
+bool CarModelConfigParser::isHideInChassis(const std::string& mesh){
+    return m_hide_chassis_meshes.find(mesh) != m_hide_chassis_meshes.end();
+}
+
+/* @brief check if the mesh needs texture
+ * @param mesh: mesh name
+ * @param material: material name
+ * @return true if the mesh needs texture, otherwise false
+ */
+bool CarModelConfigParser::needTexture(const std::string& mesh, const std::string& material){
+    return m_texture_data.find(std::make_pair(mesh, material)) != m_texture_data.end() ||
+        m_texture_data.find(std::make_pair(mesh, "")) != m_texture_data.end() ;
+}
+
+TextureData CarModelConfigParser::getTextureData(const std::string& mesh, const std::string& material){
+    if(m_texture_data.find(std::make_pair(mesh, "")) != m_texture_data.end()){
+        return m_texture_data[std::make_pair(mesh, "")];
+    }else{
+        return m_texture_data[std::make_pair(mesh, material)];
+    }
+}
+
+RotateData CarModelConfigParser::getRotatableMeshData(const std::string& mesh){
+    return m_rotatable_meshes_transforms[mesh];
+}
+
+glm::vec3 CarModelConfigParser::getLightMeshColor(const std::string& mesh, bool state){
+    if (state) {
+        return m_light_meshes_color[mesh][1];
+    } else {
+        return m_light_meshes_color[mesh][0];
+    }
+}
+
+glm::vec3 CarModelConfigParser::getFrontWheelDirectionAxis(const std::string& mesh){
+    return front_wheel_direction_axis[mesh];
+}
+
+void CarModelConfigParser::updateFlTargetDoorAngle(int angle){
+    for (auto& component : m_fl_door_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateFrTargetDoorAngle(int angle){
+    for (auto& component : m_fr_door_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateRlTargetDoorAngle(int angle){
+    for (auto& component : m_rl_door_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateRrTargetDoorAngle(int angle){
+    for (auto& component : m_rr_door_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateHoodTargetAngle(int angle){
+    for (auto& component : m_hood_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateTrunkTargetAngle(int angle){
+    for (auto& component : m_trunk_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateFlCurrentDoorAngle(int step){
+    for (auto& component : m_fl_door_meshes) {
+        auto& transform = m_rotatable_meshes_transforms[component];
+
+        if (transform.currentAngle < transform.targetAngle) {
+            transform.currentAngle = std::min(transform.currentAngle + step, transform.targetAngle);
+        } else if (transform.currentAngle > transform.targetAngle) {
+            transform.currentAngle = std::max(transform.currentAngle - step, transform.targetAngle);
+        }
+    }
+}
+
+void CarModelConfigParser::updateFrCurrentDoorAngle(int step){
+    for (auto& component : m_fr_door_meshes) {
+        auto& transform = m_rotatable_meshes_transforms[component];
+
+        if (transform.currentAngle < transform.targetAngle) {
+            transform.currentAngle = std::min(transform.currentAngle + step, transform.targetAngle);
+        } else if (transform.currentAngle > transform.targetAngle) {
+            transform.currentAngle = std::max(transform.currentAngle - step, transform.targetAngle);
+        }
+    }
+}
+
+void CarModelConfigParser::updateRlCurrentDoorAngle(int step){
+    for (auto& component : m_rl_door_meshes) {
+        auto& transform = m_rotatable_meshes_transforms[component];
+
+        if (transform.currentAngle < transform.targetAngle) {
+            transform.currentAngle = std::min(transform.currentAngle + step, transform.targetAngle);
+        } else if (transform.currentAngle > transform.targetAngle) {
+            transform.currentAngle = std::max(transform.currentAngle - step, transform.targetAngle);
+        }
+    }
+}
+
+void CarModelConfigParser::updateRrCurrentDoorAngle(int step){
+    for (auto& component : m_rr_door_meshes) {
+        auto& transform = m_rotatable_meshes_transforms[component];
+
+        if (transform.currentAngle < transform.targetAngle) {
+            transform.currentAngle = std::min(transform.currentAngle + step, transform.targetAngle);
+        } else if (transform.currentAngle > transform.targetAngle) {
+            transform.currentAngle = std::max(transform.currentAngle - step, transform.targetAngle);
+        }
+    }
+}
+
+void CarModelConfigParser::updateHoodCurrentAngle(int step){
+    for (auto& component : m_hood_meshes) {
+        auto& transform = m_rotatable_meshes_transforms[component];
+
+        if (transform.currentAngle < transform.targetAngle) {
+            transform.currentAngle = std::min(transform.currentAngle + step, transform.targetAngle);
+        } else if (transform.currentAngle > transform.targetAngle) {
+            transform.currentAngle = std::max(transform.currentAngle - step, transform.targetAngle);
+        }
+    }
+}
+
+void CarModelConfigParser::updateTrunkCurrentAngle(int step){
+    for (auto& component : m_trunk_meshes) {
+        auto& transform = m_rotatable_meshes_transforms[component];
+
+        if (transform.currentAngle < transform.targetAngle) {
+            transform.currentAngle = std::min(transform.currentAngle + step, transform.targetAngle);
+        } else if (transform.currentAngle > transform.targetAngle) {
+            transform.currentAngle = std::max(transform.currentAngle - step, transform.targetAngle);
+        }
+    }
+}
+
+void CarModelConfigParser::updateWheelAngle(int angle){
+    for (auto& component : m_fl_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+
+    for (auto& component : m_fr_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+
+    for (auto& component : m_rl_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+
+    for (auto& component : m_rr_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateFlWheelAngle(int angle){
+    for (auto& component : m_fl_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateFrWheelAngle(int angle){
+    for (auto& component : m_fr_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateRlWheelAngle(int angle){
+    for (auto& component : m_rl_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateRrWheelAngle(int angle){
+    for (auto& component : m_rr_wheel_meshes) {
+        m_rotatable_meshes_transforms[component].targetAngle = angle;
+        m_rotatable_meshes_transforms[component].currentAngle = angle;
+    }
+}
+
+void CarModelConfigParser::updateRotateMeshTranslation(const std::string& mesh, const glm::vec3& translation){
+    m_rotatable_meshes_transforms[mesh].translation = translation;
+}

@@ -1,6 +1,9 @@
 
-add_executable(render_explore_by_opengl pbr.cpp)
+add_executable(render_explore_by_opengl test.cpp)
 
+target_sources(render_explore_by_opengl PRIVATE 
+    configParser/ConfigParser.cpp
+)
 
 target_include_directories(render_explore_by_opengl PRIVATE 
     ${COMMON_INC_DIR}
