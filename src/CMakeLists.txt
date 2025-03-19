@@ -1,5 +1,5 @@
 
-add_executable(render_explore_by_opengl main.cpp)
+add_executable(render_explore_by_opengl pbr.cpp)
 
 
 target_include_directories(render_explore_by_opengl PRIVATE 
