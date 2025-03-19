@@ -109,7 +109,7 @@ int main()
         // render
         // ------
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms

@@ -165,9 +165,13 @@ private:
         // 4. height maps
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
+        myMaterial mMaterial;
+        mMaterial = loadMaterial(material);
+        mMaterial.MaterialIndex = mesh->mMaterialIndex;
         
         // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices, textures);
+        return Mesh(vertices, indices, textures, mMaterial);
     }
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -201,6 +205,72 @@ private:
             }
         }
         return textures;
+    }
+
+    myMaterial loadMaterial(aiMaterial* mat)
+    {
+        myMaterial material = {};
+
+        aiColor3D diffuseColor;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor)) {
+            material.diffuseColor = glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b);
+        } else {
+            std::cout << "Failed to get diffuse color" << std::endl;
+        }
+
+        aiColor3D specularColor;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor)) {
+        material.specularColor = glm::vec3(specularColor.r, specularColor.g, specularColor.b);
+        } else {
+            std::cout << "Failed to get specular color" << std::endl;
+        }
+
+        aiColor3D ambientColor;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor)) {
+            material.ambientColor = glm::vec3(ambientColor.r, ambientColor.g, ambientColor.b);
+        } else {
+            std::cout << "Failed to get ambient color" << std::endl;
+        }
+
+        float shininess;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess)) {
+        material.shininess = shininess;
+        } else {
+            std::cout << "Failed to get shininess" << std::endl;
+        }
+
+        float opacity = 1.0f;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_OPACITY, opacity)) {
+            material.Opacity = opacity;
+        }
+
+        float transparencyFactor = 1.0f;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_TRANSPARENCYFACTOR, transparencyFactor)) {
+            material.TransparencyFactor = 1.0f - transparencyFactor;
+        }
+
+        float shininessStrength = 1.0f;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS_STRENGTH, shininessStrength)) {
+            material.ShininessStrength = 1.0f - shininessStrength;
+        }
+
+        aiColor3D transparentColor;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transparentColor)) {
+            material.TransparentColor = glm::vec3(transparentColor.r, transparentColor.g, transparentColor.b);
+        }
+
+        // int shadingModel;
+        // if (AI_SUCCESS == mat->Get(AI_MATKEY_SHADING_MODEL, shadingModel)) {
+        //     if (shadingModel == aiShadingMode_Phong) {
+        //         // 设置为 Phong 着色模型
+        //     } else if (shadingModel == aiShadingMode_Gouraud) {
+        //         // 设置为 Gouraud 着色模型
+        //     }
+        // }
+
+        material.MaterialName = string(mat->GetName().C_Str());
+
+        return material;
     }
 };
 
