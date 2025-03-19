@@ -83,26 +83,26 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    std::string vs_path = std::string(ROOT_DIR) + std::string("/src/1.model_loading.vs");
-    std::string fs_path = std::string(ROOT_DIR) + std::string("/src/1.model_loading.fs");
+    std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/1.model_loading.vs");
+    std::string fs_path = std::string(ROOT_DIR) + std::string("/res/shader/1.model_loading.fs");
     Shader ourShader(vs_path.c_str(), fs_path.c_str());
     // load models
     // -----------
-    std::string path = std::string(ROOT_DIR) + std::string("/src/ball.fbx");
+    std::string path = std::string(ROOT_DIR) + std::string("/res/model/audi.fbx");
     Model ourModel(path);
 
-    std::string sky_vs_path = std::string(ROOT_DIR) + std::string("/src/skybox.vs");
-    std::string sky_fs_path = std::string(ROOT_DIR) + std::string("/src/skybox.fs");
+    std::string sky_vs_path = std::string(ROOT_DIR) + std::string("/res/shader/skybox.vs");
+    std::string sky_fs_path = std::string(ROOT_DIR) + std::string("/res/shader/skybox.fs");
     Shader skyboxShader(sky_vs_path.c_str(), sky_fs_path.c_str());
 
     vector<std::string> faces
     {
-        std::string(ROOT_DIR) + string("/src/skybox/px.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/nx.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/ny.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/py.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/pz.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/nz.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/px.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/nx.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/ny.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/py.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/pz.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/nz.png"),
     };
     unsigned int cubemapTexture = loadCubemap(faces);
     skyboxShader.use();
@@ -201,7 +201,7 @@ int main()
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(0.0002f, 0.0002f, 0.0002f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
 
         glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
