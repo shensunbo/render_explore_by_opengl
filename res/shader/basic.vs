@@ -5,6 +5,7 @@ layout (location = 2) in vec2 aTexCoords;
 
 out vec2 TexCoords;
 out vec3 Normal;
+out vec3 lightDir;
 out vec3 viewDir;
 out vec3 FragPos;
 
@@ -15,11 +16,18 @@ uniform mat4 look;
 
 void main()
 {   
+    // x: p-bottom, n-top
+    // y: p-left, n-right
+    // z: p-back, n-front
+    vec3 lightPos = vec3(-1.5, 0.0, 0.0);
+
     mat3 normalMatrix = transpose(mat3(model)); 
     Normal = normalMatrix * aNormal;
     FragPos = vec3(model * vec4(aPos, 1.0));
     mat4 invLook = inverse(look);
     vec3 viewPosition = vec3(invLook[3]);
+
+    lightDir =normalize(lightPos - FragPos);
     viewDir = normalize(viewPosition -  FragPos);
 
     TexCoords = aTexCoords;    

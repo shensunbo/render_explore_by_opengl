@@ -75,6 +75,10 @@ public:
     void Draw(Shader &shader) 
     {
         glUniform3f(glGetUniformLocation(shader.ID, "materialDiffuseColor"), mMaterial.diffuseColor.x, mMaterial.diffuseColor.y, mMaterial.diffuseColor.z);
+        glUniform3f(glGetUniformLocation(shader.ID, "materialSpecularColor"), mMaterial.specularColor.x, mMaterial.specularColor.y, mMaterial.specularColor.z);
+        glUniform3f(glGetUniformLocation(shader.ID, "materialAmbientColor"), mMaterial.ambientColor.x, mMaterial.ambientColor.y, mMaterial.ambientColor.z);
+        glUniform1f(glGetUniformLocation(shader.ID, "Shininess"), mMaterial.shininess);
+        glUniform1f(glGetUniformLocation(shader.ID, "ShininessStrength"), mMaterial.ShininessStrength);
         glUniform1f(glGetUniformLocation(shader.ID, "Opacity"), mMaterial.Opacity);
         // bind appropriate textures
         unsigned int diffuseNr  = 1;
@@ -102,6 +106,18 @@ public:
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
         
+        // glass blend
+        if (std::abs(1.0f - mMaterial.Opacity) > 1e-6) {
+            glDepthMask(GL_FALSE);
+            glEnable(GL_BLEND);
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+                                GL_ONE_MINUS_SRC_ALPHA);
+        } else {
+            glDepthMask(GL_TRUE);
+            glBlendFunc(GL_ONE, GL_ZERO);
+            glDisable(GL_BLEND);
+        }
+
         // draw mesh
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
