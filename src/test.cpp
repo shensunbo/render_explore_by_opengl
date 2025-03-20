@@ -20,8 +20,8 @@ void processCameraInput(GLFWwindow* window);
 unsigned int loadCubemap(vector<std::string> faces);
 
 // settings
-const unsigned int SCR_WIDTH = 1080;
-const unsigned int SCR_HEIGHT = 1080;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 1600;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
@@ -75,6 +75,7 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
 
     // build and compile shaders
     // -------------------------

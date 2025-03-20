@@ -16,6 +16,8 @@ void main()
 {    
     vec3 ambientColor = materialDiffuseColor * 1.5;
 
+    vec3 lightColor = vec3(1.0);
+
     vec3 a_normal = normalize(Normal);
 
     vec3 reflectDir = reflect(-lightDir, a_normal);
@@ -25,6 +27,8 @@ void main()
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(a_normal, halfwayDir), 0.0), Shininess);
     vec3 specular = (spec * materialSpecularColor );
+    // vec3 specular = (spec * lightColor );
+
 
     // vec3 resultColor = mix(diffuse + specular, materialDiffuseColor, 0.5);
     vec3 resultColor = diffuse + specular + ambientColor;
