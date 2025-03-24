@@ -7,10 +7,12 @@
 #include <iostream>
 
 #include "core/shader.h"
-#include "core/camera.h"
+// #include "core/camera.h"
 #include "core/model.h"
 
 #include "log/mylog.h"
+
+#include "VehicleVirCamera.h" 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -23,8 +25,9 @@ unsigned int loadCubemap(vector<std::string> faces);
 const unsigned int SCR_WIDTH = 1080;
 const unsigned int SCR_HEIGHT = 720;
 
+//TODO: handle callback event 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
+VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 1.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -54,7 +57,6 @@ int main()
         return -1;
     }
     glfwMakeContextCurrent(window);
-    //TODO：can't put callback to C++ class
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -163,6 +165,7 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 }
 
+
 void processCameraInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -183,8 +186,6 @@ void processCameraInput(GLFWwindow* window)
         camera.ProcessKeyboard(R, deltaTime);
     else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
         camera.ProcessKeyboard(K1, deltaTime);
-
-
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
