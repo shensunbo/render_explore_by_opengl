@@ -34,5 +34,5 @@ void main()
     vec3 resultColor = diffuse + specular + ambientColor;
 
 
-    FragColor = vec4(resultColor, Opacity);
+    FragColor = vec4(materialDiffuseColor, Opacity);
 }

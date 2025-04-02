@@ -107,16 +107,16 @@ public:
         }
         
         // glass blend
-        if (std::abs(1.0f - mMaterial.Opacity) > 1e-6) {
-            glDepthMask(GL_FALSE);
-            glEnable(GL_BLEND);
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
-                                GL_ONE_MINUS_SRC_ALPHA);
-        } else {
-            glDepthMask(GL_TRUE);
-            glBlendFunc(GL_ONE, GL_ZERO);
-            glDisable(GL_BLEND);
-        }
+        // if (std::abs(1.0f - mMaterial.Opacity) > 1e-6) {
+        //     glDepthMask(GL_FALSE);
+        //     glEnable(GL_BLEND);
+        //     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+        //                         GL_ONE_MINUS_SRC_ALPHA);
+        // } else {
+        //     glDepthMask(GL_TRUE);
+        //     glBlendFunc(GL_ONE, GL_ZERO);
+        //     glDisable(GL_BLEND);
+        // }
 
         // draw mesh
         glBindVertexArray(VAO);

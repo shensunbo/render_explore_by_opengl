@@ -50,10 +50,10 @@ int main()
     std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.vs");
     std::string fs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.fs");
     Shader ourShader(vs_path.c_str(), fs_path.c_str());
-    
+
     // load models
     // -----------
-    std::string path = std::string(ROOT_DIR) + std::string("/res/model/audi.fbx");
+    std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/Spartan_Sketchfab.fbx");
     Model ourModel(path);
 
     // draw in wireframe
@@ -80,6 +80,8 @@ int main()
         // ------
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms
@@ -94,8 +96,8 @@ int main()
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.004f));	// it's a bit too big for our scene, so scale it down
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.008f));	// it's a bit too big for our scene, so scale it down
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         ourShader.setMat4("model", model);
 
         glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
