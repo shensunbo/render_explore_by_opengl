@@ -19,6 +19,8 @@ void processInput(GLFWwindow *window);
 void processCameraInput(GLFWwindow* window);
 unsigned int loadCubemap(vector<std::string> faces);
 
+static GLFWwindow* windowAndGlInit(int width, int height);
+
 // settings
 const unsigned int SCR_WIDTH = 1080;
 const unsigned int SCR_HEIGHT = 720;
@@ -37,42 +39,7 @@ static unsigned int glerror = 0;
 
 int main()
 {
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "explore render", NULL, NULL);
-    if (window == NULL)
-    {
-        mylog(LogLevel::E, "Failed to create GLFW window");
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    //TODO：can't put callback to C++ class
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-
-    // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        mylog(LogLevel::E, "Failed to initialize GLAD");
-        return -1;
-    }
-
-    // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    stbi_set_flip_vertically_on_load(true);
-
+    GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
@@ -83,6 +50,7 @@ int main()
     std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.vs");
     std::string fs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.fs");
     Shader ourShader(vs_path.c_str(), fs_path.c_str());
+    
     // load models
     // -----------
     std::string path = std::string(ROOT_DIR) + std::string("/res/model/audi.fbx");
@@ -247,4 +215,43 @@ unsigned int loadCubemap(vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
+}
+
+static GLFWwindow* windowAndGlInit(int width, int height){
+    // glfw: initialize and configure
+    // ------------------------------
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // glfw window creation
+    // --------------------
+    GLFWwindow* wnd = glfwCreateWindow(width, height, "explore render", NULL, NULL);
+    if (wnd == NULL)
+    {
+        mylog(LogLevel::E, "Failed to create GLFW window");
+        glfwTerminate();
+        return nullptr;
+    }
+    glfwMakeContextCurrent(wnd);
+    glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
+    // glfwSetCursorPosCallback(wnd, mouse_callback);
+    glfwSetScrollCallback(wnd, scroll_callback);
+
+    // tell GLFW to capture our mouse
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // glad: load all OpenGL function pointers
+    // ---------------------------------------
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        mylog(LogLevel::E, "Failed to initialize GLAD");
+        return nullptr;
+    }
+
+    // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+    stbi_set_flip_vertically_on_load(true);
+
+    return wnd;
 }
