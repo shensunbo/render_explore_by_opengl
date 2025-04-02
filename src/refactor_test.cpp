@@ -56,7 +56,7 @@ int main()
     
     // load models
     // -----------
-    std::string path = std::string(ROOT_DIR) + std::string("/res/model/audi.fbx");
+    std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/halo.fbx");
     Model ourModel(path);
 
     // draw in wireframe
@@ -96,9 +96,9 @@ int main()
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.004f));	// it's a bit too big for our scene, so scale it down
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(0.0f, -0.7f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         ourShader.setMat4("model", model);
 
         glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first

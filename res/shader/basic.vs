@@ -19,7 +19,7 @@ void main()
     // x: p-bottom, n-top
     // y: p-left, n-right
     // z: p-back, n-front
-    vec3 lightPos = vec3(-1.5, 0.5, -0.5);
+    vec3 lightPos = vec3(0.0, 1.0, 1.0);
 
     mat3 normalMatrix = transpose(mat3(model)); 
     Normal = normalMatrix * aNormal;
