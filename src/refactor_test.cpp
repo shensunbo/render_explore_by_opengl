@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
+#include <chrono>
 
 #include "core/shader.h"
 // #include "core/camera.h"
@@ -22,7 +23,7 @@ void processCameraInput(GLFWwindow* window);
 unsigned int loadCubemap(vector<std::string> faces);
 
 static GLFWwindow* windowAndGlInit(int width, int height);
-
+static bool FrameRatemonitorAnd100msTick(void);
 // settings
 const unsigned int SCR_WIDTH = 1080;
 const unsigned int SCR_HEIGHT = 720;
@@ -66,7 +67,7 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-
+        (void)FrameRatemonitorAnd100msTick();
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -158,6 +159,37 @@ void processCameraInput(GLFWwindow* window)
 
 }
 
+static bool FrameRatemonitorAnd100msTick(void) {
+    static std::chrono::high_resolution_clock::time_point startTime =
+        std::chrono::high_resolution_clock::now();
+    static std::chrono::high_resolution_clock::time_point tickStartTime =
+        std::chrono::high_resolution_clock::now();
+    static int frameCount = 0;
+
+    std::chrono::high_resolution_clock::time_point currentTime =
+        std::chrono::high_resolution_clock::now();
+    double deltaTime =
+        std::chrono::duration<double>(currentTime - startTime).count();
+    double tickTime =
+        std::chrono::duration<double>(currentTime - tickStartTime).count();
+
+    frameCount++;
+
+    if (deltaTime >= 3) {
+        double fps = frameCount / deltaTime;
+        std::cout<< "FPS: " << (int)fps << std::endl;
+        startTime = currentTime;
+        frameCount = 0;
+    }
+
+    if (tickTime >= 0.03f) {
+        tickStartTime = currentTime;
+        return true;
+    }
+
+    return false;
+}
+
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
         float xpos = static_cast<float>(xposIn);
@@ -227,6 +259,7 @@ static GLFWwindow* windowAndGlInit(int width, int height){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
     // glfw window creation
     // --------------------
