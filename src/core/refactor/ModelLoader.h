@@ -14,7 +14,8 @@ private:
     void processNode(aiNode *node, const aiScene *scene, std::vector<Mesh>& meshInfo);
     Mesh processMesh(aiMesh *mesh, const aiScene *scene, const aiMatrix4x4& translationMatrix);
     myMaterial loadMaterial(aiMaterial* mat);
-
+    unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
+    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName);
 
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
         glm::mat4 to;
@@ -26,4 +27,7 @@ private:
         }
         return to;
     }
+
+    std::vector<Texture> textures_loaded;
+    string directory;
 };
