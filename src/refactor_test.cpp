@@ -7,9 +7,11 @@
 #include <iostream>
 #include <chrono>
 
+#include <stb_image.h>
+
 #include "core/shader.h"
 // #include "core/camera.h"
-#include "core/model.h"
+#include "core/refactor/VehicleMeshInfo.h"
 
 #include "log/mylog.h"
 
@@ -21,7 +23,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void processCameraInput(GLFWwindow* window);
-unsigned int loadCubemap(vector<std::string> faces);
 
 static GLFWwindow* windowAndGlInit(int width, int height);
 static bool FrameRatemonitorAnd100msTick(void);
@@ -61,7 +62,7 @@ int main()
     // load models
     // -----------
     std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/halo.fbx");
-    Model ourModel(path);
+    VehicleMeshInfo ourModel(path);
 
     // skybox
     Skybox cubemap;
@@ -238,41 +239,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
-}
-
-unsigned int loadCubemap(vector<std::string> faces)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-    int width, height, nrComponents;
-    for (unsigned int i = 0; i < faces.size(); i++)
-    {
-        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
-        if (data)
-        {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-            if((glerror = glGetError()) != GL_NO_ERROR){
-                std::cerr << "Error in " << __FILE__ << " (" << __FUNCTION__ << ":" << __LINE__ << "): " << glerror << std::endl;
-            }
-
-            stbi_image_free(data);
-        }
-        else
-        {
-            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-            stbi_image_free(data);
-        }
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    return textureID;
 }
 
 static GLFWwindow* windowAndGlInit(int width, int height){
