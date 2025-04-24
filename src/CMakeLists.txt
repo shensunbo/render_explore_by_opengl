@@ -14,6 +14,7 @@ target_sources(render_explore_by_opengl PRIVATE
     ${COMMON_DEP_SRC_FILES}
     core/refactor/VehicleRenderer.cpp
     core/refactor/VehicleVirCamera.cpp
+    core/refactor/Skybox.cpp
 )
 
 target_link_directories(render_explore_by_opengl PRIVATE ${COMMON_LIB_DIR})

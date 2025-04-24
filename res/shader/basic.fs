@@ -12,6 +12,8 @@ uniform float Opacity;
 uniform float Shininess;
 uniform float ShininessStrength;
 
+uniform samplerCube cubemap;
+
 void main()
 {    
     vec3 ambientColor = materialDiffuseColor * 1.5;
@@ -29,10 +31,13 @@ void main()
     vec3 specular = (spec * materialSpecularColor );
     // vec3 specular = (spec * lightColor );
 
+    vec3 envMapColor;
+    vec3 ambientReflection;
+    vec3 reflectionVector = reflect(viewDir, a_normal);
+    envMapColor = texture(cubemap, reflectionVector).rgb;
 
-    // vec3 resultColor = mix(diffuse + specular, materialDiffuseColor, 0.5);
-    vec3 resultColor = diffuse + specular;
-
+    vec3 resultColor = mix(diffuse + specular, envMapColor, 0.3);
+    // vec3 resultColor = diffuse + specular + envMapColor * 0.3;
 
     FragColor = vec4(resultColor, Opacity);
 }

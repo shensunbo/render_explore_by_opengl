@@ -14,6 +14,7 @@
 #include "log/mylog.h"
 
 #include "VehicleVirCamera.h" 
+#include "core/refactor/Skybox.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -43,6 +44,8 @@ static unsigned int glerror = 0;
 
 int main()
 {
+    printf("printf test");
+
     GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);
     // configure global opengl state
     // -----------------------------
@@ -59,6 +62,22 @@ int main()
     // -----------
     std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/halo.fbx");
     Model ourModel(path);
+
+    // skybox
+    Skybox cubemap;
+
+    vector<std::string> faces
+    {
+        std::string(ROOT_DIR) + string("/res/model/skybox/px.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/nx.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/ny.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/py.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/pz.png"),
+        std::string(ROOT_DIR) + string("/res/model/skybox/nz.png"),
+    };
+
+    cubemap.Init(faces);
+    cubemap.ActiveCubeMap();
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -95,6 +114,7 @@ int main()
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
+
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -0.7f, 0.0f)); // translate it down so it's at the center of the scene
@@ -105,6 +125,9 @@ int main()
         glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         look = camera.GetViewMatrix();
         ourShader.setMat4("look", look);
+
+        //skybox
+        ourShader.setInt("cubemap", 1);
 
         ourModel.Draw(ourShader);
 
