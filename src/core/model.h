@@ -20,6 +20,7 @@
 #include "mesh.h"
 #include "shader.h"
 #include "log/mylog.h"
+#include "refactor/ModelLoader.h"
 
 using namespace std;
 
@@ -33,11 +34,12 @@ public:
     vector<Mesh>    meshes;
     string directory;
     bool gammaCorrection;
+    ModelLoader loader;
 
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
     {
-        loadModel(path);
+        loader.LoadModel(path, meshes);
     }
 
     // draws the model, and thus all its meshes
@@ -48,6 +50,8 @@ public:
     }
     
 private:
+
+#if 0
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
         glm::mat4 to;
         for (int i = 0; i < 4; ++i) {
@@ -304,7 +308,9 @@ private:
 
         return material;
     }
-};
+#endif
+
+}; // end of model
 
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
