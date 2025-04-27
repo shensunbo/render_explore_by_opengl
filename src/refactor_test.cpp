@@ -18,6 +18,7 @@
 
 #include "VehicleVirCamera.h" 
 #include "core/refactor/Skybox.h"
+#include "core/refactor/VehicleRenderer.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -44,6 +45,8 @@ float lastFrame = 0.0f;
 
 static unsigned int glerror = 0;
 
+static VehicleRenderer vRender;
+
 int main()
 {
     printf("printf test");
@@ -54,32 +57,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
-    // build and compile shaders
-    // -------------------------
-    std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.vs");
-    std::string fs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.fs");
-    VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
-    
-    // load models
-    // -----------
-    std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/halo.fbx");
-    VehicleMeshInfo ourModel(path);
-
-    // skybox
-    Skybox cubemap;
-
-    std::vector<std::string> faces
-    {
-        std::string(ROOT_DIR) + std::string("/res/model/skybox/px.png"),
-        std::string(ROOT_DIR) + std::string("/res/model/skybox/nx.png"),
-        std::string(ROOT_DIR) + std::string("/res/model/skybox/ny.png"),
-        std::string(ROOT_DIR) + std::string("/res/model/skybox/py.png"),
-        std::string(ROOT_DIR) + std::string("/res/model/skybox/pz.png"),
-        std::string(ROOT_DIR) + std::string("/res/model/skybox/nz.png"),
-    };
-
-    cubemap.Init(faces);
-    cubemap.ActiveCubeMap();
+    vRender.create();
+    vRender.cubemap.ActiveCubeMap();
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -108,13 +87,13 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms
-        ourShader.use();
+        vRender.ourShader->use();
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        vRender.ourShader->setMat4("projection", projection);
+        vRender.ourShader->setMat4("view", view);
 
 
         // render the loaded model
@@ -122,16 +101,16 @@ int main()
         model = glm::translate(model, glm::vec3(0.0f, -0.7f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        ourShader.setMat4("model", model);
+        vRender.ourShader->setMat4("model", model);
 
         glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         look = camera.GetViewMatrix();
-        ourShader.setMat4("look", look);
+        vRender.ourShader->setMat4("look", look);
 
         //skybox
-        ourShader.setInt("cubemap", 1);
+        vRender.ourShader->setInt("cubemap", 1);
 
-        ourModel.Draw(ourShader);
+        vRender.ourModel->Draw(vRender.ourShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

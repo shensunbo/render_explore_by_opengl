@@ -29,7 +29,7 @@ public:
     }
 
     // render the mesh
-    void Draw(VehicleShader &shader);
+    void Draw(VehicleShader *shader);
 
 private:
     // render data 

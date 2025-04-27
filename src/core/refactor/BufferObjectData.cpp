@@ -1,13 +1,13 @@
 #include "BufferObjectData.h"
 
-void BufferObjectData::Draw(VehicleShader &shader) 
+void BufferObjectData::Draw(VehicleShader *shader) 
 {
-    glUniform3f(glGetUniformLocation(shader.ID, "materialDiffuseColor"), mMaterial.diffuseColor.x, mMaterial.diffuseColor.y, mMaterial.diffuseColor.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "materialSpecularColor"), mMaterial.specularColor.x, mMaterial.specularColor.y, mMaterial.specularColor.z);
-    glUniform3f(glGetUniformLocation(shader.ID, "materialAmbientColor"), mMaterial.ambientColor.x, mMaterial.ambientColor.y, mMaterial.ambientColor.z);
-    glUniform1f(glGetUniformLocation(shader.ID, "Shininess"), mMaterial.shininess);
-    glUniform1f(glGetUniformLocation(shader.ID, "ShininessStrength"), mMaterial.ShininessStrength);
-    glUniform1f(glGetUniformLocation(shader.ID, "Opacity"), mMaterial.Opacity);
+    glUniform3f(glGetUniformLocation(shader->ID, "materialDiffuseColor"), mMaterial.diffuseColor.x, mMaterial.diffuseColor.y, mMaterial.diffuseColor.z);
+    glUniform3f(glGetUniformLocation(shader->ID, "materialSpecularColor"), mMaterial.specularColor.x, mMaterial.specularColor.y, mMaterial.specularColor.z);
+    glUniform3f(glGetUniformLocation(shader->ID, "materialAmbientColor"), mMaterial.ambientColor.x, mMaterial.ambientColor.y, mMaterial.ambientColor.z);
+    glUniform1f(glGetUniformLocation(shader->ID, "Shininess"), mMaterial.shininess);
+    glUniform1f(glGetUniformLocation(shader->ID, "ShininessStrength"), mMaterial.ShininessStrength);
+    glUniform1f(glGetUniformLocation(shader->ID, "Opacity"), mMaterial.Opacity);
     // bind appropriate textures
     unsigned int diffuseNr  = 1;
     unsigned int specularNr = 1;
@@ -29,7 +29,7 @@ void BufferObjectData::Draw(VehicleShader &shader)
             number = std::to_string(heightNr++); // transfer unsigned int to string
 
         // now set the sampler to the correct texture unit
-        glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+        glUniform1i(glGetUniformLocation(shader->ID, (name + number).c_str()), i);
         // and finally bind the texture
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
