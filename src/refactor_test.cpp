@@ -9,7 +9,7 @@
 
 #include <stb_image.h>
 
-#include "core/shader.h"
+// #include "core/shader.h"
 // #include "core/camera.h"
 #include "core/refactor/VehicleMeshInfo.h"
 #include "core/refactor/VehicleShader.h"
