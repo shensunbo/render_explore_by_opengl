@@ -42,3 +42,11 @@ struct myMaterial {
     glm::vec3 ambientColor;
     glm::vec3 TransparentColor;
 };
+
+struct UboMat {
+    glm::vec4 diffuseColor;
+    glm::vec4 specularColor;
+    float opacity;
+    float shininess;
+    float shininessStrength;
+};

@@ -82,6 +82,15 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
 
+    GLuint getBlockIndex(const std::string& block_name){
+        auto id = glGetUniformBlockIndex(ID, block_name.c_str());
+        return id;
+    }
+
+    void uniformBlockBind(GLuint block_index,
+                                      GLuint layout_binding) {
+        glUniformBlockBinding(ID, block_index, layout_binding);
+    }
 private:
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------

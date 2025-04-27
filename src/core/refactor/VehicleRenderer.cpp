@@ -13,8 +13,16 @@ void VehicleRenderer::create(){
     // load models
     // -----------
     std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/halo.fbx");
+    // std::string path = std::string(ROOT_DIR) + std::string("/res/model/ford/vehicle.fbx");
+
     // VehicleMeshInfo ourModel(path);
     ourModel = new VehicleMeshInfo(path);
+
+    for(auto& it : ourModel->meshes) {
+        unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
+        ourShader->uniformBlockBind(blockIndex, 0);
+        it.updateUbo(it.mUboMat);
+    }
 
     // skybox
     std::vector<std::string> faces
@@ -55,6 +63,7 @@ void VehicleRenderer::draw(){
 
         // draw mesh
         v.bindVao();
+        v.bindUbo();
 
         glDrawElements(GL_TRIANGLES, v.getIndicesSize(), GL_UNSIGNED_INT, 0);
     }

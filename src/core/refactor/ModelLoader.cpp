@@ -4,8 +4,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <string>
+#include <iostream>
 
 #include "BufferObjectData.h"
+#include "log/mylog.h"
 
 bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo){
     // read file via ASSIMP
