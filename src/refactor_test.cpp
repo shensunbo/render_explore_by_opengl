@@ -12,6 +12,7 @@
 #include "core/shader.h"
 // #include "core/camera.h"
 #include "core/refactor/VehicleMeshInfo.h"
+#include "core/refactor/VehicleShader.h"
 
 #include "log/mylog.h"
 
@@ -57,7 +58,7 @@ int main()
     // -------------------------
     std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.vs");
     std::string fs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.fs");
-    Shader ourShader(vs_path.c_str(), fs_path.c_str());
+    VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
     
     // load models
     // -----------
@@ -103,7 +104,7 @@ int main()
         // render
         // ------
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms

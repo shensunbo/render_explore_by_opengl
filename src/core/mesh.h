@@ -6,7 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "shader.h"
+// #include "shader.h"
+#include "refactor/VehicleShader.h"
 #include "log/mylog.h"
 
 using namespace std;
@@ -72,7 +73,7 @@ public:
     }
 
     // render the mesh
-    void Draw(Shader &shader) 
+    void Draw(VehicleShader &shader) 
     {
         glUniform3f(glGetUniformLocation(shader.ID, "materialDiffuseColor"), mMaterial.diffuseColor.x, mMaterial.diffuseColor.y, mMaterial.diffuseColor.z);
         glUniform3f(glGetUniformLocation(shader.ID, "materialSpecularColor"), mMaterial.specularColor.x, mMaterial.specularColor.y, mMaterial.specularColor.z);

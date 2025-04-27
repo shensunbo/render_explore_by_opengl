@@ -1,5 +1,6 @@
 #include "../mesh.h"
-#include "../shader.h"
+// #include "../shader.h"
+#include "VehicleShader.h"
 #include "log/mylog.h"
 #include "ModelLoader.h"
 
@@ -18,7 +19,7 @@ public:
     }
 
     // draws the model, and thus all its meshes
-    void Draw(Shader &shader)
+    void Draw(VehicleShader &shader)
     {
         for(unsigned int i = 0; i < meshes.size(); i++)
             meshes[i].Draw(shader);
