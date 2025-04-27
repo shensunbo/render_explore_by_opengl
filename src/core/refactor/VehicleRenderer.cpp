@@ -35,6 +35,9 @@ void VehicleRenderer::create(){
 
 void VehicleRenderer::destroy(){
     mylog(I, "VehicleRenderer::destroy");
+
+    delete ourShader;
+    delete ourModel;
 }
 
 void VehicleRenderer::update(){
@@ -42,5 +45,19 @@ void VehicleRenderer::update(){
 }
 
 void VehicleRenderer::draw(){
-    mylog(I, "VehicleRenderer::draw");
+    for(auto& v :  ourModel->meshes){
+        ourShader->setVec3("materialDiffuseColor", v.mMaterial.diffuseColor);
+        ourShader->setVec3("materialSpecularColor", v.mMaterial.specularColor);
+        ourShader->setVec3("materialAmbientColor", v.mMaterial.ambientColor);
+        ourShader->setFloat("Shininess", v.mMaterial.shininess);
+        ourShader->setFloat("ShininessStrength", v.mMaterial.ShininessStrength);
+        ourShader->setFloat("Opacity", v.mMaterial.Opacity);
+
+        // draw mesh
+        v.bindVao();
+
+        glDrawElements(GL_TRIANGLES, v.getIndicesSize(), GL_UNSIGNED_INT, 0);
+    }
+
+    // mylog(I, "VehicleRenderer::draw");
 }

@@ -28,8 +28,16 @@ public:
         setupMesh();
     }
 
+    void bindVao(){
+        glBindVertexArray(VAO);
+    }
+
+    size_t getIndicesSize(){
+        return indices.size();
+    }
+
     // render the mesh
-    void Draw(VehicleShader *shader);
+    // void Draw(VehicleShader *shader);
 
 private:
     // render data 

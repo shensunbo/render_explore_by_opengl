@@ -110,7 +110,7 @@ int main()
         //skybox
         vRender.ourShader->setInt("cubemap", 1);
 
-        vRender.ourModel->Draw(vRender.ourShader);
+        vRender.draw();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
