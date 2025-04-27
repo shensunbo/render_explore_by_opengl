@@ -1,14 +1,17 @@
-#include "../mesh.h"
+#pragma once
+// #include "../mesh.h"
 // #include "../shader.h"
 #include "VehicleShader.h"
 #include "log/mylog.h"
 #include "ModelLoader.h"
+#include "CommonDataStruct.h"
+#include "BufferObjectData.h"
 
 class VehicleMeshInfo {
 public:
     // model data 
     std::vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-    std::vector<Mesh>    meshes;
+    std::vector<BufferObjectData>    meshes;
     bool gammaCorrection;
     ModelLoader loader;
 

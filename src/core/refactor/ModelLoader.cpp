@@ -3,10 +3,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
 #include <string>
 
-bool ModelLoader::LoadModel(const std::string& resPath, std::vector<Mesh>& meshInfo){
+#include "BufferObjectData.h"
+
+bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo){
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(resPath, aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
@@ -26,7 +27,7 @@ bool ModelLoader::LoadModel(const std::string& resPath, std::vector<Mesh>& meshI
 }
 
  // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<Mesh>& meshInfo)
+void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo)
 {
     aiMatrix4x4 mTransformation = node->mTransformation;
 
@@ -52,12 +53,12 @@ void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<Me
 
 }
 
-Mesh ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, const aiMatrix4x4& translationMatrix)
+BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, const aiMatrix4x4& translationMatrix)
 {
     // data to fill
-    vector<Vertex> vertices;
-    vector<unsigned int> indices;
-    vector<Texture> textures;
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Texture> textures;
 
     glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(translationMatrix);
 
@@ -151,7 +152,7 @@ Mesh ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, const aiMatrix
     mMaterial.MaterialIndex = mesh->mMaterialIndex;
     
     // return a mesh object created from the extracted mesh data
-    return Mesh(vertices, indices, textures, mMaterial);
+    return BufferObjectData(vertices, indices, textures, mMaterial);
 }
 
 myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
@@ -215,16 +216,16 @@ myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
     //     }
     // }
 
-    material.MaterialName = string(mat->GetName().C_Str());
+    material.MaterialName = std::string(mat->GetName().C_Str());
 
     return material;
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-vector<Texture> ModelLoader::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
+std::vector<Texture> ModelLoader::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
 {
-    vector<Texture> textures;
+    std::vector<Texture> textures;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
         aiString str;
@@ -253,9 +254,9 @@ vector<Texture> ModelLoader::loadMaterialTextures(aiMaterial *mat, aiTextureType
     return textures;
 }
 
-unsigned int ModelLoader::TextureFromFile(const char *path, const string &directory, bool gamma)
+unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &directory, bool gamma)
 {
-    string filename = string(path);
+    std::string filename = std::string(path);
     filename = directory + '/' + filename;
 
     unsigned int textureID;

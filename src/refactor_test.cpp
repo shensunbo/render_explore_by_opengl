@@ -68,14 +68,14 @@ int main()
     // skybox
     Skybox cubemap;
 
-    vector<std::string> faces
+    std::vector<std::string> faces
     {
-        std::string(ROOT_DIR) + string("/res/model/skybox/px.png"),
-        std::string(ROOT_DIR) + string("/res/model/skybox/nx.png"),
-        std::string(ROOT_DIR) + string("/res/model/skybox/ny.png"),
-        std::string(ROOT_DIR) + string("/res/model/skybox/py.png"),
-        std::string(ROOT_DIR) + string("/res/model/skybox/pz.png"),
-        std::string(ROOT_DIR) + string("/res/model/skybox/nz.png"),
+        std::string(ROOT_DIR) + std::string("/res/model/skybox/px.png"),
+        std::string(ROOT_DIR) + std::string("/res/model/skybox/nx.png"),
+        std::string(ROOT_DIR) + std::string("/res/model/skybox/ny.png"),
+        std::string(ROOT_DIR) + std::string("/res/model/skybox/py.png"),
+        std::string(ROOT_DIR) + std::string("/res/model/skybox/pz.png"),
+        std::string(ROOT_DIR) + std::string("/res/model/skybox/nz.png"),
     };
 
     cubemap.Init(faces);

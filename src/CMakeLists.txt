@@ -19,6 +19,7 @@ target_sources(render_explore_by_opengl PRIVATE
     core/refactor/ModelLoader.cpp
     core/refactor/VehicleMeshInfo.cpp
     core/refactor/VehicleShader.cpp
+    core/refactor/BufferObjectData.cpp
 )
 
 target_link_directories(render_explore_by_opengl PRIVATE ${COMMON_LIB_DIR})
