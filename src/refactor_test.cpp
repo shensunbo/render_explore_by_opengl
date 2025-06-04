@@ -257,8 +257,8 @@ static GLFWwindow* windowAndGlInit(int width, int height){
         return nullptr;
     }
 
-    // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    stbi_set_flip_vertically_on_load(true);
+    // // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+    // stbi_set_flip_vertically_on_load(true);
 
     return wnd;
 }
