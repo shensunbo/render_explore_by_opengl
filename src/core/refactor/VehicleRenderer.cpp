@@ -3,6 +3,10 @@
 #include <memory>
 
 void VehicleRenderer::create(){
+
+    std::string cfgPath = std::string(ROOT_DIR) + std::string("/res/model/halo/vehicle_info.json");
+    cfgParser.loadConfigFile(cfgPath);
+
     // build and compile shaders
     // -------------------------
     std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.vs");
@@ -16,7 +20,7 @@ void VehicleRenderer::create(){
     // std::string path = std::string(ROOT_DIR) + std::string("/res/model/ford/vehicle.fbx");
 
     // VehicleMeshInfo ourModel(path);
-    ourModel = new VehicleMeshInfo(path);
+    ourModel = new VehicleMeshInfo(path, cfgParser);
 
     for(auto& it : ourModel->meshes) {
         unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
@@ -61,11 +65,22 @@ void VehicleRenderer::draw(){
         ourShader->setFloat("ShininessStrength", v.mMaterial.ShininessStrength);
         ourShader->setFloat("Opacity", v.mMaterial.Opacity);
 
+        for (size_t i = 0; i < v.textures.size(); ++i) {
+            auto uniform = v.textures[i].type;
+            glActiveTexture(GL_TEXTURE0 + i);
+            ourShader->setInt(uniform, i);
+            glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
+
+            ourShader->setBool("textureLoad", true);
+        }
+
         // draw mesh
         v.bindVao();
         v.bindUbo();
 
         glDrawElements(GL_TRIANGLES, v.getIndicesSize(), GL_UNSIGNED_INT, 0);
+
+        ourShader->setBool("textureLoad", false);
     }
 
     // mylog(I, "VehicleRenderer::draw");

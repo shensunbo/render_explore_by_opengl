@@ -12,18 +12,21 @@ public:
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
     std::vector<Texture>      textures;
-    unsigned int VAO;
+    std::string meshName;
     myMaterial mMaterial;
     UboMat mUboMat;
+    unsigned int VAO;
+
 
     // constructor
     BufferObjectData(std::vector<Vertex> vertices, std::vector<unsigned int> indices, 
-        std::vector<Texture> textures, myMaterial mMaterial)
+        std::vector<Texture> textures, myMaterial mMaterial, std::string mName)
     {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
         this->mMaterial = mMaterial;
+        this->meshName = mName;
 
         this->mUboMat.diffuseColor = glm::vec4(mMaterial.diffuseColor, 1.0f);
         this->mUboMat.specularColor = glm::vec4(mMaterial.specularColor, 1.0f);

@@ -16,9 +16,9 @@ public:
     ModelLoader loader;
 
     // constructor, expects a filepath to a 3D model.
-    VehicleMeshInfo(std::string const &path, bool gamma = false) : gammaCorrection(gamma)
+    VehicleMeshInfo(std::string const &path, ConfigParser& vehInfo, bool gamma = false) : gammaCorrection(gamma)
     {
-        loader.LoadModel(path, meshes);
+        loader.LoadModel(path, meshes, vehInfo);
     }
 
     // // draws the model, and thus all its meshes

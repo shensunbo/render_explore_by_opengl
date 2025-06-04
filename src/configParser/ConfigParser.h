@@ -27,11 +27,14 @@ typedef struct RotateData {
  * @param diffuse: the diffuse texture path
  * @param specular: the specular texture path
  * @param normal: the normal texture path
+ * @param ao: the Ambient Occlusion texture path
  */
 typedef struct TextureData {
     std::string diffuse;
     std::string specular;
     std::string normal;
+    std::string ao;
+    std::string alpha;
 } TextureData;
 
 typedef struct VehicleParam {
@@ -53,9 +56,28 @@ typedef struct VehicleParam {
     float rotation_axis_x_3d;
     float rotation_axis_y_3d;
     float rotation_axis_z_3d;
+    float rotation_axis_x_bev;
+    float rotation_axis_y_bev;
+    float rotation_axis_z_bev;
+    float translation_x_bev;
+    float translation_y_bev;
+    float translation_z_bev;
+    //skybox
+    float rotation_axis_x_skybox_bev;
+    float rotation_axis_y_skybox_bev;
+    float rotation_axis_z_skybox_bev;
+    float translation_x_skybox_bev;
+    float translation_y_skybox_bev;
+    float translation_z_skybox_bev;
+    float rotation_axis_x_skybox_3d;
+    float rotation_axis_y_skybox_3d;
+    float rotation_axis_z_skybox_3d;
+    float translation_x_skybox_3d;
+    float translation_y_skybox_3d;
+    float translation_z_skybox_3d;
 } VehicleParam;
 
-class CarModelConfigParser {
+class ConfigParser {
 public:
     bool loadConfigFile(const std::string& config_file_path = "vehicle_info.json");
 
@@ -64,6 +86,7 @@ public:
     bool isLightMesh(const std::string& mesh);
     bool isCarPaintMesh(const std::string& mesh);
     bool isFrontWheelMesh(const std::string& mesh);
+    bool isFrontWheelCalipersMesh(const std::string& mesh);
     bool isDisabledMesh(const std::string& mesh);
     
     // transparent chassis mode
@@ -71,6 +94,7 @@ public:
     bool isHideInChassis(const std::string& mesh);
 
     bool needTexture(const std::string& mesh, const std::string& material);
+    bool haveAlphaTexture(const std::string& mesh, const std::string& material);
 
     std::string getVehicleName() { return m_vehicle_name; }
     RotateData getRotatableMeshData(const std::string& mesh);
@@ -127,6 +151,7 @@ private:
     std::set<std::string> m_fr_wheel_meshes;
     std::set<std::string> m_rl_wheel_meshes;
     std::set<std::string> m_rr_wheel_meshes;
+    std::set<std::string> m_f_caliper_meshes;
     std::unordered_map<std::string, RotateData> m_rotatable_meshes_transforms;
     std::unordered_map<std::string, glm::vec3> front_wheel_direction_axis;
 

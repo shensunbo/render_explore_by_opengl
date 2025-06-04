@@ -3,22 +3,20 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <iostream>
 #include <chrono>
-
 #include <stb_image.h>
 
 // #include "core/shader.h"
 // #include "core/camera.h"
+#include "VehicleVirCamera.h" 
 #include "core/refactor/VehicleMeshInfo.h"
 #include "core/refactor/VehicleShader.h"
-
-#include "log/mylog.h"
-
-#include "VehicleVirCamera.h" 
 #include "core/refactor/Skybox.h"
 #include "core/refactor/VehicleRenderer.h"
+#include "log/mylog.h"
+
+#include "configParser/ConfigParser.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -50,6 +48,10 @@ static VehicleRenderer vRender;
 int main()
 {
     printf("printf test");
+
+    // ConfigParser  cfgParser;
+    // std::string cfgPath = std::string(ROOT_DIR) + std::string("/res/model/halo/vehicle_info.json");
+    // cfgParser.loadConfigFile(cfgPath);
 
     GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);
     // configure global opengl state

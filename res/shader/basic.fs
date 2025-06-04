@@ -14,6 +14,8 @@ in vec3 viewDir;
 in vec2 TexCoords;
 in vec3 lightDir;
 
+uniform bool textureLoad;
+uniform sampler2D texture_diffuse;
 // uniform vec3 materialDiffuseColor;
 // uniform vec3 materialSpecularColor;
 // uniform float Opacity;
@@ -30,9 +32,17 @@ void main()
 
     vec3 a_normal = normalize(Normal);
 
+    vec3 realMaterialDiffuseColor = vec3(1.0, 0.0, 0.0);
+
+    if(textureLoad){
+        vec2 index = vec2(TexCoords.x, TexCoords.y);
+        realMaterialDiffuseColor = texture(texture_diffuse, index).rgb;
+    }
+
+
     vec3 reflectDir = reflect(-lightDir, a_normal);
     float diff = max(dot(a_normal, lightDir), 0.0);
-    vec3 diffuse = material.materialDiffuseColor.xyz * diff;
+    vec3 diffuse = realMaterialDiffuseColor * diff;
 
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(a_normal, halfwayDir), 0.0), material.Shininess);
@@ -44,8 +54,8 @@ void main()
     vec3 reflectionVector = reflect(viewDir, a_normal);
     envMapColor = texture(cubemap, reflectionVector).rgb;
 
-    vec3 resultColor = mix(diffuse + specular, envMapColor, 0.3);
-    // vec3 resultColor = diffuse + specular + envMapColor * 0.3;
+    // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
+    // vec3 resultColor = diffuse + specular;
 
-    FragColor = vec4(resultColor, material.Opacity);
+    FragColor = vec4(realMaterialDiffuseColor, material.Opacity);
 }

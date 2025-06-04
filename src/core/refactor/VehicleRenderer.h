@@ -2,6 +2,8 @@
 #include "VehicleShader.h"
 #include "Skybox.h"
 #include "VehicleMeshInfo.h"
+#include "configParser/ConfigParser.h"
+
 class VehicleRenderer {
 public:
     void create();
@@ -13,4 +15,5 @@ public:
     VehicleShader* ourShader;
     VehicleMeshInfo* ourModel;
     Skybox cubemap;
+    ConfigParser  cfgParser;
 };
