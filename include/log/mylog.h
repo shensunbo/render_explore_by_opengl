@@ -1,35 +1,41 @@
-#pragma once
+#ifndef __MYLOG_H__
+#define __MYLOG_H__
 
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <assert.h>
+#include <iostream>
+#include <cerrno>
+#include <cstring>
+#include <cassert>
 
-enum LogLevel {
-    D,
+enum class LogLevel {
     E,
     W,
     I,
+    D,
 };
+
+//set log level
+#define LOG_LEVEL LogLevel::D
 
 #define GET_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 
 #define mylog(level, M, ...) \
     do { \
-        switch ((int)level) { \
-            case D: \
+        if ((int)level <= (int)LOG_LEVEL) { \
+            switch (level) { \
+                case LogLevel::D: \
                 fprintf(stderr, "[DEBUG][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                break; \
-            case E: \
+                    break; \
+                case LogLevel::E: \
                 fprintf(stderr, "[ERROR][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                break; \
-            case W: \
+                    break; \
+                case LogLevel::W: \
                 fprintf(stderr, "[WARN][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                break; \
-            case I: \
+                    break; \
+                case LogLevel::I: \
                 fprintf(stderr, "[INFO][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                break; \
+                    break; \
+            } \
         } \
     } while(0)
 
@@ -40,3 +46,6 @@ enum LogLevel {
             assert(cond); \
         } \
     } while(0)
+
+
+#endif // __MYLOG_H__

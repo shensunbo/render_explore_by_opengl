@@ -26,6 +26,7 @@ void VehicleRenderer::create(){
         unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
         ourShader->uniformBlockBind(blockIndex, 0);
         it.updateUbo(it.mUboMat);
+        mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
     }
 
     // skybox
@@ -42,18 +43,18 @@ void VehicleRenderer::create(){
     cubemap.Init(faces);
 
 
-    mylog(I, "VehicleRenderer::create");
+    mylog(LogLevel::I, "VehicleRenderer::create");
 }
 
 void VehicleRenderer::destroy(){
-    mylog(I, "VehicleRenderer::destroy");
+    mylog(LogLevel::I, "VehicleRenderer::destroy");
 
     delete ourShader;
     delete ourModel;
 }
 
 void VehicleRenderer::update(){
-    mylog(I, "VehicleRenderer::update");
+    mylog(LogLevel::I, "VehicleRenderer::update");
 }
 
 void VehicleRenderer::draw(){
@@ -83,5 +84,5 @@ void VehicleRenderer::draw(){
         ourShader->setBool("textureLoad", false);
     }
 
-    // mylog(I, "VehicleRenderer::draw");
+    // mylog(LogLevel::I, "VehicleRenderer::draw");
 }
