@@ -9,7 +9,7 @@
 
 // #include "core/shader.h"
 // #include "core/camera.h"
-#include "VehicleVirCamera.h" 
+#include "core/refactor/VehicleVirCamera.h" 
 #include "core/refactor/VehicleMeshInfo.h"
 #include "core/refactor/VehicleShader.h"
 #include "core/refactor/Skybox.h"
@@ -41,7 +41,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-static unsigned int glerror = 0;
+// static unsigned int glerror = 0;
 
 static VehicleRenderer vRender;
 
@@ -50,7 +50,7 @@ int main()
     printf("printf test");
 
     // ConfigParser  cfgParser;
-    // std::string cfgPath = std::string(ROOT_DIR) + std::string("/res/model/halo/vehicle_info.json");
+    // std::string cfgPath =  std::string("res/model/halo/vehicle_info.json");
     // cfgParser.loadConfigFile(cfgPath);
 
     GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);

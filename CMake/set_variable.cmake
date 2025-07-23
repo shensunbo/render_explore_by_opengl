@@ -5,6 +5,8 @@ set(COMMON_INC_DIR
     ${ROOT_DIR}/dependency/imgui/include
     ${ROOT_DIR}/dependency/assimp/include
     ${ROOT_DIR}/dependency/glad/include
+    ${ROOT_DIR}/dependency/glm
+    ${ROOT_DIR}/dependency/json
 )
 
 set(COMMON_LIB_DIR 

@@ -7,7 +7,7 @@
 
 // #include "../mesh.h"
 #include "BufferObjectData.h"
-#include "configParser/ConfigParser.h"
+#include <configParser/ConfigParser.h>
 
 class ModelLoader {
 public:

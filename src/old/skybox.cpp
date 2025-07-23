@@ -83,26 +83,26 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    std::string vs_path = std::string(ROOT_DIR) + std::string("/src/1.model_loading.vs");
-    std::string fs_path = std::string(ROOT_DIR) + std::string("/src/1.model_loading.fs");
+    std::string vs_path =  std::string("/src/1.model_loading.vs");
+    std::string fs_path =  std::string("/src/1.model_loading.fs");
     Shader ourShader(vs_path.c_str(), fs_path.c_str());
     // load models
     // -----------
-    std::string path = std::string(ROOT_DIR) + std::string("/src/ball.fbx");
+    std::string path =  std::string("/src/ball.fbx");
     Model ourModel(path);
 
-    std::string sky_vs_path = std::string(ROOT_DIR) + std::string("/src/skybox.vs");
-    std::string sky_fs_path = std::string(ROOT_DIR) + std::string("/src/skybox.fs");
+    std::string sky_vs_path =  std::string("/src/skybox.vs");
+    std::string sky_fs_path =  std::string("/src/skybox.fs");
     Shader skyboxShader(sky_vs_path.c_str(), sky_fs_path.c_str());
 
     vector<std::string> faces
     {
-        std::string(ROOT_DIR) + string("/src/skybox/px.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/nx.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/ny.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/py.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/pz.png"),
-        std::string(ROOT_DIR) + string("/src/skybox/nz.png"),
+         string("/src/skybox/px.png"),
+         string("/src/skybox/nx.png"),
+         string("/src/skybox/ny.png"),
+         string("/src/skybox/py.png"),
+         string("/src/skybox/pz.png"),
+         string("/src/skybox/nz.png"),
     };
     unsigned int cubemapTexture = loadCubemap(faces);
     skyboxShader.use();

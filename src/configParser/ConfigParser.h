@@ -6,7 +6,7 @@
 #include <vector>
 #include <utility>
 #include "glm/glm.hpp"
-#include "json/json.hpp"
+#include "json.hpp"
 
 /* @brief RotateData struct
  * @param axis: the axis of rotation

@@ -10,3 +10,7 @@ make -j6
 
 ./src/render_explore_by_opengl
 ```
+
+# bazel build
+`bazel build //src:refactor_test `
+

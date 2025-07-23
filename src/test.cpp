@@ -47,13 +47,13 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    std::string vs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.vs");
-    std::string fs_path = std::string(ROOT_DIR) + std::string("/res/shader/basic.fs");
+    std::string vs_path =  std::string("res/shader/basic.vs");
+    std::string fs_path =  std::string("res/shader/basic.fs");
     Shader ourShader(vs_path.c_str(), fs_path.c_str());
 
     // load models
     // -----------
-    std::string path = std::string(ROOT_DIR) + std::string("/res/model/halo/Spartan_Sketchfab.fbx");
+    std::string path =  std::string("res/model/halo/halo.fbx");
     Model ourModel(path);
 
     // draw in wireframe
