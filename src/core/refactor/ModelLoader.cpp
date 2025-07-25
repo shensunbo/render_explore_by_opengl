@@ -12,7 +12,7 @@
 bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo){
     // read file via ASSIMP
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(resPath, aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
+    const aiScene* scene = importer.ReadFile(resPath, aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
     // check for errors
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
@@ -92,6 +92,13 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
             vec.x = mesh->mTextureCoords[0][i].x; 
             vec.y = mesh->mTextureCoords[0][i].y;
             vertex.TexCoords = vec;
+           
+        }
+        else{
+            vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+        }
+
+        if (mesh->HasTangentsAndBitangents()) {
             // tangent
             vector.x = mesh->mTangents[i].x;
             vector.y = mesh->mTangents[i].y;
@@ -102,9 +109,12 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
             vector.y = mesh->mBitangents[i].y;
             vector.z = mesh->mBitangents[i].z;
             vertex.Bitangent = vector;
+        } else {
+            // tangent
+            vertex.Tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+            // bitangent
+            vertex.Bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
         }
-        else
-            vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
         vertices.push_back(vertex);
     }

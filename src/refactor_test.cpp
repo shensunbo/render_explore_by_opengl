@@ -85,7 +85,7 @@ int main()
         // render
         // ------
         glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // don't forget to enable shader before setting uniforms
@@ -96,7 +96,6 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         vRender.ourShader->setMat4("projection", projection);
         vRender.ourShader->setMat4("view", view);
-
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);

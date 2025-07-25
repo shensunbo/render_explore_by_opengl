@@ -12,5 +12,7 @@ make -j6
 ```
 
 # bazel build
-`bazel build //src:refactor_test `
+```
+bazel build //src:refactor_test 
+```
 

@@ -39,3 +39,11 @@ cc_library(
         "//visibility:public",
     ],
 )
+
+cc_binary(
+    name = "librender_core.so.1",
+    deps = [
+        ":render_core",
+    ],
+    linkshared = True,
+)
