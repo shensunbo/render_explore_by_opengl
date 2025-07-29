@@ -12,7 +12,7 @@
 bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo){
     // read file via ASSIMP
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(resPath, aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
+    const aiScene* scene = importer.ReadFile(resPath, aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
     // check for errors
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
