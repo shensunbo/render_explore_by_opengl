@@ -114,6 +114,7 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
             vertex.Tangent = glm::vec3(0.0f, 0.0f, 0.0f);
             // bitangent
             vertex.Bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
+            mylog(LogLevel::I,"%s No TangentsAndBitangents", mesh->mName.C_Str());
         }
 
         vertices.push_back(vertex);

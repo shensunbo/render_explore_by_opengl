@@ -9,8 +9,8 @@ void VehicleRenderer::create(){
 
     // build and compile shaders
     // -------------------------
-    std::string vs_path =  std::string("res/shader/basic.vs");
-    std::string fs_path =  std::string("res/shader/basic.fs");
+    std::string vs_path =  std::string("res/shader/with_texture.vs");
+    std::string fs_path =  std::string("res/shader/with_texture.fs");
     // VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
     ourShader = new VehicleShader(vs_path.c_str(), fs_path.c_str());
     
@@ -59,12 +59,12 @@ void VehicleRenderer::update(){
 
 void VehicleRenderer::draw(){
     for(auto& v :  ourModel->meshes){
-        ourShader->setVec3("materialDiffuseColor", v.mMaterial.diffuseColor);
-        ourShader->setVec3("materialSpecularColor", v.mMaterial.specularColor);
-        ourShader->setVec3("materialAmbientColor", v.mMaterial.ambientColor);
-        ourShader->setFloat("Shininess", v.mMaterial.shininess);
-        ourShader->setFloat("ShininessStrength", v.mMaterial.ShininessStrength);
-        ourShader->setFloat("Opacity", v.mMaterial.Opacity);
+        // ourShader->setVec3("materialDiffuseColor", v.mMaterial.diffuseColor);
+        // ourShader->setVec3("materialSpecularColor", v.mMaterial.specularColor);
+        // ourShader->setVec3("materialAmbientColor", v.mMaterial.ambientColor);
+        // ourShader->setFloat("Shininess", v.mMaterial.shininess);
+        // ourShader->setFloat("ShininessStrength", v.mMaterial.ShininessStrength);
+        // ourShader->setFloat("Opacity", v.mMaterial.Opacity);
 
         for (size_t i = 0; i < v.textures.size(); ++i) {
             auto uniform = v.textures[i].type;
@@ -72,6 +72,7 @@ void VehicleRenderer::draw(){
             ourShader->setInt(uniform, i);
             glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
 
+            ourShader->setBool((uniform + "_load"), true);
             ourShader->setBool("textureLoad", true);
         }
 

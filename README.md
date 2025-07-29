@@ -16,3 +16,7 @@ make -j6
 bazel build //src:refactor_test 
 ```
 
+# result
+## phong model effect
+diffuse + specular + normal + ao textures 
+![phong](./readme_res/halo.png)

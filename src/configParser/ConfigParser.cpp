@@ -328,17 +328,92 @@ bool ConfigParser::parserCarPaintMeshes(const nlohmann::json& carPaint){
 }
 
 bool ConfigParser::parserTextureData(const nlohmann::json& texture){
-    std::vector<std::string> fileName = texture.at("diffuse").at("file_list").get<std::vector<std::string>>();
-    auto diffuseNode = texture.at("diffuse");
+    if(texture.contains("diffuse")){
+        mylog(LogLevel::I, "---> diffuse texture");
+        std::vector<std::string> fileName = texture.at("diffuse").at("file_list").get<std::vector<std::string>>();
+        auto diffuseNode = texture.at("diffuse");
 
-    for (auto& file : fileName) {
-        auto components = diffuseNode.at(file).at("components");
-        for (auto& component : components) {
-            std::string meshname = component.at("mesh_name");
-            std::string material = component.at("material_name");
-            m_texture_data[std::make_pair(meshname, material)].diffuse = file;
+        for (auto& file : fileName) {
+            auto components = diffuseNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].diffuse = file;
+            }
         }
+    }else{
+        mylog(LogLevel::I, "no diffuse texture in config file");
     }
+
+    if(texture.contains("specular")){
+        mylog(LogLevel::I, "---> specular texture");
+        std::vector<std::string> fileName = texture.at("specular").at("file_list").get<std::vector<std::string>>();
+        auto specularNode = texture.at("specular");
+
+        for (auto& file : fileName) {
+            auto components = specularNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].specular = file;
+            }
+        }
+
+    } else{
+        mylog(LogLevel::I, "---> no specular texture");
+    }
+
+    if(texture.contains("normal")){
+        mylog(LogLevel::I, "---> normal texture");
+        std::vector<std::string> fileName = texture.at("normal").at("file_list").get<std::vector<std::string>>();
+        auto normalNode = texture.at("normal");
+
+        for (auto& file : fileName) {
+            auto components = normalNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].normal = file;
+            }
+        }
+
+    } else{
+        mylog(LogLevel::I, "---> no normal texture");
+    }
+
+    if(texture.contains("ao")){
+        mylog(LogLevel::I, "---> ao texture");
+        std::vector<std::string> fileName = texture.at("ao").at("file_list").get<std::vector<std::string>>();
+        auto aoNode = texture.at("ao");
+
+        for (auto& file : fileName) {
+            auto components = aoNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].ao = file;
+            }
+        }
+    } else{
+        mylog(LogLevel::I, "---> no ao texture");
+    }
+
+    if(texture.contains("alpha")){
+        std::vector<std::string> fileName = texture.at("alpha").at("file_list").get<std::vector<std::string>>();
+        auto alphaNode = texture.at("alpha");
+
+        for (auto& file : fileName) {
+            auto components = alphaNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].alpha = file;
+            }
+        }
+    } else{
+        mylog(LogLevel::I, "---> no alpha texture");
+    }
+
     return true;
 }
 

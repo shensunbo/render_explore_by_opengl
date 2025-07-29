@@ -108,6 +108,10 @@ int main()
         look = camera.GetViewMatrix();
         vRender.ourShader->setMat4("look", look);
 
+        glm::mat4 invLook = glm::inverse(look);
+        glm::vec3 viewPosition = glm::vec3(invLook[3]);
+        vRender.ourShader->setVec3("viewPosition", viewPosition);
+
         //skybox
         vRender.ourShader->setInt("cubemap", 1);
 
