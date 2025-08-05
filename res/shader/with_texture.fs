@@ -30,6 +30,7 @@ uniform bool texture_ao_load;
 uniform bool texture_alpha_load;
 
 uniform samplerCube cubemap;
+uniform mat4 cubemapRotateMatrix;
 
 uniform vec3 viewPosition;
 
@@ -77,22 +78,25 @@ void main()
     vec3 lightDir =normalize(lightPos - FragPos);
     vec3 viewDir = normalize(viewPosition -  FragPos);
 
-    vec3 reflectDir = reflect(-lightDir, a_normal);
     float diff = max(dot(a_normal, lightDir), 0.0);
     vec3 diffuse = realMaterialDiffuseColor * diff;
 
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(a_normal, halfwayDir), 0.0), 128);
+    float spec = pow(max(dot(a_normal, halfwayDir), 0.0), 25);
     vec3 specular = (spec * realMaterialSpecularColor);
     // vec3 specular = (spec * lightColor );
 
-    // vec3 envMapColor;
-    // vec3 ambientReflection;
-    // vec3 reflectionVector = reflect(viewDir, a_normal);
-    // envMapColor = texture(cubemap, reflectionVector).rgb;
+    vec3 envMapColor;
+    vec3 ambientReflection;
+    vec3 reflectDir = reflect(viewDir, a_normal);
+    reflectDir =  (cubemapRotateMatrix * vec4(reflectDir, 1.0)).xyz;
+    envMapColor = texture(cubemap, reflectDir).rgb;
+    realAmbientColor = envMapColor * 0.3f;
 
+    // TODO: mix specular with realAmbientColor will get error and show nothing
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
-    vec3 resultColor = diffuse  + specular + realAmbientColor;
+    // vec3 resultColor = diffuse  + specular + realAmbientColor;
+    vec3 resultColor = diffuse  + realAmbientColor;
 
     FragColor = vec4(resultColor, 1.0);
 }

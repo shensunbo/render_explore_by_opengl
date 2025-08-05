@@ -65,6 +65,11 @@ int main()
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    vRender.ourShader->use();
+    glm::mat4 skyboxModel = glm::mat4(1.0f);
+    skyboxModel = glm::rotate(skyboxModel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
