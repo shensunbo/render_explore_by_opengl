@@ -10,6 +10,14 @@
 
 #include "log/mylog.h"
 
+#define CHECK_GLES_STATUS()                \
+    do {                                   \
+        auto err = glGetError();           \
+        if (err != GL_NO_ERROR) {          \
+            mylog(LogLevel::E, "gl error: 0x%x", err); \
+        }                                  \
+    } while (0)
+
 class VehicleShader
 {
 public:

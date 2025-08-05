@@ -9,7 +9,7 @@ const float SPEED = 1.0f;
 const float SENSITIVITY = 0.05f;
 const float ZOOM = 45.0f;
 
-glm::vec3 rPos = glm::vec3(0.0f, 0.0f, 5.0f);
+glm::vec3 rPos = glm::vec3(0.0f, 0.0f, 0.8f);
 //glm::vec3 rPos = glm::vec3(0.0f, 0.0f, 16.0f);
 
 glm::vec3 K1Pos = glm::vec3(0.0f, 150.0f, 10.0f);

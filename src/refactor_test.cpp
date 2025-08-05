@@ -32,7 +32,7 @@ const unsigned int SCR_HEIGHT = 720;
 
 //TODO: handle callback event 
 // camera
-VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 1.0f));
+VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -60,15 +60,71 @@ int main()
     glEnable(GL_MULTISAMPLE);
 
     vRender.create();
-    vRender.cubemap.ActiveCubeMap();
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     vRender.ourShader->use();
     glm::mat4 skyboxModel = glm::mat4(1.0f);
-    skyboxModel = glm::rotate(skyboxModel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
+
+    VehicleShader skyboxShader("res/shader/skybox.vs", "res/shader/skybox.fs");
+        float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+     // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    skyboxShader.setInt("skybox", 1);
 
     // render loop
     // -----------
@@ -95,6 +151,7 @@ int main()
 
         // don't forget to enable shader before setting uniforms
         vRender.ourShader->use();
+        vRender.cubemap.ActiveCubeMap();
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
@@ -104,7 +161,7 @@ int main()
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.7f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         vRender.ourShader->setMat4("model", model);
@@ -117,10 +174,31 @@ int main()
         glm::vec3 viewPosition = glm::vec3(invLook[3]);
         vRender.ourShader->setVec3("viewPosition", viewPosition);
 
+        CHECK_GLES_STATUS();
+
         //skybox
         vRender.ourShader->setInt("cubemap", 1);
 
         vRender.draw();
+
+        CHECK_GLES_STATUS();
+
+
+        // draw skybox as last
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
+        glm::mat4 skymodel = glm::mat4(1.0f);
+        // skymodel = glm::rotate(skymodel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        skyboxShader.setMat4("model", skymodel);
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        vRender.cubemap.ActiveCubeMap();
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -251,7 +329,7 @@ static GLFWwindow* windowAndGlInit(int width, int height){
     }
     glfwMakeContextCurrent(wnd);
     glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
-    // glfwSetCursorPosCallback(wnd, mouse_callback);
+    glfwSetCursorPosCallback(wnd, mouse_callback);
     glfwSetScrollCallback(wnd, scroll_callback);
 
     // tell GLFW to capture our mouse

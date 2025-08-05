@@ -34,8 +34,8 @@ void VehicleRenderer::create(){
     {
          std::string("res/model/skybox/px.png"),
          std::string("res/model/skybox/nx.png"),
-         std::string("res/model/skybox/ny.png"),
          std::string("res/model/skybox/py.png"),
+         std::string("res/model/skybox/ny.png"),
          std::string("res/model/skybox/pz.png"),
          std::string("res/model/skybox/nz.png"),
     };

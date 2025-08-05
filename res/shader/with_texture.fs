@@ -1,4 +1,6 @@
 #version 330 core
+precision highp float;
+
 out vec4 FragColor;
 
 layout (std140) uniform MaterialBlock {
@@ -87,16 +89,18 @@ void main()
     // vec3 specular = (spec * lightColor );
 
     vec3 envMapColor;
-    vec3 ambientReflection;
-    vec3 reflectDir = reflect(viewDir, a_normal);
+    // the first param of reflect should point from light to surface 
+    vec3 reflectDir = reflect(-viewDir, a_normal);
     reflectDir =  (cubemapRotateMatrix * vec4(reflectDir, 1.0)).xyz;
     envMapColor = texture(cubemap, reflectDir).rgb;
-    realAmbientColor = envMapColor * 0.3f;
+    realAmbientColor = envMapColor * 0.2f;
 
-    // TODO: mix specular with realAmbientColor will get error and show nothing
+    // TODO: mix specular with realAmbientColor will get error and show nothing, 
+    // error code: gl error: 0x502
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
-    // vec3 resultColor = diffuse  + specular + realAmbientColor;
-    vec3 resultColor = diffuse  + realAmbientColor;
+    vec3 resultColor = diffuse + realAmbientColor;
+    // vec3 resultColor = diffuse  + realAmbientColor;
+    // resultColor = clamp(diffuse + specular + realAmbientColor, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
 
     FragColor = vec4(resultColor, 1.0);
 }
