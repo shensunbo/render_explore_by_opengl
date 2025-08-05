@@ -147,6 +147,8 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
     // texture_normal:   2
     // texture_ao:       3
     // texture_alpha:    4
+    // texture_roughness:5
+    // texture_metallic: 6
     if(vehInfo.needTexture(std::string(mesh->mName.C_Str()), material->GetName().C_Str())){
         std::vector<Texture> diffuseMaps =
             LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse",
@@ -172,6 +174,16 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
             LoadTextures(material, aiTextureType_OPACITY, "texture_alpha",
                          std::string(mesh->mName.C_Str()), vehInfo);
         textures.insert(textures.end(), alphaMaps.begin(), alphaMaps.end());
+
+        std::vector<Texture> roughnessMaps =
+            LoadTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness",
+                         std::string(mesh->mName.C_Str()), vehInfo);
+        textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
+
+        std::vector<Texture> metallicMaps =
+            LoadTextures(material, aiTextureType_METALNESS, "texture_metallic",
+                         std::string(mesh->mName.C_Str()), vehInfo);
+        textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
     }
 
     myMaterial mMaterial;
@@ -314,6 +326,8 @@ unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &d
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
+
+        mylog(LogLevel::I, "Texture loaded at path: %s, channels: %d", path, nrComponents);
     }
     else
     {
@@ -324,12 +338,20 @@ unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &d
     return textureID;
 }
 
-// load textures when the model file does not contain any textures
-// texture_diffuse:  0
-// texture_specular: 1
-// texture_normal:   2
-// texture_ao:       3
-// texture_alpha:    4
+/**
+ * Load textures when the model file does not contain any textures
+ *
+ * Texture types:
+ *   - 0: texture_diffuse
+ *   - 1: texture_specular
+ *   - 2: texture_normal
+ *   - 3: texture_ao
+ *   - 4: texture_alpha
+ *   - 5: texture_roughness
+ *   - 6: texture_metallic
+ *
+ * @note typename will be used to bind the texture to the shader
+ */
 std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
                                                     aiTextureType type,
                                                     const char* typeName,
@@ -366,6 +388,16 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
             textureName =
                 vehInfo.getTextureData(meshName, mat->GetName().C_Str()).alpha;
             break;
+        case aiTextureType_DIFFUSE_ROUGHNESS:
+            texId = 5;
+            textureName =
+                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).roughness;
+            break;
+        case aiTextureType_METALNESS:
+            texId = 6;
+            textureName =
+                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).metallic;
+            break;
         default:
             textureName = INVALID_TEXTURE_NAME;
             mylog(LogLevel::E, "couldn't load typeName %s for mesh %s ", typeName,
@@ -388,6 +420,7 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
         {   // if texture hasn't been loaded already, load it
             Texture texture;
             texture.id = TextureFromFile(textureName.c_str(), directory);
+            texture.bindId = texId;
             texture.type = typeName;
             texture.path = textureName;
             textures.push_back(texture);

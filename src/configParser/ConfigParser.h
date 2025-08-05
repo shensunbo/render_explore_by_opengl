@@ -28,6 +28,9 @@ typedef struct RotateData {
  * @param specular: the specular texture path
  * @param normal: the normal texture path
  * @param ao: the Ambient Occlusion texture path
+ * @param alpha: the alpha texture path
+ * @param roughness: the roughness texture path
+ * @param metallic: the metallic texture path
  */
 typedef struct TextureData {
     std::string diffuse;
@@ -35,6 +38,8 @@ typedef struct TextureData {
     std::string normal;
     std::string ao;
     std::string alpha;
+    std::string roughness;
+    std::string metallic;
 } TextureData;
 
 typedef struct VehicleParam {

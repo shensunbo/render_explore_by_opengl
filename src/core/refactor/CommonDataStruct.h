@@ -25,6 +25,7 @@ struct Vertex {
 
 struct Texture {
     unsigned int id;
+    unsigned int bindId; // texture slot
     std::string type;
     std::string path;
 };

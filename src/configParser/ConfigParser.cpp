@@ -16,6 +16,7 @@ bool ConfigParser::loadConfigFile(const std::string& config_file_path){
         file.close();
     } catch (const nlohmann::json::parse_error& e) {
         mylog(LogLevel::E, "error %s ", e.what());
+        assert(false);
         return false;
     }
 
@@ -399,6 +400,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
     }
 
     if(texture.contains("alpha")){
+        mylog(LogLevel::I, "---> alpha texture");
         std::vector<std::string> fileName = texture.at("alpha").at("file_list").get<std::vector<std::string>>();
         auto alphaNode = texture.at("alpha");
 
@@ -412,6 +414,40 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         }
     } else{
         mylog(LogLevel::I, "---> no alpha texture");
+    }
+
+    if(texture.contains("roughness")){
+        mylog(LogLevel::I, "---> roughness texture");
+        std::vector<std::string> fileName = texture.at("roughness").at("file_list").get<std::vector<std::string>>();
+        auto roughnessNode = texture.at("roughness");
+
+        for (auto& file : fileName) {
+            auto components = roughnessNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].roughness = file;
+            }
+        }
+    } else{
+        mylog(LogLevel::I, "---> no roughness texture");
+    }
+
+    if(texture.contains("metallic")){
+        mylog(LogLevel::I, "---> metallic texture");
+        std::vector<std::string> fileName = texture.at("metallic").at("file_list").get<std::vector<std::string>>();
+        auto metallicNode = texture.at("metallic");
+
+        for (auto& file : fileName) {
+            auto components = metallicNode.at(file).at("components");
+            for (auto& component : components) {
+                std::string meshname = component.at("mesh_name");
+                std::string material = component.at("material_name");
+                m_texture_data[std::make_pair(meshname, material)].metallic = file;
+            }
+        }
+    } else{
+        mylog(LogLevel::I, "---> no metallic texture");
     }
 
     return true;

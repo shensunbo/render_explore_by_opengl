@@ -33,5 +33,5 @@ public:
 
 private:
     //TODO: get this automatically 
-    const unsigned int maxTextureID = 4;
+    const unsigned int maxTextureID = 6;
 };

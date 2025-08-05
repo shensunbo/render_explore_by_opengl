@@ -6,7 +6,6 @@
         "diffuse":{
             "file_list":[
                 "textures/Spartan_Helmet_Mat_BaseColor.png",
-                "textures/Spartan_Helmet_Mat_BaseColor.png",
                 "textures/Spartan_Chest_Mat_BaseColor.png",
                 "textures/Spartan_Arms_Mat_BaseColor.png",
                 "textures/Spartan_Legs_Mat_BaseColor.png",
@@ -87,7 +86,6 @@
         "specular":{
             "file_list":[
                 "textures/Spartan_Helmet_Mat_Specular.png",
-                "textures/Spartan_Helmet_Mat_Specular.png",
                 "textures/Spartan_Chest_Mat_Specular.png",
                 "textures/Spartan_Arms_Mat_Specular.png",
                 "textures/Spartan_Legs_Mat_Specular.png",
@@ -158,7 +156,6 @@
         },
         "ao":{
             "file_list":[
-                "textures/Spartan_Helmet_Mat_AO.png",
                 "textures/Spartan_Helmet_Mat_AO.png",
                 "textures/Spartan_Chest_Mat_AO.png",
                 "textures/Spartan_Arms_Mat_AO.png",
@@ -231,7 +228,6 @@
         "normal":{
             "file_list":[
                 "textures/Spartan_Helmet_Mat_Normal.png",
-                "textures/Spartan_Helmet_Mat_Normal.png",
                 "textures/Spartan_Chest_Mat_Normal.png",
                 "textures/Spartan_Arms_Mat_Normal.png",
                 "textures/Spartan_Legs_Mat_Normal.png",
@@ -299,6 +295,159 @@
                     }
                 ]
             }
+        },
+        "roughness":{
+            "file_list":[
+                "textures/Spartan_Helmet_Mat_Roughness.png",
+                "textures/Spartan_Chest_Mat_Roughness.png",
+                "textures/Spartan_Arms_Mat_Roughness.png",
+                "textures/Spartan_Legs_Mat_Roughness.png",
+                "textures/ODST_Shoulder_Mat_Roughness.png",
+                "textures/Spartan_Undersuit_Mat_Roughness.png",
+                "textures/Spartan_Ears_Mat_Roughness.png",
+                "textures/lambert1_Roughness.png"
+            ],
+            "textures/lambert1_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"lambert1"
+                    }
+                ]
+            },
+            "textures/Spartan_Helmet_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Helmet",
+                        "material_name":"Spartan_Helmet_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Ears_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Helmet",
+                        "material_name":"Spartan_Ear_Mat"
+                    },
+                    {
+                        "mesh_name":"polySurface436",
+                        "material_name":"Spartan_Ear_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Chest_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"chest_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Arms_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"arms_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Legs_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"Spartan_Legs_Mat"
+                    }
+                ]
+            },
+            "textures/ODST_Shoulder_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"Spartan_Shoulders_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Undersuit_Mat_Roughness.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour_LP",
+                        "material_name":"Spartan_Undersuit_Mat"
+                    }
+                ]
+            }
+        },
+        "metallic":{
+            "file_list":[
+                "textures/Spartan_Helmet_Mat_Metallic.png",
+                "textures/Spartan_Chest_Mat_Metallic.png",
+                "textures/Spartan_Arms_Mat_Metallic.png",
+                "textures/Spartan_Legs_Mat_Metallic.png",
+                "textures/ODST_Shoulder_Mat_Metallic.png",
+                "textures/Spartan_Undersuit_Mat_Metallic.png",
+                "textures/Spartan_Ears_Mat_Metallic.png"
+            ],
+            "textures/Spartan_Helmet_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Helmet",
+                        "material_name":"Spartan_Helmet_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Ears_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Helmet",
+                        "material_name":"Spartan_Ear_Mat"
+                    },
+                    {
+                        "mesh_name":"polySurface436",
+                        "material_name":"Spartan_Ear_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Chest_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"chest_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Arms_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"arms_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Legs_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"Spartan_Legs_Mat"
+                    }
+                ]
+            },
+            "textures/ODST_Shoulder_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour",
+                        "material_name":"Spartan_Shoulders_Mat"
+                    }
+                ]
+            },
+            "textures/Spartan_Undersuit_Mat_Metallic.png":{
+                "components":[
+                    {
+                        "mesh_name":"Armour_LP",
+                        "material_name":"Spartan_Undersuit_Mat"
+                    }
+                ]
+            }
         }
+
+
     }
 }

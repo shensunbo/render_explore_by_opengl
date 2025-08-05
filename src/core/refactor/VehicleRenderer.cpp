@@ -60,17 +60,10 @@ void VehicleRenderer::update(){
 
 void VehicleRenderer::draw(){
     for(auto& v :  ourModel->meshes){
-        // ourShader->setVec3("materialDiffuseColor", v.mMaterial.diffuseColor);
-        // ourShader->setVec3("materialSpecularColor", v.mMaterial.specularColor);
-        // ourShader->setVec3("materialAmbientColor", v.mMaterial.ambientColor);
-        // ourShader->setFloat("Shininess", v.mMaterial.shininess);
-        // ourShader->setFloat("ShininessStrength", v.mMaterial.ShininessStrength);
-        // ourShader->setFloat("Opacity", v.mMaterial.Opacity);
-
         for (size_t i = 0; i < v.textures.size(); ++i) {
             auto uniform = v.textures[i].type;
-            glActiveTexture(GL_TEXTURE0 + i);
-            ourShader->setInt(uniform, i);
+            glActiveTexture(GL_TEXTURE0 + v.textures[i].bindId);
+            ourShader->setInt(uniform, v.textures[i].bindId);
             glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
 
             ourShader->setBool((uniform + "_load"), true);

@@ -24,12 +24,16 @@ uniform sampler2D texture_specular;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_ao;
 uniform sampler2D texture_alpha;
+uniform sampler2D texture_roughness;
+uniform sampler2D texture_metallic;
 
 uniform bool texture_diffuse_load;
 uniform bool texture_specular_load;
 uniform bool texture_normal_load;
 uniform bool texture_ao_load;
 uniform bool texture_alpha_load;
+uniform bool texture_roughness_load;
+uniform bool texture_metallic_load;
 
 uniform samplerCube cubemap;
 uniform mat4 cubemapRotateMatrix;
@@ -44,11 +48,13 @@ vec3 lightPos = vec3(0.0, -1.0, 1.0);
 void main()
 {    
     float diffCoef = 1.0;
+    float roughness = -1.0;
+    float metallic = -1.0;
     vec3 realMaterialDiffuseColor = material.materialDiffuseColor.xyz;
     vec3 realMaterialSpecularColor = material.materialSpecularColor.xyz;
     vec3 realAmbientColor = vec3(0.1);
     vec3 finalColor = vec3(1.0);
-    vec3 realNormal = normalize(Normal);;
+    vec3 realNormal = normalize(Normal);
 
     // handle texture
     if(textureLoad){
@@ -70,6 +76,14 @@ void main()
             realNormal = texture(texture_normal, TexCoords).rgb;
             realNormal = normalize(realNormal * 2.0 - 1.0);
             realNormal = normalize(TBN * realNormal);
+        }
+
+        if(texture_roughness_load){
+            roughness = texture(texture_roughness, index).r;
+        }
+
+        if(texture_metallic_load){
+            metallic = texture(texture_metallic, index).r;
         }
     }
 
@@ -100,10 +114,16 @@ void main()
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
     vec3 resultColor = diffuse  + specular + realAmbientColor;
     resultColor = diffCoef * resultColor;
-    // vec3 resultColor = diffuse  + realAmbientColor;
-    // resultColor = clamp(diffuse + specular + realAmbientColor, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
 
-    // resultColor = mix(resultColor, realAmbientColor, 0.1);
+    // 测试AO贴图效果
+    // resultColor = vec3(diffCoef);
+
+    // 测试roughness
+    //  resultColor = vec3(roughness);
+
+    // 测试metallic
+    // resultColor = vec3(metallic);
+
 
     FragColor = vec4(resultColor, 1.0);
 }

@@ -19,9 +19,12 @@ make -j6
 ```
 bazel build //src:refactor_test 
 
-
+// debug version
 bazel build --cxxopt="-g" --strip=never  //src:refactor_test 
 ```
+
+# questions
+1. AO 贴图用于中间阶段还是应用于最后的结果中
 
 # result
 ## phong model effect
