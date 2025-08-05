@@ -295,6 +295,7 @@ unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &d
     unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
+        // TODO: 着色器中无法区分纹理是单通道还是多通道
         GLenum format;
         if (nrComponents == 1)
             format = GL_RED;

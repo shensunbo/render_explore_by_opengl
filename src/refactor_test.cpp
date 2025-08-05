@@ -124,7 +124,7 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    skyboxShader.setInt("skybox", 1);
+    skyboxShader.setInt("skybox",  vRender.cubemap->GetBindingPoint());
 
     // render loop
     // -----------
@@ -151,7 +151,7 @@ int main()
 
         // don't forget to enable shader before setting uniforms
         vRender.ourShader->use();
-        vRender.cubemap.ActiveCubeMap();
+        vRender.cubemap->ActiveCubeMap();
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
@@ -177,7 +177,7 @@ int main()
         CHECK_GLES_STATUS();
 
         //skybox
-        vRender.ourShader->setInt("cubemap", 1);
+        vRender.ourShader->setInt("cubemap", vRender.cubemap->GetBindingPoint());
 
         vRender.draw();
 
@@ -195,7 +195,7 @@ int main()
         skyboxShader.setMat4("projection", projection);
         // skybox cube
         glBindVertexArray(skyboxVAO);
-        vRender.cubemap.ActiveCubeMap();
+        vRender.cubemap->ActiveCubeMap();
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default

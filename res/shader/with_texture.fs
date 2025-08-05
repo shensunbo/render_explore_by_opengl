@@ -59,7 +59,7 @@ void main()
         }
 
         if(texture_specular_load){
-            realMaterialSpecularColor = texture(texture_specular, index).rgb;
+            realMaterialSpecularColor = vec3(texture(texture_specular, index).r);
         }
 
         if(texture_ao_load){
@@ -98,9 +98,11 @@ void main()
     // TODO: mix specular with realAmbientColor will get error and show nothing, 
     // error code: gl error: 0x502
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
-    vec3 resultColor = diffuse + realAmbientColor;
+    vec3 resultColor = diffuse  + specular + realAmbientColor;
     // vec3 resultColor = diffuse  + realAmbientColor;
     // resultColor = clamp(diffuse + specular + realAmbientColor, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
+
+    // resultColor = mix(resultColor, realAmbientColor, 0.1);
 
     FragColor = vec4(resultColor, 1.0);
 }

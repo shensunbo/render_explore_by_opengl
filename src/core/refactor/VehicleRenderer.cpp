@@ -40,8 +40,9 @@ void VehicleRenderer::create(){
          std::string("res/model/skybox/nz.png"),
     };
 
-    cubemap.Init(faces);
-
+    unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
+    cubemap = std::make_shared<Skybox>(skyboxBindID);
+    cubemap->Init(faces);
 
     mylog(LogLevel::I, "VehicleRenderer::create");
 }

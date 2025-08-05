@@ -2,13 +2,13 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "name": "render_explore_by_opengl",
+        "name": "refactor_test",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build/src/render_explore_by_opengl",
+        "program": "${workspaceFolder}/bazel-bin/src/refactor_test",
         "args": [],
         "stopAtEntry": false,
-        "cwd": "${workspaceFolder}/build",
+        "cwd": "${workspaceFolder}",
         "environment": [],
         "externalConsole": false,
         "MIMode": "gdb",

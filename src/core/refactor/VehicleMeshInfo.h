@@ -14,17 +14,24 @@ public:
     std::vector<BufferObjectData>    meshes;
     bool gammaCorrection;
     ModelLoader loader;
-
+    
     // constructor, expects a filepath to a 3D model.
     VehicleMeshInfo(std::string const &path, ConfigParser& vehInfo, bool gamma = false) : gammaCorrection(gamma)
     {
         loader.LoadModel(path, meshes, vehInfo);
     }
 
+    unsigned int getMaxTextureID() const {
+        return maxTextureID;
+    }
     // // draws the model, and thus all its meshes
     // void Draw(VehicleShader *shader)
     // {
     //     for(unsigned int i = 0; i < meshes.size(); i++)
     //         meshes[i].Draw(shader);
     // }
+
+private:
+    //TODO: get this automatically 
+    const unsigned int maxTextureID = 4;
 };

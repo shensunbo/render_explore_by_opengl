@@ -54,7 +54,6 @@ unsigned int Skybox::LoadCubemap(
 }
 
 void Skybox::ActiveCubeMap() const {
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0 + bind_point_);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_);
-    
 }
