@@ -73,7 +73,7 @@ void main()
         }
     }
 
-    realMaterialDiffuseColor = diffCoef * realMaterialDiffuseColor;
+    // realMaterialDiffuseColor = diffCoef * realMaterialDiffuseColor;
     vec3 a_normal = realNormal;
 
     // cal light effect 
@@ -99,6 +99,7 @@ void main()
     // error code: gl error: 0x502
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
     vec3 resultColor = diffuse  + specular + realAmbientColor;
+    resultColor = diffCoef * resultColor;
     // vec3 resultColor = diffuse  + realAmbientColor;
     // resultColor = clamp(diffuse + specular + realAmbientColor, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
 
