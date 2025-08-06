@@ -37,3 +37,5 @@ diffuse + specular + normal + ao textures + skybox reflection
 use ao texture to the final result
 ![ao](./readme_res/halo_ao_final.png)
 
+use ao texture to the final result and add roughness texture
+![roughness](./readme_res/roughness.png)

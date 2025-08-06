@@ -44,7 +44,7 @@ uniform vec3 viewPosition;
 // y: p-back, n-front
 // z: p-top, n-bottom
 vec3 lightPos = vec3(0.0, -1.0, 1.0);
-vec3 specularColor = vec3(0.5);
+vec3 specularColor = vec3(1.0);
 
 void main()
 {    
@@ -67,7 +67,7 @@ void main()
         }
 
         if(texture_specular_load){
-            realShininess = texture(texture_specular, index).r * 255.0;
+            realShininess = texture(texture_specular, index).r * 128.0;
         }
 
         if(texture_ao_load){
@@ -101,7 +101,8 @@ void main()
 
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(a_normal, halfwayDir), 0.0), realShininess);
-    vec3 specular = diffCoef * (spec * specularColor);
+    vec3 specular = (spec * specularColor);
+    // specular = specular * (1.0 - roughness);
     // vec3 specular = (spec * lightColor );
 
     vec3 envMapColor;
@@ -109,12 +110,17 @@ void main()
     vec3 reflectDir = reflect(-viewDir, a_normal);
     reflectDir =  (cubemapRotateMatrix * vec4(reflectDir, 1.0)).xyz;
     envMapColor = texture(cubemap, reflectDir).rgb;
-    realAmbientColor = envMapColor * 0.2f;
+    realAmbientColor = envMapColor * 0.3f;
 
     // TODO: mix specular with realAmbientColor will get error and show nothing, 
     // error code: gl error: 0x502
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
-    vec3 resultColor = diffuse  + specular + realAmbientColor;
+
+    // with roughness
+    vec3 resultColor = diffuse  + (specular + realAmbientColor) * (1.0 - roughness);
+
+    // basic
+    // vec3 resultColor = diffuse  + (specular + realAmbientColor);
     resultColor = diffCoef * resultColor;
 
     // 测试镜面反射
@@ -124,10 +130,13 @@ void main()
     // resultColor = vec3(diffCoef);
 
     // 测试roughness
-    //  resultColor = vec3(roughness);
+    //  resultColor = vec3( (1.0 - roughness));
+    // resultColor = (specular + realAmbientColor) * (1.0 - roughness);
 
     // 测试metallic
     // resultColor = vec3(metallic);
+
+    
 
 
     FragColor = vec4(resultColor, 1.0);
