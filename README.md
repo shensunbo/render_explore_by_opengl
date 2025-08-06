@@ -4,6 +4,7 @@ render_explore_by_opengl
 # TODO:
 1. 在着色器中区分纹理是单通道还是多通道, 对于ao，specular，Metallic, Roughness 这些贴图，一般是单通道的
 2. 3D 纹理和 2D 纹理不能混淆
+3. 金属度贴图效果可能不明显，只有边缘是金属
 
 # build
 ```

@@ -89,7 +89,7 @@ void main()
         }
     }
 
-    // realMaterialDiffuseColor = diffCoef * realMaterialDiffuseColor;
+    // realMaterialDiffuseColor = (1.0 + roughness * 0.2) * realMaterialDiffuseColor;
     vec3 a_normal = realNormal;
 
     // cal light effect 
