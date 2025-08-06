@@ -44,12 +44,14 @@ uniform vec3 viewPosition;
 // y: p-back, n-front
 // z: p-top, n-bottom
 vec3 lightPos = vec3(0.0, -1.0, 1.0);
+vec3 specularColor = vec3(0.5);
 
 void main()
 {    
     float diffCoef = 1.0;
     float roughness = -1.0;
     float metallic = -1.0;
+    float realShininess = material.Shininess;
     vec3 realMaterialDiffuseColor = material.materialDiffuseColor.xyz;
     vec3 realMaterialSpecularColor = material.materialSpecularColor.xyz;
     vec3 realAmbientColor = vec3(0.1);
@@ -65,7 +67,7 @@ void main()
         }
 
         if(texture_specular_load){
-            realMaterialSpecularColor = vec3(texture(texture_specular, index).r);
+            realShininess = texture(texture_specular, index).r * 255.0;
         }
 
         if(texture_ao_load){
@@ -98,8 +100,8 @@ void main()
     vec3 diffuse = realMaterialDiffuseColor * diff;
 
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(a_normal, halfwayDir), 0.0), 25);
-    vec3 specular = (spec * realMaterialSpecularColor);
+    float spec = pow(max(dot(a_normal, halfwayDir), 0.0), realShininess);
+    vec3 specular = diffCoef * (spec * specularColor);
     // vec3 specular = (spec * lightColor );
 
     vec3 envMapColor;
@@ -114,6 +116,9 @@ void main()
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
     vec3 resultColor = diffuse  + specular + realAmbientColor;
     resultColor = diffCoef * resultColor;
+
+    // 测试镜面反射
+    // resultColor = specular;
 
     // 测试AO贴图效果
     // resultColor = vec3(diffCoef);
