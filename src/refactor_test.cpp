@@ -69,62 +69,63 @@ int main()
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
 
-    VehicleShader skyboxShader("res/shader/skybox.vs", "res/shader/skybox.fs");
-        float skyboxVertices[] = {
-        // positions          
-        -1.0f,  1.0f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
 
-        -1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f, -1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
+    // VehicleShader skyboxShader("res/shader/skybox.vs", "res/shader/skybox.fs");
+    //     float skyboxVertices[] = {
+    //     // positions          
+    //     -1.0f,  1.0f, -1.0f,
+    //     -1.0f, -1.0f, -1.0f,
+    //      1.0f, -1.0f, -1.0f,
+    //      1.0f, -1.0f, -1.0f,
+    //      1.0f,  1.0f, -1.0f,
+    //     -1.0f,  1.0f, -1.0f,
 
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
+    //     -1.0f, -1.0f,  1.0f,
+    //     -1.0f, -1.0f, -1.0f,
+    //     -1.0f,  1.0f, -1.0f,
+    //     -1.0f,  1.0f, -1.0f,
+    //     -1.0f,  1.0f,  1.0f,
+    //     -1.0f, -1.0f,  1.0f,
 
-        -1.0f, -1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,
+    //      1.0f, -1.0f, -1.0f,
+    //      1.0f, -1.0f,  1.0f,
+    //      1.0f,  1.0f,  1.0f,
+    //      1.0f,  1.0f,  1.0f,
+    //      1.0f,  1.0f, -1.0f,
+    //      1.0f, -1.0f, -1.0f,
 
-        -1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f, -1.0f,
-         1.0f,  1.0f,  1.0f,
-         1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f,
+    //     -1.0f, -1.0f,  1.0f,
+    //     -1.0f,  1.0f,  1.0f,
+    //      1.0f,  1.0f,  1.0f,
+    //      1.0f,  1.0f,  1.0f,
+    //      1.0f, -1.0f,  1.0f,
+    //     -1.0f, -1.0f,  1.0f,
 
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f, -1.0f,
-         1.0f, -1.0f, -1.0f,
-        -1.0f, -1.0f,  1.0f,
-         1.0f, -1.0f,  1.0f
-    };
+    //     -1.0f,  1.0f, -1.0f,
+    //      1.0f,  1.0f, -1.0f,
+    //      1.0f,  1.0f,  1.0f,
+    //      1.0f,  1.0f,  1.0f,
+    //     -1.0f,  1.0f,  1.0f,
+    //     -1.0f,  1.0f, -1.0f,
+
+    //     -1.0f, -1.0f, -1.0f,
+    //     -1.0f, -1.0f,  1.0f,
+    //      1.0f, -1.0f, -1.0f,
+    //      1.0f, -1.0f, -1.0f,
+    //     -1.0f, -1.0f,  1.0f,
+    //      1.0f, -1.0f,  1.0f
+    // };
 
      // skybox VAO
-    unsigned int skyboxVAO, skyboxVBO;
-    glGenVertexArrays(1, &skyboxVAO);
-    glGenBuffers(1, &skyboxVBO);
-    glBindVertexArray(skyboxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    skyboxShader.setInt("skybox",  vRender.cubemap->GetBindingPoint());
+    // GLuint skyboxVAO, skyboxVBO;
+    // glGenVertexArrays(1, &skyboxVAO);
+    // glGenBuffers(1, &skyboxVBO);
+    // glBindVertexArray(skyboxVAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // skyboxShader.setInt("skyboxTexture",  vRender.cubemap->GetBindingPoint());
 
 
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -193,24 +194,28 @@ int main()
 
 
         // draw skybox as last
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        skyboxShader.use();
+        // glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        // skyboxShader.use();
 
         if(camera.updateEvent){
             glm::mat4 skymodel = glm::mat4(1.0f);
             // skymodel = glm::rotate(skymodel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            skyboxShader.setMat4("model", skymodel);
+            // skyboxShader.setMat4("model", skymodel);
             view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
-            skyboxShader.setMat4("view", view);
-            skyboxShader.setMat4("projection", projection);
+            // skyboxShader.setMat4("view", view);
+            // skyboxShader.setMat4("projection", projection);
+            glm::mat4 mvp = projection * view * skymodel;
+            vRender.cubemap->updateMvpMatrix(mvp);
+
         }
         
+         vRender.cubemap->drawSkybox();
         // skybox cube
-        glBindVertexArray(skyboxVAO);
-        vRender.cubemap->ActiveCubeMap();
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
+        // glBindVertexArray(skyboxVAO);
+        // vRender.cubemap->ActiveCubeMap();
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glBindVertexArray(0);
+        // glDepthFunc(GL_LESS); // set depth function back to default
         
         auto frameEndTime = std::chrono::high_resolution_clock::now();
         auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
