@@ -71,6 +71,8 @@ public:
     bool isJumping; // 是否正在跳跃
     bool isOnGround; // 角色是否在地面上
     glm::vec3 playerVelocity;
+
+    bool updateEvent = true;
 private:
     // // Default camera values
     // const float YAW = -90.0f;

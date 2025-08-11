@@ -126,10 +126,26 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     skyboxShader.setInt("skybox",  vRender.cubemap->GetBindingPoint());
 
+
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+    vRender.ourShader->use();
+    // render the loaded model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    vRender.ourShader->setMat4("model", model);
+
+    glm::mat4 projection = glm::mat4(1.0);
+    glm::mat4 view = glm::mat4(1.0);
+    glm::mat4 look = glm::mat4(1.0f);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        auto frameStartTime = std::chrono::high_resolution_clock::now();
+
         (void)FrameRatemonitorAnd100msTick();
         // per-frame time logic
         // --------------------
@@ -141,11 +157,10 @@ int main()
         // -----
         processInput(window);
         processCameraInput(window);
-        camera.ProcessJump(deltaTime);
+        // camera.ProcessJump(deltaTime);
 
         // render
         // ------
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
         glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -153,32 +168,25 @@ int main()
         vRender.ourShader->use();
         vRender.cubemap->ActiveCubeMap();
 
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        vRender.ourShader->setMat4("projection", projection);
-        vRender.ourShader->setMat4("view", view);
+        if(camera.updateEvent){
+            // view/projection transformations
+            projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+            view = camera.GetViewMatrix();
+            vRender.ourShader->setMat4("projection", projection);
+            vRender.ourShader->setMat4("view", view);
 
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        vRender.ourShader->setMat4("model", model);
+            look = camera.GetViewMatrix();
+            vRender.ourShader->setMat4("look", look);
 
-        glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        look = camera.GetViewMatrix();
-        vRender.ourShader->setMat4("look", look);
-
-        glm::mat4 invLook = glm::inverse(look);
-        glm::vec3 viewPosition = glm::vec3(invLook[3]);
-        vRender.ourShader->setVec3("viewPosition", viewPosition);
+            glm::mat4 invLook = glm::inverse(look);
+            glm::vec3 viewPosition = glm::vec3(invLook[3]);
+            vRender.ourShader->setVec3("viewPosition", viewPosition);
+        }
 
         CHECK_GLES_STATUS();
 
         //skybox
         vRender.ourShader->setInt("cubemap", vRender.cubemap->GetBindingPoint());
-
         vRender.draw();
 
         CHECK_GLES_STATUS();
@@ -187,23 +195,47 @@ int main()
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
-        glm::mat4 skymodel = glm::mat4(1.0f);
-        // skymodel = glm::rotate(skymodel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        skyboxShader.setMat4("model", skymodel);
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
+
+        if(camera.updateEvent){
+            glm::mat4 skymodel = glm::mat4(1.0f);
+            // skymodel = glm::rotate(skymodel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            skyboxShader.setMat4("model", skymodel);
+            view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
+            skyboxShader.setMat4("view", view);
+            skyboxShader.setMat4("projection", projection);
+        }
+        
         // skybox cube
         glBindVertexArray(skyboxVAO);
         vRender.cubemap->ActiveCubeMap();
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+        
+        auto frameEndTime = std::chrono::high_resolution_clock::now();
+        auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
 
+        // clear update event
+        camera.updateEvent = false;
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
+
+        auto swapBufStartTime = std::chrono::high_resolution_clock::now();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        auto swapBufEndTime = std::chrono::high_resolution_clock::now();
+        auto swapBufCostTime = std::chrono::duration<float, std::milli>(swapBufEndTime - swapBufStartTime).count();
+
+        // Optionally print timing information (can be enabled/disabled)
+        static bool printTiming = false;
+        if (printTiming) {
+            std::cout << "Frame Timing (ms):\n"
+                    << "  rendering time: " << frameDuration << "\n"
+                    << "  swap buffer time: " << swapBufCostTime << "\n"
+                    << "------------------------\n";
+        }
     }
 
     // glfw: terminate, clearing all previously allocated GLFW resources.

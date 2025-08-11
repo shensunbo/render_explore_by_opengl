@@ -47,6 +47,8 @@ VehicleVirCamera::VehicleVirCamera(float posX, float posY, float posZ, float upX
 // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 void VehicleVirCamera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
+    updateEvent = true;
+
     float velocity = MovementSpeed * deltaTime;
     if (direction == FORWARD)
         Position += Front * velocity;
@@ -91,6 +93,8 @@ void VehicleVirCamera::ProcessKeyboard(Camera_Movement direction, float deltaTim
 // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 void VehicleVirCamera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
 {
+    updateEvent = true;
+
     xoffset *= MouseSensitivity;
     yoffset *= MouseSensitivity;
 
@@ -113,6 +117,8 @@ void VehicleVirCamera::ProcessMouseMovement(float xoffset, float yoffset, GLbool
 // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 void VehicleVirCamera::ProcessMouseScroll(float yoffset)
 {
+    updateEvent = true;
+    
     Zoom -= (float)yoffset;
     if (Zoom < 1.0f)
         Zoom = 1.0f;
