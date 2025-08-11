@@ -47,11 +47,7 @@ static VehicleRenderer vRender;
 
 int main()
 {
-    printf("printf test");
-
-    // ConfigParser  cfgParser;
-    // std::string cfgPath =  std::string("res/model/halo/vehicle_info.json");
-    // cfgParser.loadConfigFile(cfgPath);
+    mylog(LogLevel::I, "Starting Refactor");
 
     GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);
     // configure global opengl state
@@ -60,78 +56,11 @@ int main()
     glEnable(GL_MULTISAMPLE);
 
     vRender.create();
-
-    // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     vRender.ourShader->use();
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
 
-
-    // VehicleShader skyboxShader("res/shader/skybox.vs", "res/shader/skybox.fs");
-    //     float skyboxVertices[] = {
-    //     // positions          
-    //     -1.0f,  1.0f, -1.0f,
-    //     -1.0f, -1.0f, -1.0f,
-    //      1.0f, -1.0f, -1.0f,
-    //      1.0f, -1.0f, -1.0f,
-    //      1.0f,  1.0f, -1.0f,
-    //     -1.0f,  1.0f, -1.0f,
-
-    //     -1.0f, -1.0f,  1.0f,
-    //     -1.0f, -1.0f, -1.0f,
-    //     -1.0f,  1.0f, -1.0f,
-    //     -1.0f,  1.0f, -1.0f,
-    //     -1.0f,  1.0f,  1.0f,
-    //     -1.0f, -1.0f,  1.0f,
-
-    //      1.0f, -1.0f, -1.0f,
-    //      1.0f, -1.0f,  1.0f,
-    //      1.0f,  1.0f,  1.0f,
-    //      1.0f,  1.0f,  1.0f,
-    //      1.0f,  1.0f, -1.0f,
-    //      1.0f, -1.0f, -1.0f,
-
-    //     -1.0f, -1.0f,  1.0f,
-    //     -1.0f,  1.0f,  1.0f,
-    //      1.0f,  1.0f,  1.0f,
-    //      1.0f,  1.0f,  1.0f,
-    //      1.0f, -1.0f,  1.0f,
-    //     -1.0f, -1.0f,  1.0f,
-
-    //     -1.0f,  1.0f, -1.0f,
-    //      1.0f,  1.0f, -1.0f,
-    //      1.0f,  1.0f,  1.0f,
-    //      1.0f,  1.0f,  1.0f,
-    //     -1.0f,  1.0f,  1.0f,
-    //     -1.0f,  1.0f, -1.0f,
-
-    //     -1.0f, -1.0f, -1.0f,
-    //     -1.0f, -1.0f,  1.0f,
-    //      1.0f, -1.0f, -1.0f,
-    //      1.0f, -1.0f, -1.0f,
-    //     -1.0f, -1.0f,  1.0f,
-    //      1.0f, -1.0f,  1.0f
-    // };
-
-     // skybox VAO
-    // GLuint skyboxVAO, skyboxVBO;
-    // glGenVertexArrays(1, &skyboxVAO);
-    // glGenBuffers(1, &skyboxVBO);
-    // glBindVertexArray(skyboxVAO);
-    // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    // glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // skyboxShader.setInt("skyboxTexture",  vRender.cubemap->GetBindingPoint());
-
-
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-    // vRender.ourShader->use();
-    // render the loaded model
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
@@ -140,6 +69,11 @@ int main()
 
     glm::mat4 projection = glm::mat4(1.0);
     glm::mat4 view = glm::mat4(1.0);
+
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+     // draw in wireframe
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     // -----------
@@ -174,7 +108,6 @@ int main()
             projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
             view = camera.GetViewMatrix();
 
-            
             glm::mat4 mvp = projection * view * model;
             vRender.ourShader->setMat4("uMVP", mvp);
 
@@ -196,21 +129,19 @@ int main()
             view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
             glm::mat4 mvp = projection * view * skymodel;
             vRender.cubemap->updateMvpMatrix(mvp);
-
         }
         
         vRender.cubemap->drawSkybox();
-        
-        auto frameEndTime = std::chrono::high_resolution_clock::now();
-        auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
-
         // clear update event
         camera.updateEvent = false;
+        
+        // frame end time stamp
+        auto frameEndTime = std::chrono::high_resolution_clock::now();
+        auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
+        
+        auto swapBufStartTime = std::chrono::high_resolution_clock::now();
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-
-        auto swapBufStartTime = std::chrono::high_resolution_clock::now();
-
         glfwSwapBuffers(window);
         glfwPollEvents();
 
