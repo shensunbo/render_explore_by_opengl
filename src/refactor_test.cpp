@@ -130,7 +130,7 @@ int main()
 
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-    vRender.ourShader->use();
+    // vRender.ourShader->use();
     // render the loaded model
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
@@ -140,19 +140,19 @@ int main()
 
     glm::mat4 projection = glm::mat4(1.0);
     glm::mat4 view = glm::mat4(1.0);
-    glm::mat4 look = glm::mat4(1.0f);
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
-    {
-        auto frameStartTime = std::chrono::high_resolution_clock::now();
-
-        (void)FrameRatemonitorAnd100msTick();
+    {   
         // per-frame time logic
         // --------------------
+        auto frameStartTime = std::chrono::high_resolution_clock::now();
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        (void)FrameRatemonitorAnd100msTick();
 
         // input
         // -----
@@ -173,13 +173,12 @@ int main()
             // view/projection transformations
             projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
             view = camera.GetViewMatrix();
-            vRender.ourShader->setMat4("projection", projection);
-            vRender.ourShader->setMat4("view", view);
 
-            look = camera.GetViewMatrix();
-            vRender.ourShader->setMat4("look", look);
+            
+            glm::mat4 mvp = projection * view * model;
+            vRender.ourShader->setMat4("uMVP", mvp);
 
-            glm::mat4 invLook = glm::inverse(look);
+            glm::mat4 invLook = glm::inverse(view);
             glm::vec3 viewPosition = glm::vec3(invLook[3]);
             vRender.ourShader->setVec3("viewPosition", viewPosition);
         }
@@ -192,30 +191,15 @@ int main()
 
         CHECK_GLES_STATUS();
 
-
-        // draw skybox as last
-        // glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        // skyboxShader.use();
-
         if(camera.updateEvent){
             glm::mat4 skymodel = glm::mat4(1.0f);
-            // skymodel = glm::rotate(skymodel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            // skyboxShader.setMat4("model", skymodel);
             view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
-            // skyboxShader.setMat4("view", view);
-            // skyboxShader.setMat4("projection", projection);
             glm::mat4 mvp = projection * view * skymodel;
             vRender.cubemap->updateMvpMatrix(mvp);
 
         }
         
-         vRender.cubemap->drawSkybox();
-        // skybox cube
-        // glBindVertexArray(skyboxVAO);
-        // vRender.cubemap->ActiveCubeMap();
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
-        // glBindVertexArray(0);
-        // glDepthFunc(GL_LESS); // set depth function back to default
+        vRender.cubemap->drawSkybox();
         
         auto frameEndTime = std::chrono::high_resolution_clock::now();
         auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
