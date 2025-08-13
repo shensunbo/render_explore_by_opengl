@@ -75,6 +75,61 @@ int main()
      // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    // FBO test
+    VehicleShader fboShader("res/shader/fbo_rect.vs", "res/shader/fbo_rect.fs");
+    // Setup screen VAO
+    GLfloat quadVertices[] = {   // Vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        // Positions   // TexCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };	
+
+    GLuint quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
+    glBindVertexArray(0);
+
+    // 初始化FBO
+    GLuint fbo, texture, rbo;
+
+    // 创建帧缓冲
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    // 创建纹理附件
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+    // 创建渲染缓冲对象作为深度和模板附件
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    // 检查完整性
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+        mylog(LogLevel::E, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+        MY_ASSERT(false, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    bool fboEnable = false;
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -94,8 +149,13 @@ int main()
         processCameraInput(window);
         // camera.ProcessJump(deltaTime);
 
+        if(fboEnable){
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        }
+
         // render
         // ------
+        glEnable(GL_DEPTH_TEST);
         glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -118,9 +178,14 @@ int main()
 
         CHECK_GLES_STATUS();
 
-        //skybox
         vRender.ourShader->setInt("cubemap", vRender.cubemap->GetBindingPoint());
         vRender.draw();
+
+        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        // glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
+        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         CHECK_GLES_STATUS();
 
@@ -134,6 +199,22 @@ int main()
         vRender.cubemap->drawSkybox();
         // clear update event
         camera.updateEvent = false;
+        
+        if(fboEnable){
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glDisable(GL_DEPTH_TEST);
+
+            fboShader.use();  
+            glBindVertexArray(quadVAO);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+        }
         
         // frame end time stamp
         auto frameEndTime = std::chrono::high_resolution_clock::now();
@@ -157,6 +238,10 @@ int main()
                     << "------------------------\n";
         }
     }
+
+    glDeleteFramebuffers(1, &fbo);
+    glDeleteTextures(1, &texture);
+    glDeleteRenderbuffers(1, &rbo);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
