@@ -6,6 +6,8 @@
 #include <iostream>
 #include <chrono>
 #include <stb_image.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 // #include "core/shader.h"
 // #include "core/camera.h"
@@ -23,6 +25,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void processCameraInput(GLFWwindow* window);
+
+void dumpTextureToFile(GLuint texture, int width, int height, const char* filename);
 
 static GLFWwindow* windowAndGlInit(int width, int height);
 static bool FrameRatemonitorAnd100msTick(void);
@@ -45,6 +49,8 @@ float lastFrame = 0.0f;
 
 static VehicleRenderer vRender;
 
+static bool dumpRes = false;
+static bool fboEnable = false;
 int main()
 {
     mylog(LogLevel::I, "Starting Refactor");
@@ -129,7 +135,6 @@ int main()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    bool fboEnable = false;
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -201,6 +206,10 @@ int main()
         camera.updateEvent = false;
         
         if(fboEnable){
+            if(dumpRes){
+                dumpTextureToFile(texture, SCR_WIDTH, SCR_HEIGHT, "dump.png");
+                dumpRes = false;
+            }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -249,6 +258,23 @@ int main()
     return 0;
 }
 
+void dumpTextureToFile(GLuint texture, int width, int height, const char* filename) {
+    // 绑定纹理
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    // 分配内存
+    unsigned char* pixels = new unsigned char[width * height * 4];
+    
+    // 获取纹理数据
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    
+    // 保存为图像文件
+    stbi_write_png(filename, width, height, 4, pixels, width * 4);
+    
+    // 释放内存
+    delete[] pixels;
+}
+
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -284,7 +310,12 @@ void processCameraInput(GLFWwindow* window)
         camera.ProcessKeyboard(R, deltaTime);
     else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
         camera.ProcessKeyboard(K1, deltaTime);
-
+    else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+        dumpRes = true;
+    else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        fboEnable = true;
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        fboEnable = false;
 
 }
 

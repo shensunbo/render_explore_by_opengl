@@ -11,6 +11,9 @@ Use GitHub Flavored Markdown
 - [ ] 识别内置纹理路径和嵌入的纹理
 
 - [ ] 简单动画
+
+- [ ] 使用 renderdoc 抓取渲染结果
+
 --- 
 
 ## low priority
