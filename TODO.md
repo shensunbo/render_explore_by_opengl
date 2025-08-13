@@ -1,5 +1,5 @@
 # format
-Use github GitHub Flavored Markdown
+Use GitHub Flavored Markdown
 - [ ] todo
 - [x] done
 

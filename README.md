@@ -24,6 +24,9 @@ bazel build //src:refactor_test
 bazel build --cxxopt="-g" --strip=never  //src:refactor_test 
 ```
 
+# todos
+[todo](TODO.md)
+
 # questions
 1. AO 贴图用于中间阶段还是应用于最后的结果中
 
