@@ -83,6 +83,7 @@ int main()
 
     // FBO test
     VehicleShader fboShader("res/shader/fbo_rect.vs", "res/shader/fbo_rect.fs");
+    // fboShader.setInt("fboTexture", 0); // not necessary
     // Setup screen VAO
     GLfloat quadVertices[] = {   // Vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
         // Positions   // TexCoords
@@ -212,7 +213,7 @@ int main()
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-            glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+            // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -220,6 +221,7 @@ int main()
 
             fboShader.use();  
             glBindVertexArray(quadVAO);
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture);
             glDrawArrays(GL_TRIANGLES, 0, 6);
             glBindVertexArray(0);
@@ -263,13 +265,13 @@ void dumpTextureToFile(GLuint texture, int width, int height, const char* filena
     glBindTexture(GL_TEXTURE_2D, texture);
     
     // 分配内存
-    unsigned char* pixels = new unsigned char[width * height * 4];
+    unsigned char* pixels = new unsigned char[width * height * 3];
     
     // 获取纹理数据
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
     
     // 保存为图像文件
-    stbi_write_png(filename, width, height, 4, pixels, width * 4);
+    stbi_write_png(filename, width, height, 3, pixels, width * 3);
     
     // 释放内存
     delete[] pixels;
@@ -310,12 +312,18 @@ void processCameraInput(GLFWwindow* window)
         camera.ProcessKeyboard(R, deltaTime);
     else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
         camera.ProcessKeyboard(K1, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+    else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
         dumpRes = true;
-    else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        mylog(LogLevel::I, "dump frame to file");
+    }
+    else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
         fboEnable = true;
-    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        mylog(LogLevel::I, "FBO enabled");
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){
         fboEnable = false;
+        mylog(LogLevel::I, "FBO disabled");
+    }
 
 }
 
