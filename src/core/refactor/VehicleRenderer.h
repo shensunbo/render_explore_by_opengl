@@ -3,7 +3,9 @@
 #include "Skybox.h"
 #include "VehicleMeshInfo.h"
 #include "configParser/ConfigParser.h"
-#include "memory"
+#include "FboHandler.h"
+
+#include <memory>
 
 class VehicleRenderer {
 public:
@@ -17,5 +19,6 @@ public:
     VehicleMeshInfo* ourModel;
     // Skybox* cubemap;
     std::shared_ptr<Skybox> cubemap;
+    std::shared_ptr<FboHandler> fbo_;
     ConfigParser  cfgParser;
 };

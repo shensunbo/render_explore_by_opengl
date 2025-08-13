@@ -44,6 +44,10 @@ void VehicleRenderer::create(){
     cubemap = std::make_shared<Skybox>(skyboxBindID);
     cubemap->Init(faces);
 
+    // TODO
+    fbo_ = std::make_shared<FboHandler>();
+    fbo_->init(1080, 720);
+
     mylog(LogLevel::I, "VehicleRenderer::create");
 }
 
