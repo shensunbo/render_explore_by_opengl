@@ -78,7 +78,9 @@ int main()
 
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-     // draw in wireframe
+    CHECK_GLES_STATUS();
+
+    // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
@@ -104,7 +106,7 @@ int main()
             // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
             vRender.fbo_->enable();
         }
-
+        CHECK_GLES_STATUS();
         // render
         // ------
         glEnable(GL_DEPTH_TEST);
@@ -152,6 +154,7 @@ int main()
         // clear update event
         camera.updateEvent = false;
         
+        CHECK_GLES_STATUS();
         // if(fboEnable){
         //     if(dumpRes){
         //         dumpTextureToFile(texture, SCR_WIDTH, SCR_HEIGHT, "dump.png");
@@ -176,7 +179,8 @@ int main()
         if(fboEnable){
             vRender.fbo_->renderToFullscreenQuad();
         }
-        
+
+        CHECK_GLES_STATUS();
         // frame end time stamp
         auto frameEndTime = std::chrono::high_resolution_clock::now();
         auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();

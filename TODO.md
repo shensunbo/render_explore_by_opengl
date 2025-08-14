@@ -46,3 +46,6 @@ Use GitHub Flavored Markdown
 
 - [ ] scene based rendering
 ---
+
+# BUGs
+- [ ] [ERROR][VehicleShader.cpp:42 VehicleShader]: gl error: 0x502

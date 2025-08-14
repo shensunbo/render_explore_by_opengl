@@ -19,7 +19,6 @@ void FboHandler::initFullscreenQuad(){
          1.0f,  1.0f,  1.0f, 1.0f
     };	
 
-    GLuint quadVAO_, quadVBO_;
     glGenVertexArrays(1, &quadVAO_);
     glGenBuffers(1, &quadVBO_);
     glBindVertexArray(quadVAO_);
