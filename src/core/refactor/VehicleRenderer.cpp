@@ -2,7 +2,7 @@
 #include "log/mylog.h"
 #include <memory>
 
-void VehicleRenderer::create(){
+void VehicleRenderer::create(unsigned int width, unsigned int height){
 
     std::string cfgPath =  std::string("res/model/halo/vehicle_info.json");
     cfgParser.loadConfigFile(cfgPath);
@@ -45,8 +45,8 @@ void VehicleRenderer::create(){
     cubemap->Init(faces);
 
     // TODO
-    fbo_ = std::make_shared<FboHandler>();
-    fbo_->init(1080, 720);
+    fbo_ = std::make_shared<FboHandler>(width, height);
+    fbo_->init();
 
     mylog(LogLevel::I, "VehicleRenderer::create");
 }

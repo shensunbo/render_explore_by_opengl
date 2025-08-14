@@ -9,7 +9,7 @@
 
 class VehicleRenderer {
 public:
-    void create();
+    void create(unsigned int width, unsigned int height);
     void destroy();
     void update();
     void draw();

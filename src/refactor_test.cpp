@@ -6,8 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include <stb_image.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+
 
 // #include "core/shader.h"
 // #include "core/camera.h"
@@ -61,7 +60,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
-    vRender.create();
+    vRender.create(SCR_WIDTH, SCR_HEIGHT);
     vRender.ourShader->use();
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -155,28 +154,15 @@ int main()
         camera.updateEvent = false;
         
         CHECK_GLES_STATUS();
-        // if(fboEnable){
-        //     if(dumpRes){
-        //         dumpTextureToFile(texture, SCR_WIDTH, SCR_HEIGHT, "dump.png");
-        //         dumpRes = false;
-        //     }
-        //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        //     // glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-        //     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        //     glClear(GL_COLOR_BUFFER_BIT);
-        //     glDisable(GL_DEPTH_TEST);
-
-        //     fboShader.use();  
-        //     glBindVertexArray(quadVAO);
-        //     glActiveTexture(GL_TEXTURE0);
-        //     glBindTexture(GL_TEXTURE_2D, texture);
-        //     glDrawArrays(GL_TRIANGLES, 0, 6);
-        //     glBindVertexArray(0);
-        // }
+        
 
         if(fboEnable){
+            if(dumpRes){
+                vRender.fbo_->dumpTextureToFile("dump.png");
+                dumpRes = false;
+            }
+
             vRender.fbo_->renderToFullscreenQuad();
         }
 
@@ -210,22 +196,7 @@ int main()
     return 0;
 }
 
-void dumpTextureToFile(GLuint texture, int width, int height, const char* filename) {
-    // 绑定纹理
-    glBindTexture(GL_TEXTURE_2D, texture);
-    
-    // 分配内存
-    unsigned char* pixels = new unsigned char[width * height * 3];
-    
-    // 获取纹理数据
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-    
-    // 保存为图像文件
-    stbi_write_png(filename, width, height, 3, pixels, width * 3);
-    
-    // 释放内存
-    delete[] pixels;
-}
+
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------

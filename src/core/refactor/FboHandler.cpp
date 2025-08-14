@@ -1,8 +1,13 @@
 #include  "FboHandler.h"
 
-void FboHandler::init(unsigned int width, unsigned int height){
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+#include <memory>
+#include <chrono>
+
+void FboHandler::init(){
     initFullscreenQuad();
-    initFramebuffer(width, height);
+    initFramebuffer();
 }
 
 void FboHandler::initFullscreenQuad(){
@@ -31,14 +36,15 @@ void FboHandler::initFullscreenQuad(){
     glBindVertexArray(0);
 }
 
-void FboHandler::initFramebuffer(unsigned int width, unsigned int height){
+void FboHandler::initFramebuffer(){
+    assert(width_ > 0 && height_ > 0);
     // 创建帧缓冲
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     // 创建纹理附件
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
@@ -46,7 +52,7 @@ void FboHandler::initFramebuffer(unsigned int width, unsigned int height){
     // 创建渲染缓冲对象作为深度和模板附件
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width_, height_);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
     // 检查完整性
@@ -73,4 +79,22 @@ void FboHandler::renderToFullscreenQuad(){
 }
 void FboHandler::enable(){
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+}
+
+void FboHandler::dumpTextureToFile(const char* filename) {
+    auto dumpStartTime = std::chrono::high_resolution_clock::now();
+    assert(width_ > 0 && height_ > 0);
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    unsigned char* pixels = new unsigned char[width_ * height_ * 3];
+    
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    
+    stbi_write_png(filename, width_, height_, 3, pixels, width_ * 3);
+    
+    delete[] pixels;
+
+    auto dumpEndTime = std::chrono::high_resolution_clock::now();
+    mylog(LogLevel::I, "Dump texture to file %s, width %d, height %d, time %f ms", filename, width_, height_, std::chrono::duration<double, std::milli>(dumpEndTime - dumpStartTime).count());
 }

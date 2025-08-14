@@ -5,8 +5,11 @@
 
 class FboHandler {
 public:
-    // FboHandler() = delete;
-    FboHandler():shader_("res/shader/fbo_rect.vs", "res/shader/fbo_rect.fs") {
+    FboHandler() = delete;
+    FboHandler(unsigned int width, unsigned int height):
+        width_(width),
+        height_(height),
+        shader_("res/shader/fbo_rect.vs", "res/shader/fbo_rect.fs") {
     }
 
     ~FboHandler(){
@@ -16,7 +19,7 @@ public:
     }
    
 
-    void init(unsigned int width, unsigned int height);
+    void init();
     void renderToFullscreenQuad();
 
     void setFboState(bool state){
@@ -26,16 +29,23 @@ public:
     void enable();
     void checkFboStatus();
 
+    void dumpTextureToFile(const char* filename);
+
 private:
     void initFullscreenQuad();
-    void initFramebuffer(unsigned int width, unsigned int height);
+    void initFramebuffer();
 private:
+    unsigned int width_;
+    unsigned int height_;
+
     VehicleShader shader_;
     GLuint quadVAO_;
     GLuint quadVBO_;
     GLuint fbo; 
     GLuint texture;
     GLuint rbo;
+
+    
 
     bool fboState_ = false;
 };
