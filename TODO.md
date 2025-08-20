@@ -6,13 +6,15 @@ Use GitHub Flavored Markdown
 
 # TODOs
 ## priority
-- [ ] 离屏渲染
+- [X] 离屏渲染
 
 - [ ] 识别内置纹理路径和嵌入的纹理
 
 - [ ] 简单动画
 
 - [ ] 使用 renderdoc 抓取渲染结果
+
+- [ ] 使用 EnTT 
 
 --- 
 
