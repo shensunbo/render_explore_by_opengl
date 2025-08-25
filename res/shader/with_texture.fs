@@ -46,6 +46,11 @@ uniform vec3 viewPosition;
 vec3 lightPos = vec3(0.0, -1.0, 1.0);
 vec3 specularColor = vec3(1.0);
 
+// light attenuation
+float constant = 1.0;
+float linear = 0.09;
+float quadratic = 0.032;
+
 void main()
 {    
     float diffCoef = 1.0;
@@ -96,6 +101,10 @@ void main()
     vec3 lightDir =normalize(lightPos - FragPos);
     vec3 viewDir = normalize(viewPosition -  FragPos);
 
+    // light attenuation
+    float distance = length(lightPos - FragPos);
+    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
+
     float diff = max(dot(a_normal, lightDir), 0.0);
     vec3 diffuse = realMaterialDiffuseColor * diff;
 
@@ -118,7 +127,8 @@ void main()
 
     // TODO: realAmbientColor should be multiplied or be added with diffuse
     // with roughness
-    vec3 resultColor = diffuse  + (specular + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
+    // vec3 resultColor = diffuse  + (specular + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
+    vec3 resultColor = diffuse * attenuation  + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
     // vec3 resultColor = diffuse  + (specular) * (1.0 - roughness);
 
 

@@ -21,9 +21,9 @@ void main()
     // z: p-back, n-front
     vec3 lightPos = vec3(0.0, 1.0, 1.0);
 
-    mat3 normalMatrix = transpose(mat3(model)); 
-    Normal = normalMatrix * aNormal;
+    Normal = normalize(vec3(model * vec4(aNormal, 0.0)));
     FragPos = vec3(model * vec4(aPos, 1.0));
+    // TODO: use CPU to calculate the viewPosition
     mat4 invLook = inverse(look);
     vec3 viewPosition = vec3(invLook[3]);
 

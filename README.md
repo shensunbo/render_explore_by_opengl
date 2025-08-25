@@ -33,17 +33,20 @@ bazel build --cxxopt="-g" --strip=never  //src:refactor_test
 
 # result
 ## phong model effect
-diffuse + specular + normal + ao textures 
+### diffuse + specular + normal + ao textures 
 ![phong](./readme_res/halo.png)
 
-diffuse + specular + normal + ao textures + skybox reflection 
+### diffuse + specular + normal + ao textures + skybox reflection 
 ![skybox](./readme_res/halo_skybox.png)
 
-use ao texture to the final result
+### use ao texture to the final result
 ![ao](./readme_res/halo_ao_final.png)
 
-use ao texture to the final result and add roughness texture
+### use ao texture to the final result and add roughness texture
 ![roughness](./readme_res/roughness.png)
 
-skybox reflection multiplied with diffuse color
+### skybox reflection multiplied with diffuse color
 ![skybox mix](./readme_res/skybox_mix.png)
+
+### light attenuation
+![attenuation](./readme_res/attenuation.png)
