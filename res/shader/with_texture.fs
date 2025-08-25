@@ -110,14 +110,17 @@ void main()
     vec3 reflectDir = reflect(-viewDir, a_normal);
     reflectDir =  (cubemapRotateMatrix * vec4(reflectDir, 1.0)).xyz;
     envMapColor = texture(cubemap, reflectDir).rgb;
-    realAmbientColor = envMapColor * 0.3f;
+    realAmbientColor = envMapColor * 0.5f;
 
     // TODO: mix specular with realAmbientColor will get error and show nothing, 
     // error code: gl error: 0x502
     // vec3 resultColor = mix(diffuse + specular, envMapColor, 0.1);
 
+    // TODO: realAmbientColor should be multiplied or be added with diffuse
     // with roughness
-    vec3 resultColor = diffuse  + (specular + realAmbientColor) * (1.0 - roughness);
+    vec3 resultColor = diffuse  + (specular + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
+    // vec3 resultColor = diffuse  + (specular) * (1.0 - roughness);
+
 
     // basic
     // vec3 resultColor = diffuse  + (specular + realAmbientColor);

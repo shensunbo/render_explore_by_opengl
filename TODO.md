@@ -16,6 +16,8 @@ Use GitHub Flavored Markdown
 
 - [ ] 使用 EnTT 
 
+- [ ] 显示光源位置
+
 --- 
 
 ## low priority
@@ -33,7 +35,7 @@ Use GitHub Flavored Markdown
 
 - [ ] PBR ball
 
-- [ ] dump 图片
+- [X] dump 图片
 
 - [ ] dump 视频
 

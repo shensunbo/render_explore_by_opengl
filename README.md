@@ -29,6 +29,7 @@ bazel build --cxxopt="-g" --strip=never  //src:refactor_test
 
 # questions
 1. AO 贴图用于中间阶段还是应用于最后的结果中
+2. skybox 作为环境光的时候应该与漫反射颜色相乘还是相加。-- 相乘作为环境光颜色看起来更好一些。
 
 # result
 ## phong model effect
@@ -43,3 +44,6 @@ use ao texture to the final result
 
 use ao texture to the final result and add roughness texture
 ![roughness](./readme_res/roughness.png)
+
+skybox reflection multiplied with diffuse color
+![skybox mix](./readme_res/skybox_mix.png)
