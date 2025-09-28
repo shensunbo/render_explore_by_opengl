@@ -1,5 +1,5 @@
 #include <EGL/egl.h>
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>  // Change to GLES3 header
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,9 +8,9 @@ int main() {
     EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(display, NULL, NULL);
 
-    // 2. 配置 EGL
+    // 2. 配置 EGL for GLES 3.0
     const EGLint attribs[] = {
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,  // Change to ES3 bit
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
         EGL_NONE
     };
@@ -20,25 +20,25 @@ int main() {
 
     // 3. 创建离屏 Surface（PBuffer）
     const EGLint pbufferAttribs[] = {
-        EGL_WIDTH, 512,  // 离屏缓冲区宽度
-        EGL_HEIGHT, 512, // 离屏缓冲区高度
+        EGL_WIDTH, 512,
+        EGL_HEIGHT, 512,
         EGL_NONE
     };
     EGLSurface surface = eglCreatePbufferSurface(display, config, pbufferAttribs);
 
-    // 4. 创建 OpenGL ES 上下文
+    // 4. 创建 OpenGL ES 3.0 上下文
     const EGLint contextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_CLIENT_VERSION, 3,  // Change to version 3
         EGL_NONE
     };
     EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
     eglMakeCurrent(display, surface, surface, context);
 
-    // 5. 使用 OpenGL ES 渲染（离屏）
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色背景
+    // 5. 使用 OpenGL ES 3.0 渲染
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // 6. 读取像素数据（可选）
+    // 6. 读取像素数据
     unsigned char *pixels = (unsigned char *)malloc(512 * 512 * 4);
     glReadPixels(0, 0, 512, 512, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
@@ -52,7 +52,8 @@ int main() {
         printf("Failed to open file for writing\n");
     }
 
-    // 7. 清理资源
+    // 8. 清理资源
+    free(pixels);  // Don't forget to free allocated memory
     eglDestroyContext(display, context);
     eglDestroySurface(display, surface);
     eglTerminate(display);
