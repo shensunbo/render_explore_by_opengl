@@ -1,4 +1,5 @@
-#version 330 core
+#version 300 es
+precision highp float;
 out vec4 FragColor;
 
 layout (std140) uniform MaterialBlock {

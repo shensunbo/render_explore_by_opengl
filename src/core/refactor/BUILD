@@ -31,11 +31,14 @@ cc_library(
         "//dependency/stb:stb",
         "//dependency/assimp:assimp",
         "//dependency/glad:glad",
+        # "//dependency/egl:egl_glad",
         "//src:configParser"
     ],
     linkopts = [
         "-lglfw",
-        "-lGL",
+        # "-lGL",
+        "-lEGL",
+        "-lGLESv2",
     ],
     visibility = [
         "//visibility:public",
