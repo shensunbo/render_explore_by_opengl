@@ -4,3 +4,4 @@ bazel-*
 MODULE.bazel.lock
 dump.png
 render_result.raw
+perf/

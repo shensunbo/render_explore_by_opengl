@@ -23,6 +23,9 @@ bazel build //src:refactor_test
 // debug version
 bazel build --cxxopt="-g" --strip=never  //src:refactor_test 
 ```
+# perf profiling
+./perf.sh bazel-bin/src/refactor_test
+![perf](./readme_res/perf.svg)
 
 # todos
 [todo](TODO.md)
