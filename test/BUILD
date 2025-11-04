@@ -15,3 +15,22 @@ cc_binary(
         "-lGLESv2",
     ],
 )
+
+cc_binary(
+    name = "mesaTest",
+    srcs = [
+        "mesaTest.cpp",
+    ],
+    deps = [
+        "//include:log",
+        "//dependency/glm:glm",
+        # "//dependency/glad:glad",
+    ],
+    linkopts = [
+        # "-lglfw",
+        # "-lGL",
+        "-lOSMesa",
+        "-lGL",
+        "-lGLESv2",
+    ],
+)
