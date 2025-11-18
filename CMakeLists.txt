@@ -12,6 +12,16 @@ add_subdirectory(src)
 
 message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY = ${CMAKE_BINARY_DIR}")
 
+# Copy resources to build directory
+set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res)
+add_custom_target(copy_resources ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${RESOURCES_DIR} ${CMAKE_BINARY_DIR}/res
+    COMMENT "Copying resources to build directory"
+)
+
+# Make android_test depend on copying resources
+add_dependencies(android_test copy_resources)
+
 # make install
-set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res )
 install(DIRECTORY ${RESOURCES_DIR} DESTINATION ${CMAKE_BINARY_DIR})

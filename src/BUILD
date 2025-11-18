@@ -32,3 +32,17 @@ cc_binary(
         ":configParser",
     ],
 )
+
+cc_binary(
+    name = "android_test",
+    srcs = [
+        "android_test.cpp",
+    ],
+    deps = [
+        "//include:log",
+        "//dependency/glm:glm",
+        "//dependency/stb:stb",
+        "//src/core/refactor:render_core",
+        ":configParser",
+    ],
+)

@@ -18,6 +18,7 @@ Use GitHub Flavored Markdown
 
 - [ ] 显示光源位置
 
+- [ ] android  platform 
 --- 
 
 ## low priority

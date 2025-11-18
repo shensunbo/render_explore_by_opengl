@@ -9,7 +9,7 @@
 
 class VehicleRenderer {
 public:
-    void create(unsigned int width, unsigned int height);
+    void create(unsigned int width, unsigned int height, const std::string& resourcePrefix = "");
     void destroy();
     void update();
     void draw();

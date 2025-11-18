@@ -2,21 +2,22 @@
 #include "log/mylog.h"
 #include <memory>
 
-void VehicleRenderer::create(unsigned int width, unsigned int height){
+void VehicleRenderer::create(unsigned int width, unsigned int height, const std::string& resourcePrefix){
 
-    std::string cfgPath =  std::string("res/model/halo/vehicle_info.json");
+    std::string cfgPath =  resourcePrefix + std::string("res/model/halo/vehicle_info.json");
+    mylog(LogLevel::I, "Loading config file: %s", cfgPath.c_str());
     cfgParser.loadConfigFile(cfgPath);
 
     // build and compile shaders
     // -------------------------
-    std::string vs_path =  std::string("res/shader/with_texture.vs");
-    std::string fs_path =  std::string("res/shader/with_texture.fs");
+    std::string vs_path =  resourcePrefix + std::string("res/shader/with_texture.vs");
+    std::string fs_path =  resourcePrefix + std::string("res/shader/with_texture.fs");
     // VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
     ourShader = new VehicleShader(vs_path.c_str(), fs_path.c_str());
     
     // load models
     // -----------
-    std::string path =  std::string("res/model/halo/halo.fbx");
+    std::string path =  resourcePrefix + std::string("res/model/halo/halo.fbx");
     // std::string path =  std::string("res/model/ford/vehicle.fbx");
 
     // VehicleMeshInfo ourModel(path);
@@ -32,12 +33,12 @@ void VehicleRenderer::create(unsigned int width, unsigned int height){
     // skybox
     std::vector<std::string> faces
     {
-         std::string("res/model/skybox/px.png"),
-         std::string("res/model/skybox/nx.png"),
-         std::string("res/model/skybox/py.png"),
-         std::string("res/model/skybox/ny.png"),
-         std::string("res/model/skybox/pz.png"),
-         std::string("res/model/skybox/nz.png"),
+         resourcePrefix + std::string("res/model/skybox/px.png"),
+         resourcePrefix + std::string("res/model/skybox/nx.png"),
+         resourcePrefix + std::string("res/model/skybox/py.png"),
+         resourcePrefix + std::string("res/model/skybox/ny.png"),
+         resourcePrefix + std::string("res/model/skybox/pz.png"),
+         resourcePrefix + std::string("res/model/skybox/nz.png"),
     };
 
     unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
