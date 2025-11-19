@@ -18,7 +18,11 @@ Use GitHub Flavored Markdown
 
 - [ ] 显示光源位置
 
-- [ ] android  platform 
+- [X] android  platform 
+
+- [ ] NDK build by bazel
+
+- [ ] NDK build state control 
 --- 
 
 ## low priority
