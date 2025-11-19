@@ -1,8 +1,10 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include <string>
-#include "core/refactor/VehicleRenderer.h"
+#include <glm/glm.hpp>
+
+// Forward declarations
+class VehicleRenderer;
 
 class RendererAPI {
 public:
@@ -15,7 +17,7 @@ public:
     void render();
 
 private:
-    VehicleRenderer vRender;
+    VehicleRenderer* vRender;
     int width;
     int height;
     

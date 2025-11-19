@@ -1,6 +1,6 @@
 #include "Skybox.h"
 
-#include <glad/glad.h>
+#include "gl/gl_headers.h"
 // #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 

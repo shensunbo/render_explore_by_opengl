@@ -20,8 +20,10 @@ add_custom_target(copy_resources ALL
     COMMENT "Copying resources to build directory"
 )
 
-# Make android_test depend on copying resources
-add_dependencies(android_test copy_resources)
+# Make android_test depend on copying resources (only on desktop)
+if(NOT ANDROID)
+    add_dependencies(android_test copy_resources)
+endif()
 
 # make install
 install(DIRECTORY ${RESOURCES_DIR} DESTINATION ${CMAKE_BINARY_DIR})

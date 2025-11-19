@@ -6,10 +6,10 @@
 class FboHandler {
 public:
     FboHandler() = delete;
-    FboHandler(unsigned int width, unsigned int height):
+    FboHandler(unsigned int width, unsigned int height, std::string vs = "res/shader/fbo_rect.vs", std::string fs = "res/shader/fbo_rect.fs"):
         width_(width),
         height_(height),
-        shader_("res/shader/fbo_rect.vs", "res/shader/fbo_rect.fs") {
+        shader_(vs.c_str(), fs.c_str()) {
     }
 
     ~FboHandler(){

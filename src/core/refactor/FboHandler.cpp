@@ -85,11 +85,26 @@ void FboHandler::dumpTextureToFile(const char* filename) {
     auto dumpStartTime = std::chrono::high_resolution_clock::now();
     assert(width_ > 0 && height_ > 0);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
-    
     unsigned char* pixels = new unsigned char[width_ * height_ * 3];
     
+#ifdef __ANDROID__
+    // Android OpenGL ES: use FBO + glReadPixels to read texture
+    GLuint tempFbo;
+    glGenFramebuffers(1, &tempFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, tempFbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        glReadPixels(0, 0, width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    }
+    
+    glDeleteFramebuffers(1, &tempFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+#else
+    // Desktop OpenGL: use glGetTexImage
+    glBindTexture(GL_TEXTURE_2D, texture);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+#endif
     
     stbi_write_png(filename, width_, height_, 3, pixels, width_ * 3);
     

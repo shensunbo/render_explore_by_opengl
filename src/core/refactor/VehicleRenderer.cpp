@@ -4,20 +4,26 @@
 
 void VehicleRenderer::create(unsigned int width, unsigned int height, const std::string& resourcePrefix){
 
-    std::string cfgPath =  resourcePrefix + std::string("res/model/halo/vehicle_info.json");
+    // Add trailing slash to resource prefix if not empty
+    std::string prefix = resourcePrefix;
+    if (!prefix.empty() && prefix.back() != '/') {
+        prefix += '/';
+    }
+
+    std::string cfgPath =  prefix + std::string("res/model/halo/vehicle_info.json");
     mylog(LogLevel::I, "Loading config file: %s", cfgPath.c_str());
     cfgParser.loadConfigFile(cfgPath);
 
     // build and compile shaders
     // -------------------------
-    std::string vs_path =  resourcePrefix + std::string("res/shader/with_texture.vs");
-    std::string fs_path =  resourcePrefix + std::string("res/shader/with_texture.fs");
+    std::string vs_path =  prefix + std::string("res/shader/with_texture.vs");
+    std::string fs_path =  prefix + std::string("res/shader/with_texture.fs");
     // VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
     ourShader = new VehicleShader(vs_path.c_str(), fs_path.c_str());
     
     // load models
     // -----------
-    std::string path =  resourcePrefix + std::string("res/model/halo/halo.fbx");
+    std::string path =  prefix + std::string("res/model/halo/halo.fbx");
     // std::string path =  std::string("res/model/ford/vehicle.fbx");
 
     // VehicleMeshInfo ourModel(path);
@@ -33,20 +39,20 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
     // skybox
     std::vector<std::string> faces
     {
-         resourcePrefix + std::string("res/model/skybox/px.png"),
-         resourcePrefix + std::string("res/model/skybox/nx.png"),
-         resourcePrefix + std::string("res/model/skybox/py.png"),
-         resourcePrefix + std::string("res/model/skybox/ny.png"),
-         resourcePrefix + std::string("res/model/skybox/pz.png"),
-         resourcePrefix + std::string("res/model/skybox/nz.png"),
+         prefix + std::string("res/model/skybox/px.png"),
+         prefix + std::string("res/model/skybox/nx.png"),
+         prefix + std::string("res/model/skybox/py.png"),
+         prefix + std::string("res/model/skybox/ny.png"),
+         prefix + std::string("res/model/skybox/pz.png"),
+         prefix + std::string("res/model/skybox/nz.png"),
     };
 
     unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
-    cubemap = std::make_shared<Skybox>(skyboxBindID);
+    cubemap = std::make_shared<Skybox>(skyboxBindID, prefix + std::string("res/shader/skybox.vs"), prefix + std::string("res/shader/skybox.fs"));
     cubemap->Init(faces);
 
     // TODO
-    fbo_ = std::make_shared<FboHandler>(width, height);
+    fbo_ = std::make_shared<FboHandler>(width, height, prefix + std::string("res/shader/fbo_rect.vs"), prefix + std::string("res/shader/fbo_rect.fs"));
     fbo_->init();
 
     mylog(LogLevel::I, "VehicleRenderer::create");

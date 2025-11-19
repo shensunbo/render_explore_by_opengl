@@ -9,7 +9,7 @@ class Skybox {
 public:
     Skybox() = delete;
     // need assign bind point, cannot be repeated with existing ones
-    Skybox(unsigned int bindPoint):shader_("res/shader/skybox.vs", "res/shader/skybox.fs"){
+    Skybox(unsigned int bindPoint, std::string vs = "res/shader/skybox.vs", std::string fs = "res/shader/skybox.fs"):shader_(vs.c_str(), fs.c_str()){
         bind_point_ = bindPoint;
     }
     ~Skybox() = default;

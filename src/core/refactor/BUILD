@@ -27,6 +27,7 @@ cc_library(
     ],
     deps = [
         "//include:log",
+        "//include:gl_headers",
         "//dependency/glm:glm",
         "//dependency/stb:stb",
         "//dependency/assimp:assimp",

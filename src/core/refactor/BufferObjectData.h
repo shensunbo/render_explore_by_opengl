@@ -2,7 +2,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <glad/glad.h> // holds all OpenGL type declarations
+#include "gl/gl_headers.h"
 #include "CommonDataStruct.h"
 // #include "VehicleShader.h"
 

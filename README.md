@@ -23,6 +23,25 @@ bazel build //src:refactor_test
 // debug version
 bazel build --cxxopt="-g" --strip=never  //src:refactor_test 
 ```
+
+# NDK build for x86 lib
+```
+mkdir build
+cd build
+
+export ANDROID_NDK=/opt/ndk
+
+cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+    -DANDROID_ABI=x86_64 \
+    -DANDROID_PLATFORM=android-29 \
+    ..
+
+make -j$(nproc)
+
+# strip debug info
+$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-unneeded src/librender_explore_by_opengl.so
+```
+
 # perf profiling
 ./perf.sh bazel-bin/src/refactor_test
 ![perf](./readme_res/perf.svg)
@@ -53,3 +72,6 @@ bazel build --cxxopt="-g" --strip=never  //src:refactor_test
 
 ### light attenuation
 ![attenuation](./readme_res/attenuation.png)
+
+## android studio
+![android](./readme_res/android.png)

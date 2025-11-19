@@ -29,6 +29,7 @@ VehicleShader::VehicleShader(const char* vertexPath, const char* fragmentPath)
     catch (std::ifstream::failure& e)
     {
         mylog(LogLevel::E, "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: %s", e.what());
+        mylog(LogLevel::E, "vertexPath: %s, fragmentPath: %s", vertexPath,  fragmentPath);
     }
     const char* vShaderCode = vertexCode.c_str();
     const char * fShaderCode = fragmentCode.c_str();

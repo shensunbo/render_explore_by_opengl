@@ -29,28 +29,49 @@ target_sources(render_explore_by_opengl PRIVATE
     core/refactor/AnimationHandler.cpp
 )
 
-target_link_directories(render_explore_by_opengl PRIVATE ${COMMON_LIB_DIR})
-target_link_libraries(render_explore_by_opengl PRIVATE
-    -lassimp
-    -limgui
-    -lglfw
-    -lGL
+# for NDK29
+target_compile_options(render_explore_by_opengl PRIVATE
+    -Wall
+    -Wextra
+    -fexceptions
+    -frtti
 )
 
-# Build android_test executable
-add_executable(android_test android_test.cpp)
+# Platform-specific linking configuration
+if(ANDROID)
+    # Android NDK - use system libraries provided by NDK
+    target_link_libraries(render_explore_by_opengl PRIVATE
+        -lassimp
+        log
+        GLESv3
+    )
+else()
+    # Desktop/Linux - use local libraries and system GL
+    target_link_directories(render_explore_by_opengl PRIVATE ${COMMON_LIB_DIR})
+    target_link_libraries(render_explore_by_opengl PRIVATE
+        -lassimp
+        -limgui
+        -lglfw
+        -lGL
+    )
+endif()
 
-target_include_directories(android_test PRIVATE 
-    ${COMMON_INC_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    core/refactor
-)
+# Build android_test executable (Desktop only - requires GLFW)
+if(NOT ANDROID)
+    add_executable(android_test android_test.cpp)
 
-target_link_directories(android_test PRIVATE ${COMMON_LIB_DIR})
-target_link_libraries(android_test PRIVATE
-    render_explore_by_opengl
-    -lassimp
-    -limgui
-    -lglfw
-    -lGL
-)
+    target_include_directories(android_test PRIVATE 
+        ${COMMON_INC_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        core/refactor
+    )
+
+    target_link_directories(android_test PRIVATE ${COMMON_LIB_DIR})
+    target_link_libraries(android_test PRIVATE
+        render_explore_by_opengl
+        -lassimp
+        -limgui
+        -lglfw
+        -lGL
+    )
+endif()

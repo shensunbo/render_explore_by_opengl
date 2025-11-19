@@ -26,6 +26,7 @@ cc_binary(
     ],
     deps = [
         "//include:log",
+        "//include:gl_headers",
         "//dependency/glm:glm",
         "//dependency/stb:stb",
         "//src/core/refactor:render_core",
@@ -40,6 +41,7 @@ cc_binary(
     ],
     deps = [
         "//include:log",
+        "//include:gl_headers",
         "//dependency/glm:glm",
         "//dependency/stb:stb",
         "//src/core/refactor:render_core",
