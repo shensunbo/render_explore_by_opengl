@@ -23,6 +23,9 @@ Use GitHub Flavored Markdown
 - [ ] NDK build by bazel
 
 - [ ] NDK build state control 
+
+- [ ] res loading speed optimize 
+
 --- 
 
 ## low priority

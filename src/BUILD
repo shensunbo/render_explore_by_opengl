@@ -32,6 +32,9 @@ cc_binary(
         "//src/core/refactor:render_core",
         ":configParser",
     ],
+    copts = [
+        "-g",
+    ],
 )
 
 cc_binary(
