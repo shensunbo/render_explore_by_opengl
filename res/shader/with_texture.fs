@@ -51,6 +51,11 @@ float constant = 1.0;
 float linear = 0.09;
 float quadratic = 0.032;
 
+vec3 gammaCorrect(vec3 color) {
+    // Gamma 2.2校正
+    return pow(color, vec3(1.0/2.2));
+}
+
 void main()
 {    
     float diffCoef = 1.0;
@@ -128,7 +133,7 @@ void main()
     // TODO: realAmbientColor should be multiplied or be added with diffuse
     // with roughness
     // vec3 resultColor = diffuse  + (specular + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
-    vec3 resultColor = diffuse * attenuation  + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
+    vec3 resultColor = diffuse * attenuation * 0.5 + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
     // vec3 resultColor = diffuse  + (specular) * (1.0 - roughness);
 
 
@@ -149,8 +154,5 @@ void main()
     // 测试metallic
     // resultColor = vec3(metallic);
 
-    
-
-
-    FragColor = vec4(resultColor, 1.0);
+    FragColor = vec4(gammaCorrect(resultColor), 1.0);
 }
