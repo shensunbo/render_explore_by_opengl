@@ -26,6 +26,11 @@ Use GitHub Flavored Markdown
 
 - [ ] res loading speed optimize 
 
+- [ ] 纹理格式转换，转换为GPU 友好的纹理格式`# 将 PNG 转换为 DDS（BC7 压缩）
+texconv -f BC7_UNORM -m 10 input.png -o output.dds`
+
+- [ ] 纹理加载异步化, debug 目前的加载瓶颈
+
 --- 
 
 ## low priority

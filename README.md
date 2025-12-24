@@ -76,5 +76,10 @@ $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-unneed
 ## android studio
 ![android](./readme_res/android.png)
 
-## gamma correction
-![gamma](./readme_res/gamma.png)
+## gamma correction 
+### **(wrong!!!)**
+![gamma](./readme_res/gamma_wrong.png)
+
+### right
+
+![right](./readme_res/gamma_right.png)

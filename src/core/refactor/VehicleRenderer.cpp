@@ -17,7 +17,7 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
     // build and compile shaders
     // -------------------------
     std::string vs_path =  prefix + std::string("res/shader/with_texture.vs");
-    std::string fs_path =  prefix + std::string("res/shader/with_texture.fs");
+    std::string fs_path =  prefix + std::string("res/shader/with_texture_test.fs");
     // VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
     ourShader = new VehicleShader(vs_path.c_str(), fs_path.c_str());
     
