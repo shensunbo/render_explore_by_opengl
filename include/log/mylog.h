@@ -12,6 +12,8 @@
 #else
 #include <iostream>
 #include <cstdio>
+#include <ctime>
+#include <sys/time.h>
 #endif
 
 enum class LogLevel {
@@ -62,18 +64,25 @@ enum class LogLevel {
 #define mylog(level, M, ...) \
     do { \
         if ((int)level <= (int)LOG_LEVEL) { \
+            struct timeval tv; \
+            gettimeofday(&tv, nullptr); \
+            struct tm* tstruct = localtime(&tv.tv_sec); \
+            char timebuf[32]; \
+            strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", tstruct); \
+            char fulltimebuf[40]; \
+            snprintf(fulltimebuf, sizeof(fulltimebuf), "%s.%03ld", timebuf, tv.tv_usec / 1000); \
             switch (level) { \
                 case LogLevel::D: \
-                    fprintf(stderr, "[DEBUG][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
+                    fprintf(stderr, "[%s][DEBUG][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
                     break; \
                 case LogLevel::E: \
-                    fprintf(stderr, "[ERROR][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
+                    fprintf(stderr, "[%s][ERROR][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
                     break; \
                 case LogLevel::W: \
-                    fprintf(stderr, "[WARN][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
+                    fprintf(stderr, "[%s][WARN][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
                     break; \
                 case LogLevel::I: \
-                    fprintf(stderr, "[INFO][%s:%d %s]: " M "\n", GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
+                    fprintf(stderr, "[%s][INFO][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
                     break; \
             } \
         } \

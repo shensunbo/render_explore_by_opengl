@@ -52,6 +52,8 @@ texconv -f BC7_UNORM -m 10 input.png -o output.dds`
 
 - [ ] dump 视频
 
+- [ ] 使用开源的日志系统
+
 ---
 ## optional
 
