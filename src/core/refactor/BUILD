@@ -33,7 +33,8 @@ cc_library(
         "//dependency/assimp:assimp",
         "//dependency/glad:glad",
         # "//dependency/egl:egl_glad",
-        "//src:configParser"
+        "//src:configParser",
+        "//dependency/ktx:ktx",
     ],
     linkopts = [
         "-lglfw",

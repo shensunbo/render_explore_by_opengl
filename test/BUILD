@@ -34,3 +34,45 @@ cc_binary(
         "-lGLESv2",
     ],
 )
+
+cc_binary(
+    name = "ktxTest",
+    srcs = [
+        "ktxTest.cpp",
+    ],
+    deps = [
+        "//dependency/ktx:ktx",
+    ],
+    linkopts = [
+        "-lstdc++",
+    ],
+)
+cc_binary(
+    name = "ktxRenderTest",
+    srcs = [
+        "ktxRenderTest.cpp",
+    ],
+    deps = [
+        "//dependency/ktx:ktx",
+        "//dependency/glad:glad",
+    ],
+    linkopts = [
+        "-lglfw",
+        "-lGL",
+        "-lstdc++",
+    ],
+)
+
+cc_binary(
+    name = "multithreadLoadTest",
+    srcs = [
+        "multithreadLoadTest.cpp",
+    ],
+    deps = [
+        "//include:log",
+        "//dependency/stb:stb",
+    ],
+    linkopts = [
+        "-lstdc++",
+    ],
+)

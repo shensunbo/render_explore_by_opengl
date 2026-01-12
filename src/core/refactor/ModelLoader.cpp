@@ -2,11 +2,15 @@
 #include "gl/gl_headers.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <ktx.h>
 #include <string>
 #include <iostream>
+#include <thread>
+#include <mutex>
 
 #include "BufferObjectData.h"
 #include "log/mylog.h"
+#include "VehicleShader.h"
 
 bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo){
     // read file via ASSIMP
@@ -21,8 +25,35 @@ bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObject
     // retrieve the directory path of the filepath
     directory = resPath.substr(0, resPath.find_last_of('/'));
 
+    // handle texture loading in multithreading
+    for(auto const& texture_path : vehInfo.getTexturePaths()) {
+        mylog(LogLevel::I, "texture path: %s", texture_path.c_str());
+        m_loaded_texture_data[texture_path] = imageParam{};
+    }
+
+    std::vector<std::thread> threads;
+    for(auto const& texture_path : vehInfo.getTexturePaths()) {
+        threads.emplace_back([this, texture_path]() {
+            std::string fullPath = this->directory + "/" + texture_path;
+            unsigned int result = ImageFromFile(fullPath, m_loaded_texture_data[texture_path]);
+            assert(result == 0);
+        });
+    }
+
+    // wait for all texture loading threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
     // process ASSIMP's root node recursively
     processNode(scene->mRootNode, scene, meshInfo, vehInfo);
+
+    // release loaded texture data
+    for (const auto& tex : m_loaded_texture_data) {
+        if (tex.second.data) {
+            stbi_image_free(tex.second.data);
+        }
+    }
 
     return true;
 }
@@ -149,6 +180,8 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
     // texture_roughness:5
     // texture_metallic: 6
     if(vehInfo.needTexture(std::string(mesh->mName.C_Str()), material->GetName().C_Str())){
+        auto start_time = std::chrono::high_resolution_clock::now();
+
         std::vector<Texture> diffuseMaps =
             LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse",
                          std::string(mesh->mName.C_Str()), vehInfo);
@@ -183,6 +216,10 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
             LoadTextures(material, aiTextureType_METALNESS, "texture_metallic",
                          std::string(mesh->mName.C_Str()), vehInfo);
         textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        mylog(LogLevel::I, "[ModelLoader] mesh %s material %s texture load cost: %lld ms", mesh->mName.C_Str(), material->GetName().C_Str(), cost);
     }
 
     myMaterial mMaterial;
@@ -294,6 +331,72 @@ myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
 //     return textures;
 // }
 
+unsigned int ModelLoader::ImageFromFile(std::string filename, imageParam& pngData)
+{
+    unsigned char *data = stbi_load(filename.c_str(), &pngData.width, &pngData.height, &pngData.nrChannels, 0);
+    if (data)
+    {
+        pngData.data = data;
+        mylog(LogLevel::I, "Texture loaded at path: %s, width %d, height %d, channels: %d", filename.c_str(), pngData.width, pngData.height, pngData.nrChannels);
+    }
+    else
+    {
+        pngData.data = nullptr;
+        mylog(LogLevel::E, "Texture failed to load at path: %s", filename.c_str());
+        assert(false);
+        return 1;
+    }
+
+    return 0;
+}
+
+unsigned int ModelLoader::TextureFromBuffer(const std::string& path){
+    // 从 m_loaded_texture_data 中查找已加载的纹理数据
+    auto it = m_loaded_texture_data.find(path);
+    if (it == m_loaded_texture_data.end()) {
+        mylog(LogLevel::E, "Texture data not found in buffer: %s", path.c_str());
+        assert(false);
+        return 0;
+    }
+
+    const imageParam& imgData = it->second;
+    
+    // 检查数据是否有效
+    if (!imgData.data) {
+        mylog(LogLevel::E, "Texture data is null for path: %s", path.c_str());
+        assert(false);
+        return 0;
+    }
+
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    GLenum format;
+    if (imgData.nrChannels == 1)
+        format = GL_RED;
+    else if (imgData.nrChannels == 3)
+        format = GL_RGB;
+    else if (imgData.nrChannels == 4)
+        format = GL_RGBA;
+    else {
+        mylog(LogLevel::E, "Unsupported channel count %d for texture: %s", imgData.nrChannels, path.c_str());
+        return 0;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, imgData.width, imgData.height, 0, format, GL_UNSIGNED_BYTE, imgData.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    mylog(LogLevel::I, "Texture created from buffer: %s, %dx%d, channels: %d", path.c_str(), imgData.width, imgData.height, imgData.nrChannels);
+
+    return textureID;
+}
+
 unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &directory, bool gamma)
 {
     std::string filename = std::string(path);
@@ -334,6 +437,107 @@ unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &d
         stbi_image_free(data);
     }
 
+    return textureID;
+}
+
+unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string &directory)
+{
+    auto total_start = std::chrono::high_resolution_clock::now();
+    
+    std::string filename = std::string(path);
+    filename = directory + '/' + filename;
+
+    mylog(LogLevel::I, "Loading KTX texture: %s", filename.c_str());
+    
+    auto load_start = std::chrono::high_resolution_clock::now();
+    ktxTexture* texture = nullptr;
+    KTX_error_code result = ktxTexture_CreateFromNamedFile(filename.c_str(),
+                                                            KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
+                                                            &texture);
+    auto load_end = std::chrono::high_resolution_clock::now();
+    auto load_cost = std::chrono::duration_cast<std::chrono::milliseconds>(load_end - load_start).count();
+    
+    if (result != KTX_SUCCESS) {
+        mylog(LogLevel::E, "Failed to load KTX file: %s, error: %s", filename.c_str(), ktxErrorString(result));
+        return 0;
+    }
+    
+    mylog(LogLevel::I, "KTX file read cost: %lld ms - Dimensions: %dx%d, Levels: %d, Layers: %d, Faces: %d", 
+          load_cost, texture->baseWidth, texture->baseHeight, texture->numLevels, texture->numLayers, texture->numFaces);
+    
+    GLuint textureID = 0;  // 初始化为0
+    GLenum target = 0;     // 初始化为0
+    GLenum glerror = GL_NO_ERROR;  // 初始化为GL_NO_ERROR
+    
+    // 上传到 OpenGL - ktxTexture_GLUpload 会创建纹理并填充数据
+    auto upload_start = std::chrono::high_resolution_clock::now();
+    result = ktxTexture_GLUpload(texture, &textureID, &target, &glerror);
+    auto upload_end = std::chrono::high_resolution_clock::now();
+    auto upload_cost = std::chrono::duration_cast<std::chrono::milliseconds>(upload_end - upload_start).count();
+    
+    if (result != KTX_SUCCESS) {
+        mylog(LogLevel::E, "Failed to upload KTX texture to OpenGL: %s", ktxErrorString(result));
+        if (glerror != GL_NO_ERROR) {
+            mylog(LogLevel::E, "OpenGL error during upload: 0x%x", glerror);
+        }
+        ktxTexture_Destroy(texture);
+        return 0;
+    }
+    
+    // 检查上传过程中是否有GL错误
+    if (glerror != GL_NO_ERROR) {
+        mylog(LogLevel::E, "GL error reported by ktxTexture_GLUpload: 0x%x", glerror);
+        ktxTexture_Destroy(texture);
+        return 0;
+    }
+    
+    mylog(LogLevel::I, "KTX GPU upload cost: %lld ms - Texture ID: %u, Target: 0x%x", upload_cost, textureID, target);
+    
+    // 验证纹理ID是否有效
+    GLboolean isTexture = glIsTexture(textureID);
+    if (!isTexture) {
+        mylog(LogLevel::E, "ktxTexture_GLUpload returned invalid texture ID: %u", textureID);
+        ktxTexture_Destroy(texture);
+        return 0;
+    }
+    
+    // 检查GPU上传后的状态
+    GLenum err1 = glGetError();
+    if (err1 != GL_NO_ERROR) {
+        mylog(LogLevel::E, "GL error after ktxTexture_GLUpload: 0x%x", err1);
+    }
+    
+    // 设置纹理参数
+    auto param_start = std::chrono::high_resolution_clock::now();
+    glBindTexture(target, textureID);
+    GLenum err2 = glGetError();
+    if (err2 != GL_NO_ERROR) {
+        mylog(LogLevel::E, "GL error after glBindTexture: 0x%x", err2);
+    }
+    
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    GLenum err3 = glGetError();
+    if (err3 != GL_NO_ERROR) {
+        mylog(LogLevel::E, "GL error after glTexParameteri: 0x%x", err3);
+    }
+    
+    glBindTexture(target, 0);
+    auto param_end = std::chrono::high_resolution_clock::now();
+    auto param_cost = std::chrono::duration_cast<std::chrono::milliseconds>(param_end - param_start).count();
+
+    ktxTexture_Destroy(texture);
+
+    CHECK_GLES_STATUS();
+    
+    auto total_end = std::chrono::high_resolution_clock::now();
+    auto total_cost = std::chrono::duration_cast<std::chrono::milliseconds>(total_end - total_start).count();
+    
+    mylog(LogLevel::I, "KTX total cost: %lld ms (read: %lld, upload: %lld, param: %lld)", 
+          total_cost, load_cost, upload_cost, param_cost);
+    
     return textureID;
 }
 
@@ -418,7 +622,35 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
         if(!skip)
         {   // if texture hasn't been loaded already, load it
             Texture texture;
-            texture.id = TextureFromFile(textureName.c_str(), directory);
+            
+            // 检查文件扩展名，决定使用哪种加载方式
+            // std::string texPath = textureName;
+            // bool isKTX = false;
+            // if (texPath.length() >= 4) {
+            //     std::string ext = texPath.substr(texPath.length() - 4);
+            //     if (ext == ".ktx" || ext == ".KTX") {
+            //         isKTX = true;
+            //     } else if (texPath.length() >= 5) {
+            //         ext = texPath.substr(texPath.length() - 5);
+            //         if (ext == ".ktx2" || ext == ".KTX2") {
+            //             isKTX = true;
+            //         }
+            //     }
+            // }
+            
+            // if (isKTX) {
+            //     texture.id = TextureFromKTXFile(textureName.c_str(), directory);
+            //     mylog(LogLevel::I, "Loaded KTX texture: %s", textureName.c_str());
+            // } else {
+            //     texture.id = TextureFromFile(textureName.c_str(), directory);
+            // }
+
+            texture.id = TextureFromBuffer(textureName);
+            if(texture.id == 0){
+                mylog(LogLevel::E, "Failed to load texture: %s for mesh %s ", textureName.c_str(),
+                       meshName.c_str());
+                assert(false);
+            }
             texture.bindId = texId;
             texture.type = typeName;
             texture.path = textureName;

@@ -110,6 +110,7 @@ public:
     std::pair <std::string, glm::vec3> getCurrentCarPaint() { return m_current_car_paint; }
     std::set<std::string> getHideMeshesInChassis() { return m_hide_chassis_meshes; }
     VehicleParam getVehicleParam() { return m_vehicle_param; }
+    const std::set<std::string>& getTexturePaths() const { return m_texture_paths; }
 
     void updateFlTargetDoorAngle(int angle);
     void updateFrTargetDoorAngle(int angle);
@@ -173,6 +174,7 @@ private:
 
     //texture, first meshname, second material; if material is "", the texture is for all material
     std::map<std::pair<std::string, std::string>, TextureData> m_texture_data;
+    std::set<std::string> m_texture_paths;
 
     // transparent chassis mode
     std::set<std::string> m_transparent_chassis_meshes;

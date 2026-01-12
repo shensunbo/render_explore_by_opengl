@@ -335,6 +335,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto diffuseNode = texture.at("diffuse");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = diffuseNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -352,6 +353,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto specularNode = texture.at("specular");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = specularNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -370,6 +372,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto normalNode = texture.at("normal");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = normalNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -388,6 +391,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto aoNode = texture.at("ao");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = aoNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -405,6 +409,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto alphaNode = texture.at("alpha");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = alphaNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -422,6 +427,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto roughnessNode = texture.at("roughness");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = roughnessNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -439,6 +445,7 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
         auto metallicNode = texture.at("metallic");
 
         for (auto& file : fileName) {
+            m_texture_paths.insert(file);
             auto components = metallicNode.at(file).at("components");
             for (auto& component : components) {
                 std::string meshname = component.at("mesh_name");
@@ -449,6 +456,9 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture){
     } else{
         mylog(LogLevel::I, "---> no metallic texture");
     }
+
+
+    mylog(LogLevel::I, "total texture files: %d", m_texture_paths.size());
 
     return true;
 }

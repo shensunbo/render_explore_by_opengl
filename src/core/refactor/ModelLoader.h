@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <unordered_map>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -14,12 +15,22 @@ public:
     bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo);
 
 private:
+    struct imageParam{
+        int width;
+        int height;
+        int nrChannels;
+        unsigned char *data;
+    };
+
     void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo);
     BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, 
         const aiMatrix4x4& translationMatrix, ConfigParser& vehInfo);
 
     myMaterial loadMaterial(aiMaterial* mat);
     unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
+    unsigned int TextureFromBuffer(const std::string& path);
+    unsigned int ImageFromFile(std::string filename, imageParam& pngData);
+    unsigned int TextureFromKTXFile(const char *path, const std::string &directory);
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
     std::vector<Texture> LoadTextures(aiMaterial* mat, aiTextureType type,
                                           const char* typeName,
@@ -40,4 +51,5 @@ private:
     // std::vector<Texture> textures_loaded;
     std::vector<Texture> m_textures_loaded;
     std::string directory;
+    std::unordered_map<std::string, imageParam> m_loaded_texture_data;
 };

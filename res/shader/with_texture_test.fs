@@ -74,7 +74,7 @@ void main()
 
         if(texture_diffuse_load){
             realMaterialDiffuseColor = texture(texture_diffuse, index).rgb;
-            realMaterialDiffuseColor = pow(realMaterialDiffuseColor, vec3(2.2));
+            // realMaterialDiffuseColor = pow(realMaterialDiffuseColor, vec3(2.2));
         }
 
         if(texture_specular_load){
@@ -154,6 +154,6 @@ void main()
 
     // 测试metallic
     // resultColor = vec3(metallic);
-    resultColor = gammaCorrect(resultColor);
+    resultColor = realMaterialDiffuseColor;
     FragColor = vec4(resultColor, 1.0);
 }
