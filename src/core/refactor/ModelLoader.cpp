@@ -1,6 +1,5 @@
 #include "ModelLoader.h"
 #include "gl/gl_headers.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <ktx.h>
 #include <string>
@@ -12,7 +11,8 @@
 #include "log/mylog.h"
 #include "VehicleShader.h"
 
-bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo){
+bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
+        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData){
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(resPath, aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
@@ -22,44 +22,16 @@ bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObject
         mylog(LogLevel::E,"ERROR::ASSIMP:: %s, ", importer.GetErrorString());
         return false;
     }
-    // retrieve the directory path of the filepath
-    directory = resPath.substr(0, resPath.find_last_of('/'));
-
-    // handle texture loading in multithreading
-    for(auto const& texture_path : vehInfo.getTexturePaths()) {
-        mylog(LogLevel::I, "texture path: %s", texture_path.c_str());
-        m_loaded_texture_data[texture_path] = imageParam{};
-    }
-
-    std::vector<std::thread> threads;
-    for(auto const& texture_path : vehInfo.getTexturePaths()) {
-        threads.emplace_back([this, texture_path]() {
-            std::string fullPath = this->directory + "/" + texture_path;
-            unsigned int result = ImageFromFile(fullPath, m_loaded_texture_data[texture_path]);
-            assert(result == 0);
-        });
-    }
-
-    // wait for all texture loading threads to finish
-    for (auto& thread : threads) {
-        thread.join();
-    }
 
     // process ASSIMP's root node recursively
-    processNode(scene->mRootNode, scene, meshInfo, vehInfo);
-
-    // release loaded texture data
-    for (const auto& tex : m_loaded_texture_data) {
-        if (tex.second.data) {
-            stbi_image_free(tex.second.data);
-        }
-    }
+    processNode(scene->mRootNode, scene, meshInfo, vehInfo, textureData);
 
     return true;
 }
 
  // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo)
+void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, 
+        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData)
 {
     aiMatrix4x4 mTransformation = node->mTransformation;
 
@@ -75,18 +47,18 @@ void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<Bu
         // the node object only contains indices to index the actual objects in the scene. 
         // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        meshInfo.push_back(processMesh(mesh, scene, mTransformation, vehInfo));
+        meshInfo.push_back(processMesh(mesh, scene, mTransformation, vehInfo, textureData));
     }
     // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
     for(unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        processNode(node->mChildren[i], scene, meshInfo, vehInfo);
+        processNode(node->mChildren[i], scene, meshInfo, vehInfo, textureData);
     }
 
 }
 
 BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, const aiMatrix4x4& translationMatrix, 
-    ConfigParser& vehInfo)
+    ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData)
 {
     // data to fill
     std::vector<Vertex> vertices;
@@ -184,37 +156,37 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
 
         std::vector<Texture> diffuseMaps =
             LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
         std::vector<Texture> specularMaps =
             LoadTextures(material, aiTextureType_SPECULAR, "texture_specular",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
         std::vector<Texture> normalMaps =
             LoadTextures(material, aiTextureType_NORMALS, "texture_normal",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
         std::vector<Texture> aoMaps =
             LoadTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
 
         std::vector<Texture> alphaMaps =
             LoadTextures(material, aiTextureType_OPACITY, "texture_alpha",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), alphaMaps.begin(), alphaMaps.end());
 
         std::vector<Texture> roughnessMaps =
             LoadTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
 
         std::vector<Texture> metallicMaps =
             LoadTextures(material, aiTextureType_METALNESS, "texture_metallic",
-                         std::string(mesh->mName.C_Str()), vehInfo);
+                         std::string(mesh->mName.C_Str()), vehInfo, textureData);
         textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
 
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -298,62 +270,10 @@ myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
     return material;
 }
 
-// checks all material textures of a given type and loads the textures if they're not loaded yet.
-// the required info is returned as a Texture struct.
-// std::vector<Texture> ModelLoader::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
-// {
-//     std::vector<Texture> textures;
-//     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-//     {
-//         aiString str;
-//         mat->GetTexture(type, i, &str);
-//         // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-//         bool skip = false;
-//         for(unsigned int j = 0; j < textures_loaded.size(); j++)
-//         {
-//             if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
-//             {
-//                 textures.push_back(textures_loaded[j]);
-//                 skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
-//                 break;
-//             }
-//         }
-//         if(!skip)
-//         {   // if texture hasn't been loaded already, load it
-//             Texture texture;
-//             texture.id = TextureFromFile(str.C_Str(), directory);
-//             texture.type = typeName;
-//             texture.path = str.C_Str();
-//             textures.push_back(texture);
-//             textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
-//         }
-//     }
-//     return textures;
-// }
-
-unsigned int ModelLoader::ImageFromFile(std::string filename, imageParam& pngData)
-{
-    unsigned char *data = stbi_load(filename.c_str(), &pngData.width, &pngData.height, &pngData.nrChannels, 0);
-    if (data)
-    {
-        pngData.data = data;
-        mylog(LogLevel::I, "Texture loaded at path: %s, width %d, height %d, channels: %d", filename.c_str(), pngData.width, pngData.height, pngData.nrChannels);
-    }
-    else
-    {
-        pngData.data = nullptr;
-        mylog(LogLevel::E, "Texture failed to load at path: %s", filename.c_str());
-        assert(false);
-        return 1;
-    }
-
-    return 0;
-}
-
-unsigned int ModelLoader::TextureFromBuffer(const std::string& path){
+unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData){
     // 从 m_loaded_texture_data 中查找已加载的纹理数据
-    auto it = m_loaded_texture_data.find(path);
-    if (it == m_loaded_texture_data.end()) {
+    auto it = textureData.find(path);
+    if (it == textureData.end()) {
         mylog(LogLevel::E, "Texture data not found in buffer: %s", path.c_str());
         assert(false);
         return 0;
@@ -559,7 +479,8 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
                                                     aiTextureType type,
                                                     const char* typeName,
                                                     std::string meshName,
-                                                    ConfigParser& vehInfo) {
+                                                    ConfigParser& vehInfo,
+                                                    const std::unordered_map<std::string, imageParam>& textureData) {
     std::vector<Texture> textures;
     bool skip = false;
     std::string INVALID_TEXTURE_NAME = "";
@@ -645,7 +566,7 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
             //     texture.id = TextureFromFile(textureName.c_str(), directory);
             // }
 
-            texture.id = TextureFromBuffer(textureName);
+            texture.id = TextureFromBuffer(textureName, textureData);
             if(texture.id == 0){
                 mylog(LogLevel::E, "Failed to load texture: %s for mesh %s ", textureName.c_str(),
                        meshName.c_str());

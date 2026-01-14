@@ -1,8 +1,10 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "glm/glm.hpp"
 #include "VehicleShader.h"
+#include "CommonDataStruct.h"
 
 // TODO: 纹理ID先使用10，以避免和其他纹理冲突
 class Skybox {
@@ -14,7 +16,7 @@ public:
     }
     ~Skybox() = default;
 
-    bool Init(const std::vector<std::string>& faces);
+    bool Init(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData);
 
     void ActiveCubeMap() const;
 
@@ -36,7 +38,10 @@ public:
     }
 
 private:
+    // load from disk, slow
     unsigned int LoadCubemap(const std::vector<std::string>& faces) const;
+    // load from buffer
+    unsigned int LoadCubemap(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData) const;
 
     unsigned int cubemap_;
     unsigned int bind_point_;

@@ -51,3 +51,10 @@ struct UboMat {
     float shininess;
     float shininessStrength;
 };
+
+struct imageParam{
+    int width;
+    int height;
+    int nrChannels;
+    unsigned char *data;
+};

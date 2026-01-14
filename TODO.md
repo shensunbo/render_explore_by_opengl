@@ -24,12 +24,14 @@ Use GitHub Flavored Markdown
 
 - [ ] NDK build state control 
 
-- [ ] res loading speed optimize 
+- [X] res loading speed optimize，texture from >10s -> 3.3s
 
 - [ ] 纹理格式转换，转换为GPU 友好的纹理格式`# 将 PNG 转换为 DDS（BC7 压缩）
 texconv -f BC7_UNORM -m 10 input.png -o output.dds`
 
 - [ ] 纹理加载异步化, debug 目前的加载瓶颈
+
+- [ ] 代码结构优化
 
 --- 
 

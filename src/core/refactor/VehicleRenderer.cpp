@@ -1,6 +1,9 @@
 #include "VehicleRenderer.h"
 #include "log/mylog.h"
 #include <memory>
+#include <stb_image.h>
+#include <thread>
+#include "tool.h"
 
 void VehicleRenderer::create(unsigned int width, unsigned int height, const std::string& resourcePrefix){
 
@@ -12,12 +15,12 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
 
     std::string cfgPath =  prefix + std::string("res/model/halo/vehicle_info.json");
     mylog(LogLevel::I, "Loading config file: %s", cfgPath.c_str());
-    cfgParser.loadConfigFile(cfgPath);
+    cfgParser.loadConfigFile(cfgPath, m_texture_paths);
 
     // build and compile shaders
     // -------------------------
     std::string vs_path =  prefix + std::string("res/shader/with_texture.vs");
-    std::string fs_path =  prefix + std::string("res/shader/with_texture_test.fs");
+    std::string fs_path =  prefix + std::string("res/shader/with_texture.fs");
     // VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
     ourShader = new VehicleShader(vs_path.c_str(), fs_path.c_str());
     
@@ -26,17 +29,7 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
     std::string path =  prefix + std::string("res/model/halo/halo.fbx");
     // std::string path =  std::string("res/model/ford/vehicle.fbx");
 
-    // VehicleMeshInfo ourModel(path);
-    ourModel = new VehicleMeshInfo(path, cfgParser);
-
-    for(auto& it : ourModel->meshes) {
-        unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
-        ourShader->uniformBlockBind(blockIndex, 0);
-        it.updateUbo(it.mUboMat);
-        mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
-    }
-
-    // skybox
+     // skybox
     std::vector<std::string> faces
     {
          prefix + std::string("res/model/skybox/px.png"),
@@ -47,14 +40,50 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
          prefix + std::string("res/model/skybox/nz.png"),
     };
 
+    m_texture_paths.insert(faces[0]);
+    m_texture_paths.insert(faces[1]);
+    m_texture_paths.insert(faces[2]);
+    m_texture_paths.insert(faces[3]);
+    m_texture_paths.insert(faces[4]);
+    m_texture_paths.insert(faces[5]);
+
+    // handle texture loading in multithreading, remember to release after all textures generated 
+    for(auto const& texture_path : m_texture_paths) {
+        m_loaded_texture_data[texture_path] = imageParam{};
+    }
+
+    std::vector<std::thread> threads;
+    for(auto const& texture_path : m_texture_paths) {
+        threads.emplace_back([this, texture_path]() {
+            auto result = Tool::ImageFromFile(texture_path, m_loaded_texture_data[texture_path]);
+            assert(result == 0);
+        });
+    }
+
+    // wait for all texture loading threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // VehicleMeshInfo ourModel(path);
+    ourModel = new VehicleMeshInfo(path, cfgParser, m_loaded_texture_data);
+
+    for(auto& it : ourModel->meshes) {
+        unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
+        ourShader->uniformBlockBind(blockIndex, 0);
+        it.updateUbo(it.mUboMat);
+        mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
+    }
+
     unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
     cubemap = std::make_shared<Skybox>(skyboxBindID, prefix + std::string("res/shader/skybox.vs"), prefix + std::string("res/shader/skybox.fs"));
-    cubemap->Init(faces);
+    cubemap->Init(faces, m_loaded_texture_data);
 
     // TODO
     fbo_ = std::make_shared<FboHandler>(width, height, prefix + std::string("res/shader/fbo_rect.vs"), prefix + std::string("res/shader/fbo_rect.fs"));
     fbo_->init();
 
+    releaseTextureData();
     mylog(LogLevel::I, "VehicleRenderer::create");
 }
 
@@ -91,4 +120,15 @@ void VehicleRenderer::draw(){
     }
 
     // mylog(LogLevel::I, "VehicleRenderer::draw");
+}
+
+void VehicleRenderer::releaseTextureData(){
+    for (const auto& tex : m_loaded_texture_data) {
+        if (tex.second.data) {
+            stbi_image_free(tex.second.data);
+        }
+    }
+
+    m_loaded_texture_data.clear();
+    mylog(LogLevel::I, "All texture data released.");
 }

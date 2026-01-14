@@ -12,30 +12,28 @@
 
 class ModelLoader {
 public:
-    bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo);
-
+    bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
+            ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData);
+    
+    // static unsigned int ImageFromFile(std::string filename, imageParam& pngData);
 private:
-    struct imageParam{
-        int width;
-        int height;
-        int nrChannels;
-        unsigned char *data;
-    };
-
-    void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo);
+    void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo,
+                    const std::unordered_map<std::string, imageParam>& textureData);
     BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, 
-        const aiMatrix4x4& translationMatrix, ConfigParser& vehInfo);
+        const aiMatrix4x4& translationMatrix, ConfigParser& vehInfo, 
+        const std::unordered_map<std::string, imageParam>& textureData);
 
     myMaterial loadMaterial(aiMaterial* mat);
     unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
-    unsigned int TextureFromBuffer(const std::string& path);
-    unsigned int ImageFromFile(std::string filename, imageParam& pngData);
+    unsigned int TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData);
+    // unsigned int ImageFromFile(std::string filename, imageParam& pngData);
     unsigned int TextureFromKTXFile(const char *path, const std::string &directory);
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
     std::vector<Texture> LoadTextures(aiMaterial* mat, aiTextureType type,
                                           const char* typeName,
                                           std::string meshName,
-                                          ConfigParser& vehInfo);
+                                          ConfigParser& vehInfo,
+                                          const std::unordered_map<std::string, imageParam>& textureData);
 
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
         glm::mat4 to;
@@ -51,5 +49,5 @@ private:
     // std::vector<Texture> textures_loaded;
     std::vector<Texture> m_textures_loaded;
     std::string directory;
-    std::unordered_map<std::string, imageParam> m_loaded_texture_data;
+    // std::unordered_map<std::string, imageParam> m_loaded_texture_data;
 };

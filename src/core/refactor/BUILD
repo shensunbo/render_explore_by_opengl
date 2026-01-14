@@ -10,7 +10,8 @@ cc_library(
         "VehicleRenderer.cpp",
         "VehicleShader.cpp",
         "VehicleVirCamera.cpp",
-        "FboHandler.cpp"
+        "FboHandler.cpp",
+        "tool.cpp",
     ],
     hdrs = [
         "AnimationHandler.h",
@@ -23,7 +24,8 @@ cc_library(
         "VehicleShader.h",
         "VehicleVirCamera.h",
         "CommonDataStruct.h",
-        "FboHandler.h"
+        "FboHandler.h",
+        "tool.h",
     ],
     deps = [
         "//include:log",

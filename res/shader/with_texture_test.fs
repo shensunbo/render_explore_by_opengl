@@ -134,12 +134,12 @@ void main()
     // TODO: realAmbientColor should be multiplied or be added with diffuse
     // with roughness
     // vec3 resultColor = diffuse  + (specular + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
-    vec3 resultColor = diffuse * attenuation * 0.5 + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
+    // vec3 resultColor = diffuse * attenuation * 0.5 + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
     // vec3 resultColor = diffuse  + (specular) * (1.0 - roughness);
 
 
     // basic
-    // vec3 resultColor = diffuse  + (specular + realAmbientColor);
+    vec3 resultColor = diffuse  + (specular + realAmbientColor);
     resultColor = diffCoef * resultColor;
 
     // 测试镜面反射
@@ -154,6 +154,6 @@ void main()
 
     // 测试metallic
     // resultColor = vec3(metallic);
-    resultColor = realMaterialDiffuseColor;
+    // resultColor = realMaterialDiffuseColor;
     FragColor = vec4(resultColor, 1.0);
 }

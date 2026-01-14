@@ -84,7 +84,7 @@ typedef struct VehicleParam {
 
 class ConfigParser {
 public:
-    bool loadConfigFile(const std::string& config_file_path = "vehicle_info.json");
+    bool loadConfigFile(const std::string& config_file_path, std::set<std::string>& texture_paths_set);
 
     bool isAdjustableMesh(const std::string& mesh);
     bool isRotatableMesh(const std::string& mesh);
@@ -110,7 +110,7 @@ public:
     std::pair <std::string, glm::vec3> getCurrentCarPaint() { return m_current_car_paint; }
     std::set<std::string> getHideMeshesInChassis() { return m_hide_chassis_meshes; }
     VehicleParam getVehicleParam() { return m_vehicle_param; }
-    const std::set<std::string>& getTexturePaths() const { return m_texture_paths; }
+    // const std::set<std::string>& getTexturePaths() const { return m_texture_paths; }
 
     void updateFlTargetDoorAngle(int angle);
     void updateFrTargetDoorAngle(int angle);
@@ -136,7 +136,7 @@ private:
     bool parserWheelMeshes(const nlohmann::json& wheel);
     bool parserLightMeshes(const nlohmann::json& light);
     bool parserCarPaintMeshes(const nlohmann::json& carPaint);
-    bool parserTextureData(const nlohmann::json& texture);
+    bool parserTextureData(const nlohmann::json& texture, std::set<std::string>& texture_paths_set);
     bool parserDisabledMeshes(const nlohmann::json& disabledMeshes);
     bool parserTransparentChassisMeshes(const nlohmann::json& transparentChassis);
     bool parserVehicleParam(const nlohmann::json& vehicleParam);
@@ -174,7 +174,8 @@ private:
 
     //texture, first meshname, second material; if material is "", the texture is for all material
     std::map<std::pair<std::string, std::string>, TextureData> m_texture_data;
-    std::set<std::string> m_texture_paths;
+    // std::set<std::string> m_texture_paths;
+    std::string m_path_prefix;
 
     // transparent chassis mode
     std::set<std::string> m_transparent_chassis_meshes;

@@ -14,6 +14,9 @@ public:
     void update();
     void draw();
 
+private:
+    void releaseTextureData();
+
 public:
     VehicleShader* ourShader;
     VehicleMeshInfo* ourModel;
@@ -21,4 +24,7 @@ public:
     std::shared_ptr<Skybox> cubemap;
     std::shared_ptr<FboHandler> fbo_;
     ConfigParser  cfgParser;
+
+    std::set<std::string> m_texture_paths;
+    std::unordered_map<std::string, imageParam> m_loaded_texture_data;
 };

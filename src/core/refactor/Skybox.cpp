@@ -12,8 +12,8 @@
  */
 
 // skybox for glass material
-bool Skybox::Init(const std::vector<std::string>& faces){
-    cubemap_ = LoadCubemap(faces);
+bool Skybox::Init(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData){
+    cubemap_ = LoadCubemap(faces, textureData);
 
     initSkybox();
     return true;
@@ -51,6 +51,62 @@ unsigned int Skybox::LoadCubemap(
 
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     
+
+    return textureID;
+}
+
+unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces, 
+        const std::unordered_map<std::string, imageParam>& textureData) const{
+            
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    CHECK_GLES_STATUS();
+
+    // int width, height, nrComponents;
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        // unsigned char* data =
+        //     stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
+
+        // 从 m_loaded_texture_data 中查找已加载的纹理数据
+        auto it = textureData.find(faces[i]);
+        if (it == textureData.end()) {
+            mylog(LogLevel::E, "Texture data not found in buffer: %s", faces[i].c_str());
+            assert(false);
+            return 0;
+        }
+
+        const imageParam& imgData = it->second;
+        
+        // // 检查数据是否有效
+        // if (!imgData.data) {
+        //     SLOG_E("Texture data is null for path: {}", faces[i].c_str());
+        //     assert(false);
+        //     return 0;
+        // }
+
+        if (imgData.data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, imgData.width,
+                         imgData.height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData.data);
+            CHECK_GLES_STATUS();
+
+            // stbi_image_free(data);
+        } else {
+            mylog(LogLevel::E, "Texture data is null for path: %s", faces[i].c_str());
+            assert(false);
+            return 0;
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    CHECK_GLES_STATUS();
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    CHECK_GLES_STATUS();
 
     return textureID;
 }
