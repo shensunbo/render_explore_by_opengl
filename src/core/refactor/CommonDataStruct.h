@@ -50,6 +50,15 @@ struct UboMat {
     float opacity;
     float shininess;
     float shininessStrength;
+    // use uint32_t to align with glsl bool
+    uint32_t texture_diffuse_load;
+    uint32_t texture_specular_load;
+    uint32_t texture_normal_load;
+    uint32_t texture_ao_load;
+    uint32_t texture_alpha_load;
+    uint32_t texture_roughness_load;
+    uint32_t texture_metallic_load;
+    uint32_t texture_emissive_load;
 };
 
 struct imageParam{

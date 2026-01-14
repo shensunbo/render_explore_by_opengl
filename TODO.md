@@ -33,6 +33,8 @@ texconv -f BC7_UNORM -m 10 input.png -o output.dds`
 
 - [ ] 代码结构优化
 
+- [ ] BRDF
+
 --- 
 
 ## low priority

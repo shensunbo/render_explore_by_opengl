@@ -106,8 +106,14 @@ void VehicleRenderer::draw(){
             ourShader->setInt(uniform, v.textures[i].bindId);
             glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
 
-            ourShader->setBool((uniform + "_load"), true);
+            // ourShader->setBool((uniform + "_load"), true);
+            // ourShader->setBool("textureLoad", true);
+        }
+
+        if(v.textures.size()){
             ourShader->setBool("textureLoad", true);
+        }else{
+            ourShader->setBool("textureLoad", false);
         }
 
         // draw mesh
@@ -116,7 +122,7 @@ void VehicleRenderer::draw(){
 
         glDrawElements(GL_TRIANGLES, v.getIndicesSize(), GL_UNSIGNED_INT, 0);
 
-        ourShader->setBool("textureLoad", false);
+        // ourShader->setBool("textureLoad", false);
     }
 
     // mylog(LogLevel::I, "VehicleRenderer::draw");

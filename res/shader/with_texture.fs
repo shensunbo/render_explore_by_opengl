@@ -9,6 +9,14 @@ layout (std140) uniform MaterialBlock {
     float Opacity;
     float Shininess;
     float ShininessStrength;
+    bool texture_diffuse_load;
+    bool texture_specular_load;
+    bool texture_normal_load;
+    bool texture_ao_load;
+    bool texture_alpha_load;
+    bool texture_roughness_load;
+    bool texture_metallic_load;
+    bool texture_emissive_load;
 } material;
 
 in vec3 Normal;
@@ -27,13 +35,13 @@ uniform sampler2D texture_alpha;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
 
-uniform bool texture_diffuse_load;
-uniform bool texture_specular_load;
-uniform bool texture_normal_load;
-uniform bool texture_ao_load;
-uniform bool texture_alpha_load;
-uniform bool texture_roughness_load;
-uniform bool texture_metallic_load;
+// uniform bool texture_diffuse_load;
+// uniform bool texture_specular_load;
+// uniform bool texture_normal_load;
+// uniform bool texture_ao_load;
+// uniform bool texture_alpha_load;
+// uniform bool texture_roughness_load;
+// uniform bool texture_metallic_load;
 
 uniform samplerCube cubemap;
 uniform mat4 cubemapRotateMatrix;
@@ -72,29 +80,29 @@ void main()
     if(textureLoad){
         vec2 index = vec2(TexCoords.x, TexCoords.y);
 
-        if(texture_diffuse_load){
+        if(material.texture_diffuse_load){
             realMaterialDiffuseColor = texture(texture_diffuse, index).rgb;
         }
 
-        if(texture_specular_load){
+        if(material.texture_specular_load){
             realShininess = texture(texture_specular, index).r * 128.0;
         }
 
-        if(texture_ao_load){
+        if(material.texture_ao_load){
             diffCoef = texture(texture_ao, index).r;
         }
 
-        if(texture_normal_load){
+        if(material.texture_normal_load){
             realNormal = texture(texture_normal, TexCoords).rgb;
             realNormal = normalize(realNormal * 2.0 - 1.0);
             realNormal = normalize(TBN * realNormal);
         }
 
-        if(texture_roughness_load){
+        if(material.texture_roughness_load){
             roughness = texture(texture_roughness, index).r;
         }
 
-        if(texture_metallic_load){
+        if(material.texture_metallic_load){
             metallic = texture(texture_metallic, index).r;
         }
     }

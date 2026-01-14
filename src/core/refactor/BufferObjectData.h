@@ -14,7 +14,7 @@ public:
     std::vector<Texture>      textures;
     std::string meshName;
     myMaterial mMaterial;
-    UboMat mUboMat;
+    UboMat mUboMat{};
     unsigned int VAO;
 
 
@@ -32,6 +32,26 @@ public:
         this->mUboMat.specularColor = glm::vec4(mMaterial.specularColor, 1.0f);
         this->mUboMat.shininess = mMaterial.shininess;
         this->mUboMat.shininessStrength = mMaterial.ShininessStrength;
+
+    for (const auto& tex : textures) {
+        if (tex.type == "texture_diffuse") {
+            this->mUboMat.texture_diffuse_load = 1;
+        } else if (tex.type == "texture_specular") {
+            this->mUboMat.texture_specular_load = 1;
+        } else if (tex.type == "texture_normal") {
+            this->mUboMat.texture_normal_load = 1;
+        } else if (tex.type == "texture_ao") {
+            this->mUboMat.texture_ao_load = 1;
+        } else if (tex.type == "texture_alpha") {
+            this->mUboMat.texture_alpha_load = 1;
+        } else if (tex.type == "texture_roughness") {
+            this->mUboMat.texture_roughness_load = 1;
+        } else if (tex.type == "texture_metallic") {
+            this->mUboMat.texture_metallic_load = 1;
+        } else if (tex.type == "texture_emissive") {
+            this->mUboMat.texture_emissive_load = 1;
+        }
+    }
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         setupMesh();
