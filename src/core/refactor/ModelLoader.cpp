@@ -41,13 +41,15 @@ void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<Bu
         parent = parent->mParent;
     }
 
+    glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(mTransformation);
+
     // process each mesh located at the current node
     for(unsigned int i = 0; i < node->mNumMeshes; i++)
     {
         // the node object only contains indices to index the actual objects in the scene. 
         // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        meshInfo.push_back(processMesh(mesh, scene, mTransformation, vehInfo, textureData));
+        meshInfo.push_back(processMesh(mesh, scene, glmTranslationMatrix, vehInfo, textureData));
     }
     // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
     for(unsigned int i = 0; i < node->mNumChildren; i++)
@@ -57,7 +59,7 @@ void ModelLoader::processNode(aiNode *node, const aiScene *scene, std::vector<Bu
 
 }
 
-BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, const aiMatrix4x4& translationMatrix, 
+BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4& translationMatrix, 
     ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData)
 {
     // data to fill
@@ -65,7 +67,7 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
     std::vector<unsigned int> indices;
     std::vector<Texture> textures;
 
-    glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(translationMatrix);
+    // glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(translationMatrix);
 
     // walk through each of the mesh's vertices
     for(unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -127,7 +129,7 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
 
         glm::vec4 position =
             glm::vec4(vertex.Position, 1.0f);  // 转换为齐次坐标
-        position = glmTranslationMatrix * position;
+        position = translationMatrix * position;
 
         // 更新顶点的位置
         vertex.Position = glm::vec3(position.x, position.y, position.z);

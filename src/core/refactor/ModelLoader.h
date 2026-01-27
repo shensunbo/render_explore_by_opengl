@@ -20,7 +20,7 @@ private:
     void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo,
                     const std::unordered_map<std::string, imageParam>& textureData);
     BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, 
-        const aiMatrix4x4& translationMatrix, ConfigParser& vehInfo, 
+        const glm::mat4& translationMatrix, ConfigParser& vehInfo, 
         const std::unordered_map<std::string, imageParam>& textureData);
 
     myMaterial loadMaterial(aiMaterial* mat);
