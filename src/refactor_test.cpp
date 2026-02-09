@@ -60,7 +60,11 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
-    vRender.create(SCR_WIDTH, SCR_HEIGHT);
+    RendererConfig config{};
+    config.width = SCR_WIDTH;
+    config.height = SCR_HEIGHT;
+    config.resourceRoot = ""; // run from repo root or build copy
+    vRender.create(config);
     vRender.ourShader->use();
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -101,7 +105,7 @@ int main()
         processCameraInput(window);
         // camera.ProcessJump(deltaTime);
 
-        if(fboEnable){
+        if(fboEnable && vRender.fbo_){
             // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
             vRender.fbo_->enable();
         }
@@ -157,7 +161,7 @@ int main()
 
         
 
-        if(fboEnable){
+        if(fboEnable && vRender.fbo_){
             if(dumpRes){
                 vRender.fbo_->dumpTextureToFile("dump.png");
                 dumpRes = false;

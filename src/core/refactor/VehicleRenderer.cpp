@@ -1,44 +1,57 @@
 #include "VehicleRenderer.h"
 #include "log/mylog.h"
 #include <memory>
+#include <mutex>
 #include <stb_image.h>
 #include <thread>
 #include "tool.h"
 
-void VehicleRenderer::create(unsigned int width, unsigned int height, const std::string& resourcePrefix){
+void VehicleRenderer::create(const RendererConfig& cfg){
 
-    // Add trailing slash to resource prefix if not empty
-    std::string prefix = resourcePrefix;
-    if (!prefix.empty() && prefix.back() != '/') {
-        prefix += '/';
-    }
+    auto make_path = [](const std::string& root, const std::string& relative) {
+        if (relative.empty()) return std::string();
+        if (root.empty()) return relative;
+        if (root.back() == '/') return root + relative;
+        return root + "/" + relative;
+    };
 
-    std::string cfgPath =  prefix + std::string("res/model/halo/vehicle_info.json");
+    const std::string prefix = cfg.resourceRoot;
+
+    const std::string cfgPath = cfg.vehicleInfoPath.empty()
+                                    ? make_path(prefix, "res/model/halo/vehicle_info.json")
+                                    : make_path(prefix, cfg.vehicleInfoPath);
     mylog(LogLevel::I, "Loading config file: %s", cfgPath.c_str());
     cfgParser.loadConfigFile(cfgPath, m_texture_paths);
 
-    // build and compile shaders
-    // -------------------------
-    std::string vs_path =  prefix + std::string("res/shader/with_texture.vs");
-    std::string fs_path =  prefix + std::string("res/shader/with_texture.fs");
-    // VehicleShader ourShader(vs_path.c_str(), fs_path.c_str());
-    ourShader = new VehicleShader(vs_path.c_str(), fs_path.c_str());
+    const std::string vs_path = cfg.vehicleVsPath.empty()
+                                    ? make_path(prefix, "res/shader/with_texture.vs")
+                                    : make_path(prefix, cfg.vehicleVsPath);
+    const std::string fs_path = cfg.vehicleFsPath.empty()
+                                    ? make_path(prefix, "res/shader/with_texture.fs")
+                                    : make_path(prefix, cfg.vehicleFsPath);
+    ourShader = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
     
-    // load models
-    // -----------
-    std::string path =  prefix + std::string("res/model/halo/halo.fbx");
-    // std::string path =  std::string("res/model/ford/vehicle.fbx");
+    const std::string path = cfg.modelPath.empty()
+                                 ? make_path(prefix, "res/model/halo/halo.fbx")
+                                 : make_path(prefix, cfg.modelPath);
 
      // skybox
-    std::vector<std::string> faces
-    {
-         prefix + std::string("res/model/skybox/px.png"),
-         prefix + std::string("res/model/skybox/nx.png"),
-         prefix + std::string("res/model/skybox/py.png"),
-         prefix + std::string("res/model/skybox/ny.png"),
-         prefix + std::string("res/model/skybox/pz.png"),
-         prefix + std::string("res/model/skybox/nz.png"),
-    };
+    std::vector<std::string> faces;
+    if (!cfg.skyboxFaces[0].empty()) {
+        faces.assign(cfg.skyboxFaces.begin(), cfg.skyboxFaces.end());
+        for (auto& f : faces) {
+            f = make_path(prefix, f);
+        }
+    } else {
+        faces = {
+            make_path(prefix, "res/model/skybox/px.png"),
+            make_path(prefix, "res/model/skybox/nx.png"),
+            make_path(prefix, "res/model/skybox/py.png"),
+            make_path(prefix, "res/model/skybox/ny.png"),
+            make_path(prefix, "res/model/skybox/pz.png"),
+            make_path(prefix, "res/model/skybox/nz.png"),
+        };
+    }
 
     m_texture_paths.insert(faces[0]);
     m_texture_paths.insert(faces[1]);
@@ -48,15 +61,17 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
     m_texture_paths.insert(faces[5]);
 
     // handle texture loading in multithreading, remember to release after all textures generated 
-    for(auto const& texture_path : m_texture_paths) {
-        m_loaded_texture_data[texture_path] = imageParam{};
-    }
-
+    std::mutex textureMutex;
     std::vector<std::thread> threads;
+    threads.reserve(m_texture_paths.size());
     for(auto const& texture_path : m_texture_paths) {
-        threads.emplace_back([this, texture_path]() {
-            auto result = Tool::ImageFromFile(texture_path, m_loaded_texture_data[texture_path]);
-            assert(result == 0);
+        threads.emplace_back([this, &textureMutex, texture_path]() {
+            imageParam img{};
+            auto result = Tool::ImageFromFile(texture_path, img);
+            if (result == 0) {
+                std::lock_guard<std::mutex> lock(textureMutex);
+                m_loaded_texture_data[texture_path] = img;
+            }
         });
     }
 
@@ -66,22 +81,25 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
     }
 
     // VehicleMeshInfo ourModel(path);
-    ourModel = new VehicleMeshInfo(path, cfgParser, m_loaded_texture_data);
+    ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data);
 
     for(auto& it : ourModel->meshes) {
-        unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
-        ourShader->uniformBlockBind(blockIndex, 0);
+    unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
+    ourShader->uniformBlockBind(blockIndex, 0);
         it.updateUbo(it.mUboMat);
         mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
     }
 
     unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
-    cubemap = std::make_shared<Skybox>(skyboxBindID, prefix + std::string("res/shader/skybox.vs"), prefix + std::string("res/shader/skybox.fs"));
+    cubemap = std::make_shared<Skybox>(skyboxBindID, make_path(prefix, "res/shader/skybox.vs"), make_path(prefix, "res/shader/skybox.fs"));
     cubemap->Init(faces, m_loaded_texture_data);
 
-    // TODO
-    fbo_ = std::make_shared<FboHandler>(width, height, prefix + std::string("res/shader/fbo_rect.vs"), prefix + std::string("res/shader/fbo_rect.fs"));
-    fbo_->init();
+    if (cfg.enableFbo) {
+        fbo_ = std::make_shared<FboHandler>(cfg.width, cfg.height, make_path(prefix, "res/shader/fbo_rect.vs"), make_path(prefix, "res/shader/fbo_rect.fs"));
+        fbo_->init();
+    } else {
+        fbo_.reset();
+    }
 
     releaseTextureData();
     mylog(LogLevel::I, "VehicleRenderer::create");
@@ -89,9 +107,8 @@ void VehicleRenderer::create(unsigned int width, unsigned int height, const std:
 
 void VehicleRenderer::destroy(){
     mylog(LogLevel::I, "VehicleRenderer::destroy");
-
-    delete ourShader;
-    delete ourModel;
+    ourShader.reset();
+    ourModel.reset();
 }
 
 void VehicleRenderer::update(){

@@ -75,11 +75,18 @@ public:
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO);
     }
 
+    ~BufferObjectData();
+
+    BufferObjectData(const BufferObjectData&) = delete;
+    BufferObjectData& operator=(const BufferObjectData&) = delete;
+    BufferObjectData(BufferObjectData&& other) noexcept;
+    BufferObjectData& operator=(BufferObjectData&& other) noexcept;
+
 private:
     // render data 
-    GLuint VBO;
-    GLuint EBO;
-    GLuint UBO;
+    GLuint VBO{0};
+    GLuint EBO{0};
+    GLuint UBO{0};
 
     // initializes all the buffer objects/arrays
     void setupMesh();

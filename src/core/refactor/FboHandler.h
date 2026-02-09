@@ -41,9 +41,9 @@ private:
     VehicleShader shader_;
     GLuint quadVAO_;
     GLuint quadVBO_;
-    GLuint fbo; 
-    GLuint texture;
-    GLuint rbo;
+    GLuint fbo{0}; 
+    GLuint texture{0};
+    GLuint rbo{0};
 
     
 

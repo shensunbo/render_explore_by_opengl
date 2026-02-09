@@ -19,6 +19,21 @@ bool Skybox::Init(const std::vector<std::string>& faces, const std::unordered_ma
     return true;
 }
 
+Skybox::~Skybox(){
+    if (cubemap_) {
+        glDeleteTextures(1, &cubemap_);
+        cubemap_ = 0;
+    }
+    if (vbo_) {
+        glDeleteBuffers(1, &vbo_);
+        vbo_ = 0;
+    }
+    if (vao_) {
+        glDeleteVertexArrays(1, &vao_);
+        vao_ = 0;
+    }
+}
+
 unsigned int Skybox::LoadCubemap(
     const std::vector<std::string>& faces) const {
     unsigned int textureID;

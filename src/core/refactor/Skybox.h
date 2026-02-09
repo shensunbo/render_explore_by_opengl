@@ -14,7 +14,12 @@ public:
     Skybox(unsigned int bindPoint, std::string vs = "res/shader/skybox.vs", std::string fs = "res/shader/skybox.fs"):shader_(vs.c_str(), fs.c_str()){
         bind_point_ = bindPoint;
     }
-    ~Skybox() = default;
+    ~Skybox();
+
+    Skybox(const Skybox&) = delete;
+    Skybox& operator=(const Skybox&) = delete;
+    Skybox(Skybox&&) = delete;
+    Skybox& operator=(Skybox&&) = delete;
 
     bool Init(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData);
 
@@ -43,11 +48,11 @@ private:
     // load from buffer
     unsigned int LoadCubemap(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData) const;
 
-    unsigned int cubemap_;
-    unsigned int bind_point_;
+    unsigned int cubemap_{0};
+    unsigned int bind_point_{0};
 
-    GLuint vao_; 
-    GLuint vbo_;
+    GLuint vao_{0}; 
+    GLuint vbo_{0};
 
     VehicleShader shader_;
 };

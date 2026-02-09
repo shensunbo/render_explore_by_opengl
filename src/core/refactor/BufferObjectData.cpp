@@ -1,5 +1,48 @@
 #include "BufferObjectData.h"
 
+BufferObjectData::~BufferObjectData() {
+    if (UBO) {
+        glDeleteBuffers(1, &UBO);
+        UBO = 0;
+    }
+    if (EBO) {
+        glDeleteBuffers(1, &EBO);
+        EBO = 0;
+    }
+    if (VBO) {
+        glDeleteBuffers(1, &VBO);
+        VBO = 0;
+    }
+    if (VAO) {
+        glDeleteVertexArrays(1, &VAO);
+        VAO = 0;
+    }
+}
+
+BufferObjectData::BufferObjectData(BufferObjectData&& other) noexcept {
+    *this = std::move(other);
+}
+
+BufferObjectData& BufferObjectData::operator=(BufferObjectData&& other) noexcept {
+    if (this != &other) {
+        // clean existing
+        this->~BufferObjectData();
+
+        vertices = std::move(other.vertices);
+        indices = std::move(other.indices);
+        textures = std::move(other.textures);
+        meshName = std::move(other.meshName);
+        mMaterial = other.mMaterial;
+        mUboMat = other.mUboMat;
+
+        VAO = other.VAO; other.VAO = 0;
+        VBO = other.VBO; other.VBO = 0;
+        EBO = other.EBO; other.EBO = 0;
+        UBO = other.UBO; other.UBO = 0;
+    }
+    return *this;
+}
+
 void BufferObjectData::setupMesh()
 {
     // create buffers/arrays

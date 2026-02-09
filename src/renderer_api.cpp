@@ -33,8 +33,11 @@ void RendererAPI::init(int w, int h, const std::string& resourcePrefix)
     glEnable(GL_MULTISAMPLE);
 #endif
 
-    // Create and initialize the vehicle renderer
-    vRender->create(width, height, resourcePrefix);
+    RendererConfig cfg{};
+    cfg.width = width;
+    cfg.height = height;
+    cfg.resourceRoot = resourcePrefix;
+    vRender->create(cfg);
     vRender->ourShader->use();
 
     // Setup skybox model matrix with rotation
