@@ -10,6 +10,7 @@
 
 void VehicleRenderer::create(const RendererConfig& cfg){
 
+    // Helper to prefix resource paths with an optional root (works for in-tree and out-of-tree runs).
     auto make_path = [](const std::string& root, const std::string& relative) {
         if (relative.empty()) return std::string();
         if (root.empty()) return relative;
@@ -19,6 +20,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
 
     const std::string prefix = cfg.resourceRoot;
 
+    // Resolve config and shader paths with reasonable defaults.
     const std::string cfgPath = cfg.vehicleInfoPath.empty()
                                     ? make_path(prefix, "res/model/halo/vehicle_info.json")
                                     : make_path(prefix, cfg.vehicleInfoPath);
@@ -39,7 +41,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
                                  ? make_path(prefix, "res/model/halo/halo.fbx")
                                  : make_path(prefix, cfg.modelPath);
 
-     // skybox
+    // Build skybox face list.
     std::vector<std::string> faces;
     if (!cfg.skyboxFaces[0].empty()) {
         faces.assign(cfg.skyboxFaces.begin(), cfg.skyboxFaces.end());
@@ -64,7 +66,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     m_texture_paths.insert(faces[4]);
     m_texture_paths.insert(faces[5]);
 
-    // handle texture loading in multithreading, remember to release after all textures generated 
+    // Multithreaded texture loading: gather raw pixel data up-front, then upload on the main thread.
     std::mutex textureMutex;
     std::vector<std::thread> threads;
     threads.reserve(m_texture_paths.size());
@@ -79,12 +81,12 @@ void VehicleRenderer::create(const RendererConfig& cfg){
         });
     }
 
-    // wait for all texture loading threads to finish
+    // Wait for all texture-loading threads to complete.
     for (auto& thread : threads) {
         thread.join();
     }
 
-    // VehicleMeshInfo ourModel(path);
+    // Build GPU meshes using the loaded texture data and cache.
     ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
 
     for(auto& it : ourModel->meshes) {
@@ -98,6 +100,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     cubemap = std::make_shared<Skybox>(skyboxBindID, make_path(prefix, "res/shader/skybox.vs"), make_path(prefix, "res/shader/skybox.fs"));
     cubemap->Init(faces, m_loaded_texture_data);
 
+    // Optional FBO for post-processing or dumps.
     if (cfg.enableFbo) {
         fbo_ = std::make_shared<FboHandler>(cfg.width, cfg.height, make_path(prefix, "res/shader/fbo_rect.vs"), make_path(prefix, "res/shader/fbo_rect.fs"));
         fbo_->init();
@@ -142,7 +145,7 @@ void VehicleRenderer::draw(){
             ourShader->setBool("textureLoad", false);
         }
 
-        // draw mesh
+    // Draw current mesh.
         v.bindVao();
         v.bindUbo();
 
@@ -155,6 +158,7 @@ void VehicleRenderer::draw(){
 }
 
 void VehicleRenderer::renderFrame(const FrameParams& params){
+    // Choose between onscreen render and offscreen FBO path.
     const bool useFbo = params.enableFbo && fbo_ != nullptr;
     if (useFbo) {
         fbo_->enable();
@@ -164,6 +168,7 @@ void VehicleRenderer::renderFrame(const FrameParams& params){
     SkyboxPass skyboxPass(cubemap.get());
     PostPass postPass(fbo_.get());
 
+    // Execute passes in order: scene geometry, skybox, then optional post.
     scenePass.execute(params);
     skyboxPass.execute(params);
     if (useFbo) {

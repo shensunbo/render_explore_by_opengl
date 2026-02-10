@@ -130,10 +130,10 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
         Vertex& vertex = vertices[i];
 
         glm::vec4 position =
-            glm::vec4(vertex.Position, 1.0f);  // 转换为齐次坐标
+            glm::vec4(vertex.Position, 1.0f);  // Convert to homogeneous coordinates.
         position = translationMatrix * position;
 
-        // 更新顶点的位置
+        // Update vertex position after transform.
         vertex.Position = glm::vec3(position.x, position.y, position.z);
     }
 
@@ -263,9 +263,9 @@ myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
     // int shadingModel;
     // if (AI_SUCCESS == mat->Get(AI_MATKEY_SHADING_MODEL, shadingModel)) {
     //     if (shadingModel == aiShadingMode_Phong) {
-    //         // 设置为 Phong 着色模型
+    //         // Use Phong shading model.
     //     } else if (shadingModel == aiShadingMode_Gouraud) {
-    //         // 设置为 Gouraud 着色模型
+    //         // Use Gouraud shading model.
     //     }
     // }
 
@@ -275,7 +275,7 @@ myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
 }
 
 unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData){
-    // 从 m_loaded_texture_data 中查找已加载的纹理数据
+    // Retrieve preloaded texture data from the in-memory map.
     auto it = textureData.find(path);
     if (it == textureData.end()) {
         mylog(LogLevel::E, "Texture data not found in buffer: %s", path.c_str());
@@ -285,7 +285,7 @@ unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::
 
     const imageParam& imgData = it->second;
     
-    // 检查数据是否有效
+    // Ensure the texture payload is valid.
     if (!imgData.data) {
         mylog(LogLevel::E, "Texture data is null for path: %s", path.c_str());
         assert(false);
@@ -333,7 +333,7 @@ unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &d
     unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data)
     {
-        // TODO: 着色器中无法区分纹理是单通道还是多通道
+    // TODO: Shader path cannot distinguish single-channel from multi-channel textures.
         GLenum format;
         if (nrComponents == 1)
             format = GL_RED;
@@ -389,11 +389,11 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     mylog(LogLevel::I, "KTX file read cost: %lld ms - Dimensions: %dx%d, Levels: %d, Layers: %d, Faces: %d", 
           load_cost, texture->baseWidth, texture->baseHeight, texture->numLevels, texture->numLayers, texture->numFaces);
     
-    GLuint textureID = 0;  // 初始化为0
-    GLenum target = 0;     // 初始化为0
-    GLenum glerror = GL_NO_ERROR;  // 初始化为GL_NO_ERROR
+    GLuint textureID = 0;  // Initialize texture handle.
+    GLenum target = 0;     // Initialize target placeholder.
+    GLenum glerror = GL_NO_ERROR;  // Initialize GL error placeholder.
     
-    // 上传到 OpenGL - ktxTexture_GLUpload 会创建纹理并填充数据
+    // Upload to OpenGL; ktxTexture_GLUpload creates the texture and fills data.
     auto upload_start = std::chrono::high_resolution_clock::now();
     result = ktxTexture_GLUpload(texture, &textureID, &target, &glerror);
     auto upload_end = std::chrono::high_resolution_clock::now();
@@ -408,7 +408,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
         return 0;
     }
     
-    // 检查上传过程中是否有GL错误
+    // Check for GL errors reported by ktxTexture_GLUpload.
     if (glerror != GL_NO_ERROR) {
         mylog(LogLevel::E, "GL error reported by ktxTexture_GLUpload: 0x%x", glerror);
         ktxTexture_Destroy(texture);
@@ -417,7 +417,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     
     mylog(LogLevel::I, "KTX GPU upload cost: %lld ms - Texture ID: %u, Target: 0x%x", upload_cost, textureID, target);
     
-    // 验证纹理ID是否有效
+    // Validate the returned texture ID.
     GLboolean isTexture = glIsTexture(textureID);
     if (!isTexture) {
         mylog(LogLevel::E, "ktxTexture_GLUpload returned invalid texture ID: %u", textureID);
@@ -425,13 +425,13 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
         return 0;
     }
     
-    // 检查GPU上传后的状态
+    // Inspect GL error state after upload.
     GLenum err1 = glGetError();
     if (err1 != GL_NO_ERROR) {
         mylog(LogLevel::E, "GL error after ktxTexture_GLUpload: 0x%x", err1);
     }
     
-    // 设置纹理参数
+    // Configure texture sampling parameters.
     auto param_start = std::chrono::high_resolution_clock::now();
     glBindTexture(target, textureID);
     GLenum err2 = glGetError();
@@ -549,7 +549,7 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
         {   // if texture hasn't been loaded already, load it
             Texture texture;
             
-            // 检查文件扩展名，决定使用哪种加载方式
+            // Check the file extension to decide the loading path (legacy logic retained for reference).
             // std::string texPath = textureName;
             // bool isKTX = false;
             // if (texPath.length() >= 4) {

@@ -13,7 +13,7 @@ void FboHandler::init(){
 void FboHandler::initFullscreenQuad(){
     // fboShader.setInt("fboTexture", 0); // not necessary
     // Setup screen VAO
-    GLfloat quadVertices[] = {   // Vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+    GLfloat quadVertices[] = {   // Vertex attributes for a full-screen quad in NDC.
         // Positions   // TexCoords
         -1.0f,  1.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
@@ -38,10 +38,10 @@ void FboHandler::initFullscreenQuad(){
 
 void FboHandler::initFramebuffer(){
     assert(width_ > 0 && height_ > 0);
-    // 创建帧缓冲
+    // Create framebuffer.
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    // 创建纹理附件
+    // Create color texture attachment.
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -49,13 +49,13 @@ void FboHandler::initFramebuffer(){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-    // 创建渲染缓冲对象作为深度和模板附件
+    // Create renderbuffer for depth and stencil attachments.
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width_, height_);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
-    // 检查完整性
+    // Validate framebuffer completeness.
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
         mylog(LogLevel::E, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
         MY_ASSERT(false, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");

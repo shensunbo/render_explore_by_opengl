@@ -3,7 +3,7 @@
 #include "gl/gl_headers.h"
 #include <vector>
 
-//TODO:
+// TODO: Flesh out camera controls and inputs.
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
     FORWARD,
@@ -63,10 +63,10 @@ public:
     float MouseSensitivity;
     float Zoom;
 
-    float jumpStrength; // 跳跃力量
-    float gravity; // 重力加速度
-    bool isJumping; // 是否正在跳跃
-    bool isOnGround; // 角色是否在地面上
+    float jumpStrength; // Jump impulse strength.
+    float gravity; // Gravity acceleration.
+    bool isJumping; // Whether the avatar is mid-jump.
+    bool isOnGround; // Whether the avatar is grounded.
     glm::vec3 playerVelocity;
 
     bool updateEvent = true;

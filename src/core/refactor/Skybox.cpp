@@ -11,7 +11,7 @@
  * 
  */
 
-// skybox for glass material
+// Skybox for glass material.
 bool Skybox::Init(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData){
     cubemap_ = LoadCubemap(faces, textureData);
 
@@ -83,7 +83,7 @@ unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces,
         // unsigned char* data =
         //     stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
 
-        // 从 m_loaded_texture_data 中查找已加载的纹理数据
+    // Read texture data from preloaded buffer map.
         auto it = textureData.find(faces[i]);
         if (it == textureData.end()) {
             mylog(LogLevel::E, "Texture data not found in buffer: %s", faces[i].c_str());
@@ -93,7 +93,7 @@ unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces,
 
         const imageParam& imgData = it->second;
         
-        // // 检查数据是否有效
+    // // Validate that texture data exists.
         // if (!imgData.data) {
         //     SLOG_E("Texture data is null for path: {}", faces[i].c_str());
         //     assert(false);
@@ -191,10 +191,10 @@ void Skybox::initSkybox(){
 }
 void Skybox::drawSkybox(){
     shader_.use();
-    glDepthFunc(GL_LEQUAL);// change depth function so depth test passes when values are equal to depth buffer's content
+    glDepthFunc(GL_LEQUAL);// Change depth function so depth test passes when values are equal to depth buffer's content.
     glBindVertexArray(vao_);
     ActiveCubeMap();
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
-    glDepthFunc(GL_LESS); // set depth function back to default
+    glDepthFunc(GL_LESS); // Restore default depth function.
 }

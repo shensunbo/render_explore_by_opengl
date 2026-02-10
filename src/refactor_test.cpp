@@ -33,8 +33,8 @@ static bool FrameRatemonitorAnd100msTick(void);
 const unsigned int SCR_WIDTH = 1080;
 const unsigned int SCR_HEIGHT = 720;
 
-//TODO: handle callback event 
-// camera
+// TODO: Handle callback event routing in a cleaner way.
+// Camera state.
 VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -48,8 +48,27 @@ float lastFrame = 0.0f;
 
 static VehicleRenderer vRender;
 
-static bool dumpRes = false;
-static bool fboEnable = false;
+struct RenderToggles {
+    bool dumpRes{false};
+    bool fboEnable{false};
+};
+
+static RenderToggles toggles;
+
+static FrameParams buildFrameParams(const glm::mat4& model,
+                                    const glm::mat4& projection,
+                                    const glm::mat4& view,
+                                    const RenderToggles& tgs) {
+    FrameParams params{};
+    params.projection = projection;
+    params.view = view;
+    params.model = model;
+    glm::mat4 invLook = glm::inverse(view);
+    params.eye = glm::vec3(invLook[3]);
+    params.enableFbo = tgs.fboEnable;
+    params.dumpOnce = tgs.dumpRes;
+    return params;
+}
 int main()
 {
     mylog(LogLevel::I, "Starting Refactor");
@@ -63,7 +82,7 @@ int main()
     RendererConfig config{};
     config.width = SCR_WIDTH;
     config.height = SCR_HEIGHT;
-    config.resourceRoot = ""; // run from repo root or build copy
+    config.resourceRoot = ""; // Run from repo root or build copy.
     vRender.create(config);
     vRender.ourShader->use();
     glm::mat4 skyboxModel = glm::mat4(1.0f);
@@ -71,8 +90,8 @@ int main()
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
-    model = glm::scale(model, glm::vec3(0.0001f));	// it's a bit too big for our scene, so scale it down
+    model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // Translate to center the asset.
+    model = glm::scale(model, glm::vec3(0.0001f));    // Scale the asset down to fit the scene.
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("model", model);
 
@@ -83,8 +102,8 @@ int main()
 
     CHECK_GLES_STATUS();
 
-    // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // Optional: draw in wireframe.
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     // -----------
@@ -110,19 +129,12 @@ int main()
             view = camera.GetViewMatrix();
         }
 
-        FrameParams params{};
-        params.projection = projection;
-        params.view = view;
-        params.model = model;
-        glm::mat4 invLook = glm::inverse(view);
-        params.eye = glm::vec3(invLook[3]);
-        params.enableFbo = fboEnable;
-        params.dumpOnce = dumpRes;
+        FrameParams params = buildFrameParams(model, projection, view, toggles);
 
         vRender.renderFrame(params);
 
-        if (dumpRes) {
-            dumpRes = false;
+        if (toggles.dumpRes) {
+            toggles.dumpRes = false;
         }
 
         // clear update event
@@ -196,15 +208,15 @@ void processCameraInput(GLFWwindow* window)
     else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
         camera.ProcessKeyboard(K1, deltaTime);
     else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
-        dumpRes = true;
-        mylog(LogLevel::I, "dump frame to file");
+        toggles.dumpRes = true;
+        mylog(LogLevel::I, "Dump frame to file");
     }
     else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
-        fboEnable = true;
+        toggles.fboEnable = true;
         mylog(LogLevel::I, "FBO enabled");
     }
     else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){
-        fboEnable = false;
+        toggles.fboEnable = false;
         mylog(LogLevel::I, "FBO disabled");
     }
 

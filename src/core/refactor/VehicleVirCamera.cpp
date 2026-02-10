@@ -1,6 +1,6 @@
 #include "VehicleVirCamera.h"
 
-//TODO
+// TODO: Implement full camera behavior.
 // Default camera values
 // const float YAW = -90.0f;
 // const float PITCH = 0.0f;
@@ -37,10 +37,10 @@ VehicleVirCamera::VehicleVirCamera(float posX, float posY, float posZ, float upX
     Pitch = pitch;
     updateCameraVectors();
 
-    jumpStrength = 5.0f; // 跳跃力量
-    gravity = 9.8f; // 重力加速度
-    isJumping = false; // 是否正在跳跃
-    isOnGround = true; // 角色是否在地面上
+    jumpStrength = 5.0f; // Jump impulse strength.
+    gravity = 9.8f; // Gravity acceleration.
+    isJumping = false; // Whether the avatar is mid-jump.
+    isOnGround = true; // Whether the avatar is grounded.
     playerVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
@@ -82,7 +82,7 @@ void VehicleVirCamera::ProcessKeyboard(Camera_Movement direction, float deltaTim
         
     if (direction == SPACE)
     {
-        // 触发跳跃
+    // Trigger jump.
         isJumping = true;
         isOnGround = false;
         playerVelocity.y = jumpStrength;
@@ -130,13 +130,13 @@ void VehicleVirCamera::ProcessJump(float deltaTime)
 {
     if (isJumping)
     {
-        // 应用重力
+    // Apply gravity.
         playerVelocity.y -= gravity * deltaTime;
 
-        // 更新角色的位置
+    // Update avatar position.
         Position += playerVelocity * deltaTime;
 
-        // 检查是否落地
+    // Check ground contact.
         if (Position.y <= 0.0f)
         {
             Position.y = 0.0f;

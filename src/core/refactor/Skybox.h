@@ -6,11 +6,11 @@
 #include "VehicleShader.h"
 #include "CommonDataStruct.h"
 
-// TODO: 纹理ID先使用10，以避免和其他纹理冲突
+// TODO: Use texture binding IDs starting at 10 to avoid conflicts with other textures.
 class Skybox {
 public:
     Skybox() = delete;
-    // need assign bind point, cannot be repeated with existing ones
+    // Assign a unique bind point that does not collide with existing textures.
     Skybox(unsigned int bindPoint, std::string vs = "res/shader/skybox.vs", std::string fs = "res/shader/skybox.fs"):shader_(vs.c_str(), fs.c_str()){
         bind_point_ = bindPoint;
     }
@@ -25,7 +25,7 @@ public:
 
     void ActiveCubeMap() const;
 
-    // display skybox
+    // Render the skybox.
     void initSkybox();
     void drawSkybox();
     void updateMvpMatrix(const glm::mat4& mvp) {
@@ -43,9 +43,9 @@ public:
     }
 
 private:
-    // load from disk, slow
+    // Load skybox textures from disk (slow path).
     unsigned int LoadCubemap(const std::vector<std::string>& faces) const;
-    // load from buffer
+    // Load skybox textures from preloaded buffers.
     unsigned int LoadCubemap(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData) const;
 
     unsigned int cubemap_{0};
