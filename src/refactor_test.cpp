@@ -1,30 +1,29 @@
 #include <iostream>
 #include <chrono>
+#include <cfloat>
 #include <stb_image.h>
 #include "gl/gl_headers.h"
-
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <thread>
 
-
 // #include "core/shader.h"
-// #include "core/camera.h"
-#include "core/refactor/VehicleVirCamera.h" 
+#include "core/refactor/VehicleVirCamera.h"
 #include "core/refactor/VehicleMeshInfo.h"
 #include "core/refactor/VehicleShader.h"
 #include "core/refactor/Skybox.h"
 #include "core/refactor/VehicleRenderer.h"
 #include "log/mylog.h"
-
 #include "configParser/ConfigParser.h"
 #include "platform/Platform.h"
 
 struct RenderToggles;
 void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard);
 void processCameraInput(const platform::Platform &platform, bool blockMouse, bool blockKeyboard);
+static void drawControlWindow(RenderToggles &toggles, float frameDuration);
+static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles);
 
 void dumpTextureToFile(GLuint texture, int width, int height, const char* filename);
 
@@ -32,19 +31,15 @@ static bool FrameRatemonitorAnd100msTick(void);
 // settings
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
-
 // TODO: Handle callback event routing in a cleaner way.
 // Camera state.
 VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
-
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
 // static unsigned int glerror = 0;
 
 static VehicleRenderer vRender;
-
 struct RenderToggles {
     bool dumpRes{false};
     bool fboEnable{false};
@@ -61,7 +56,6 @@ struct RenderToggles {
 };
 
 static RenderToggles toggles;
-
 static FrameParams buildFrameParams(const glm::mat4& model,
                                     const glm::mat4& projection,
                                     const glm::mat4& view,
@@ -76,16 +70,72 @@ static FrameParams buildFrameParams(const glm::mat4& model,
     params.dumpOnce = tgs.dumpRes;
     return params;
 }
+
+static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
+    ImGui::SetNextWindowSize(ImVec2(360, 260), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse)) {
+        ImGui::TextUnformatted("Quick actions");
+        ImGui::Separator();
+        if (ImGui::Button("Dump frame", ImVec2(-FLT_MIN, 0))) {
+            toggles.dumpRes = true;
+        }
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Render pipeline");
+        ImGui::Separator();
+        ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
+        ImGui::Checkbox("Show timing overlay", &toggles.timing);
+        ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Textures");
+        ImGui::Separator();
+        if (ImGui::BeginTable("texture_toggles", 2, ImGuiTableFlags_SizingStretchProp)) {
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("Diffuse", &toggles.useDiffuse);
+            ImGui::Checkbox("Normal", &toggles.useNormal);
+            ImGui::Checkbox("Roughness", &toggles.useRoughness);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("Specular", &toggles.useSpecular);
+            ImGui::Checkbox("AO", &toggles.useAO);
+            ImGui::Checkbox("Metallic", &toggles.useMetallic);
+            ImGui::EndTable();
+        }
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Performance");
+        ImGui::Separator();
+        ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration,
+                    (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
+        ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
+        ImGui::BeginDisabled(!toggles.limitFPS);
+        ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
+        ImGui::EndDisabled();
+    }
+    ImGui::End();
+}
+
+static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles) {
+    renderer.ourShader->use();
+    renderer.ourShader->setFloat("exposure", toggles.exposure);
+    renderer.ourShader->setBool("enableDiffuseTex", toggles.useDiffuse);
+    renderer.ourShader->setBool("enableSpecularTex", toggles.useSpecular);
+    renderer.ourShader->setBool("enableNormalTex", toggles.useNormal);
+    renderer.ourShader->setBool("enableAOTex", toggles.useAO);
+    renderer.ourShader->setBool("enableRoughnessTex", toggles.useRoughness);
+    renderer.ourShader->setBool("enableMetallicTex", toggles.useMetallic);
+    renderer.setTimingEnabled(toggles.timing);
+}
+
 int main()
 {
     mylog(LogLevel::I, "Starting Refactor");
-
     platform::Platform platform(SCR_WIDTH, SCR_HEIGHT, "explore render");
     if (!platform.valid()) {
         return -1;
     }
     // configure global opengl state
-    // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_FRAMEBUFFER_SRGB);
@@ -95,9 +145,10 @@ int main()
     config.height = SCR_HEIGHT;
     config.resourceRoot = ""; // Run from repo root or build copy.
     vRender.create(config);
-    vRender.ourShader->use();
+
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    vRender.ourShader->use();
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
     vRender.ourShader->setFloat("exposure", toggles.exposure);
 
@@ -112,7 +163,7 @@ int main()
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // Translate to center the asset.
-    model = glm::scale(model, glm::vec3(0.0001f));    // Scale the asset down to fit the scene.
+    model = glm::scale(model, glm::vec3(0.0001f));                // Scale the asset down to fit the scene.
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("model", model);
 
@@ -127,56 +178,22 @@ int main()
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
-    // -----------
-    float frameDuration = 0.0f;
-    while (!platform.shouldClose())
-    {   
-        // per-frame time logic
-        // --------------------
+    float frameDuration = 0.0f;          // Duration of last completed frame (includes any sleep)
+    while (!platform.shouldClose()) {
         auto frameStartTime = std::chrono::high_resolution_clock::now();
+
         float currentFrame = static_cast<float>(platform.timeSeconds());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        (void)FrameRatemonitorAnd100msTick();
-
-        // ImGui frame start early so capture flags are valid for input handling.
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        drawControlWindow(toggles, frameDuration);
 
-        // UI controls
-        ImGui::SetNextWindowSize(ImVec2(340, 180), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Controls");
-        if (ImGui::Button("Dump frame")) {
-            toggles.dumpRes = true;
-        }
-        ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
-        ImGui::Checkbox("Timing", &toggles.timing);
-        ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
-        ImGui::Separator();
-        ImGui::TextUnformatted("Textures");
-        ImGui::Checkbox("Diffuse", &toggles.useDiffuse);
-        ImGui::Checkbox("Specular", &toggles.useSpecular);
-        ImGui::Checkbox("Normal", &toggles.useNormal);
-        ImGui::Checkbox("AO", &toggles.useAO);
-        ImGui::Checkbox("Roughness", &toggles.useRoughness);
-        ImGui::Checkbox("Metallic", &toggles.useMetallic);
-        ImGui::Separator();
-        ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration, (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
-        ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
-        ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
-        ImGui::End();
-
-
-
-        const ImGuiIO& io = ImGui::GetIO();
-
-        // input
-        // -----
-        processInput(platform, toggles, io.WantCaptureKeyboard);
-        processCameraInput(platform, io.WantCaptureMouse, io.WantCaptureKeyboard);
-        // camera.ProcessJump(deltaTime);
+        const ImGuiIO& frameIo = ImGui::GetIO();
+        processInput(platform, toggles, frameIo.WantCaptureKeyboard);
+        processCameraInput(platform, frameIo.WantCaptureMouse, frameIo.WantCaptureKeyboard);
 
         int newW = platform.width();
         int newH = platform.height();
@@ -190,18 +207,9 @@ int main()
         view = camera.GetViewMatrix();
 
         FrameParams params = buildFrameParams(model, projection, view, toggles);
-        vRender.ourShader->use();
-        vRender.ourShader->setFloat("exposure", toggles.exposure);
-        vRender.ourShader->setBool("enableDiffuseTex", toggles.useDiffuse);
-        vRender.ourShader->setBool("enableSpecularTex", toggles.useSpecular);
-        vRender.ourShader->setBool("enableNormalTex", toggles.useNormal);
-        vRender.ourShader->setBool("enableAOTex", toggles.useAO);
-        vRender.ourShader->setBool("enableRoughnessTex", toggles.useRoughness);
-        vRender.ourShader->setBool("enableMetallicTex", toggles.useMetallic);
-        vRender.setTimingEnabled(toggles.timing);
+        applyRenderToggles(vRender, toggles);
         vRender.renderFrame(params);
 
-        // ImGui render
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -209,42 +217,36 @@ int main()
             toggles.dumpRes = false;
         }
 
-        // clear update event
         camera.updateEvent = false;
 
         CHECK_GLES_STATUS();
-    // frame end time stamp
-    auto frameEndTime = std::chrono::high_resolution_clock::now();
-    frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
 
         auto swapBufStartTime = std::chrono::high_resolution_clock::now();
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         platform.swapBuffers();
         platform.pollEvents();
-
         auto swapBufEndTime = std::chrono::high_resolution_clock::now();
         auto swapBufCostTime = std::chrono::duration<float, std::milli>(swapBufEndTime - swapBufStartTime).count();
 
-        // Frame limiter
+        // Frame limiter (sleep is included in measured frameDuration)
         if (toggles.limitFPS && toggles.targetFPS > 0) {
             float minFrameTime = 1000.0f / toggles.targetFPS;
-            float sleepTime = minFrameTime - frameDuration;
+            float sleepTime = minFrameTime - std::chrono::duration<float, std::milli>(swapBufEndTime - frameStartTime).count();
             if (sleepTime > 0.0f) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(sleepTime)));
             }
         }
+
+        auto frameEndTime = std::chrono::high_resolution_clock::now();
+        frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
+        (void)FrameRatemonitorAnd100msTick();
     }
 
-    // ImGui shutdown
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
     return 0;
 }
-
-
 
 void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard)
 {
@@ -326,7 +328,7 @@ static bool FrameRatemonitorAnd100msTick(void) {
 
     if (deltaTime >= 3) {
         double fps = frameCount / deltaTime;
-        std::cout<< "FPS: " << (int)fps << std::endl;
+        mylog(LogLevel::I, "FPS: %d", static_cast<int>(fps));
         startTime = currentTime;
         frameCount = 0;
     }
