@@ -45,7 +45,7 @@ unsigned int Skybox::LoadCubemap(
         unsigned char* data =
             stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
         if (data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width,
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB8, width,
                          height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             
 
@@ -101,7 +101,7 @@ unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces,
         // }
 
         if (imgData.data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, imgData.width,
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB8, imgData.width,
                          imgData.height, 0, GL_RGB, GL_UNSIGNED_BYTE, imgData.data);
             CHECK_GLES_STATUS();
 

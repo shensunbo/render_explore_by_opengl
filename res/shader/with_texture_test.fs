@@ -51,11 +51,6 @@ float constant = 1.0;
 float linear = 0.09;
 float quadratic = 0.032;
 
-vec3 gammaCorrect(vec3 color) {
-    // Gamma 2.2校正
-    return pow(color, vec3(1.0/2.2));
-}
-
 void main()
 {    
     float diffCoef = 1.0;

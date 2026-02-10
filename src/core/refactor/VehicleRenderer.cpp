@@ -37,7 +37,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     const std::string fs_path = cfg.vehicleFsPath.empty()
                                     ? make_path(prefix, "res/shader/with_texture.fs")
                                     : make_path(prefix, cfg.vehicleFsPath);
-    ourShader = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
+        ourShader = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
 
     textureCache_ = std::make_unique<TextureCache>();
     
@@ -99,7 +99,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     for(auto& it : ourModel->meshes) {
         unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
         ourShader->uniformBlockBind(blockIndex, 0);
-        it.updateUbo(it.mUboMat);
+            it.updateUbo(it.mUboMat);
         mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
     }
 

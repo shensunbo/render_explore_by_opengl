@@ -4,7 +4,7 @@ TextureCache::~TextureCache(){
     destroy();
 }
 
-GLuint TextureCache::getOrCreate(const std::string& path, const imageParam& imgData){
+GLuint TextureCache::getOrCreate(const std::string& path, const imageParam& imgData, bool srgb){
     auto it = textures_.find(path);
     if (it != textures_.end()) {
         return it->second;
@@ -22,8 +22,14 @@ GLuint TextureCache::getOrCreate(const std::string& path, const imageParam& imgD
     else if (imgData.nrChannels == 3) format = GL_RGB;
     else if (imgData.nrChannels == 4) format = GL_RGBA;
 
+    GLint internalFormat = static_cast<GLint>(format);
+    if (srgb) {
+        if (imgData.nrChannels == 3) internalFormat = GL_SRGB8;
+        else if (imgData.nrChannels == 4) internalFormat = GL_SRGB8_ALPHA8;
+    }
+
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, imgData.width, imgData.height, 0, format, GL_UNSIGNED_BYTE, imgData.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, imgData.width, imgData.height, 0, format, GL_UNSIGNED_BYTE, imgData.data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

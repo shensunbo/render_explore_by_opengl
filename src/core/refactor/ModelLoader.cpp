@@ -571,12 +571,13 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
             //     texture.id = TextureFromFile(textureName.c_str(), directory);
             // }
 
+            const bool isSrgb = (type == aiTextureType_DIFFUSE || type == aiTextureType_SPECULAR);
             auto texIt = textureData.find(textureName);
             if (texIt == textureData.end()) {
                 mylog(LogLevel::W, "Texture data missing for %s", textureName.c_str());
                 texture.id = 0;
             } else {
-                texture.id = textureCache.getOrCreate(textureName, texIt->second);
+                texture.id = textureCache.getOrCreate(textureName, texIt->second, isSrgb);
             }
             if(texture.id == 0){
                 mylog(LogLevel::E, "Failed to load texture: %s for mesh %s ", textureName.c_str(),

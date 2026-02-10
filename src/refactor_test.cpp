@@ -73,6 +73,7 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     RendererConfig config{};
     config.width = SCR_WIDTH;
@@ -83,6 +84,7 @@ int main()
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
+    vRender.ourShader->setFloat("exposure", 1.1f);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // Translate to center the asset.

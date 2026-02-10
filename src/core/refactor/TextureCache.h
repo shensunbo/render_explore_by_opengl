@@ -16,7 +16,9 @@ public:
     TextureCache& operator=(TextureCache&&) = delete;
 
     // Return existing texture id or create a new one from CPU image data.
-    GLuint getOrCreate(const std::string& path, const imageParam& imgData);
+    // Set srgb=true for color textures (albedo/specular color) so sampling is
+    // linearized automatically.
+    GLuint getOrCreate(const std::string& path, const imageParam& imgData, bool srgb = false);
 
     void destroy();
 

@@ -43,8 +43,8 @@ void FboHandler::initFramebuffer(){
     fbo = rhi::createFramebuffer();
     rhi::bindFramebuffer(fbo);
 
-    // Create color texture attachment.
-    texture = rhi::createTexture2D(width_, height_, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+    // Create color texture attachment (sRGB so writes are gamma-correct when framebuffer sRGB is enabled).
+    texture = rhi::createTexture2D(width_, height_, GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE);
     rhi::setFramebufferTexture2D(GL_COLOR_ATTACHMENT0, texture);
 
     // Create renderbuffer for depth and stencil attachments.
