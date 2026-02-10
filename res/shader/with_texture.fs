@@ -35,6 +35,13 @@ uniform sampler2D texture_alpha;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
 
+uniform bool enableDiffuseTex;
+uniform bool enableSpecularTex;
+uniform bool enableNormalTex;
+uniform bool enableAOTex;
+uniform bool enableRoughnessTex;
+uniform bool enableMetallicTex;
+
 // uniform bool texture_diffuse_load;
 // uniform bool texture_specular_load;
 // uniform bool texture_normal_load;
@@ -76,29 +83,29 @@ void main()
     if(textureLoad){
         vec2 index = vec2(TexCoords.x, TexCoords.y);
 
-        if(material.texture_diffuse_load){
+        if(material.texture_diffuse_load && enableDiffuseTex){
             realMaterialDiffuseColor = texture(texture_diffuse, index).rgb;
         }
 
-        if(material.texture_specular_load){
+        if(material.texture_specular_load && enableSpecularTex){
             realShininess = texture(texture_specular, index).r * 128.0;
         }
 
-        if(material.texture_ao_load){
+        if(material.texture_ao_load && enableAOTex){
             diffCoef = texture(texture_ao, index).r;
         }
 
-        if(material.texture_normal_load){
+        if(material.texture_normal_load && enableNormalTex){
             realNormal = texture(texture_normal, TexCoords).rgb;
             realNormal = normalize(realNormal * 2.0 - 1.0);
             realNormal = normalize(TBN * realNormal);
         }
 
-        if(material.texture_roughness_load){
+        if(material.texture_roughness_load && enableRoughnessTex){
             roughness = texture(texture_roughness, index).r;
         }
 
-        if(material.texture_metallic_load){
+        if(material.texture_metallic_load && enableMetallicTex){
             metallic = texture(texture_metallic, index).r;
         }
     }

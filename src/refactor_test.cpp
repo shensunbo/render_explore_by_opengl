@@ -48,6 +48,12 @@ struct RenderToggles {
     bool fboEnable{false};
     bool timing{false};
     float exposure{1.1f};
+    bool useDiffuse{true};
+    bool useSpecular{true};
+    bool useNormal{true};
+    bool useAO{true};
+    bool useRoughness{true};
+    bool useMetallic{true};
 };
 
 static RenderToggles toggles;
@@ -143,7 +149,17 @@ int main()
         ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
         ImGui::Checkbox("Timing", &toggles.timing);
         ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
+        ImGui::Separator();
+        ImGui::TextUnformatted("Textures");
+        ImGui::Checkbox("Diffuse", &toggles.useDiffuse);
+        ImGui::Checkbox("Specular", &toggles.useSpecular);
+        ImGui::Checkbox("Normal", &toggles.useNormal);
+        ImGui::Checkbox("AO", &toggles.useAO);
+        ImGui::Checkbox("Roughness", &toggles.useRoughness);
+        ImGui::Checkbox("Metallic", &toggles.useMetallic);
         ImGui::End();
+
+
 
         const ImGuiIO& io = ImGui::GetIO();
 
@@ -167,6 +183,12 @@ int main()
         FrameParams params = buildFrameParams(model, projection, view, toggles);
         vRender.ourShader->use();
         vRender.ourShader->setFloat("exposure", toggles.exposure);
+        vRender.ourShader->setBool("enableDiffuseTex", toggles.useDiffuse);
+        vRender.ourShader->setBool("enableSpecularTex", toggles.useSpecular);
+        vRender.ourShader->setBool("enableNormalTex", toggles.useNormal);
+        vRender.ourShader->setBool("enableAOTex", toggles.useAO);
+        vRender.ourShader->setBool("enableRoughnessTex", toggles.useRoughness);
+        vRender.ourShader->setBool("enableMetallicTex", toggles.useMetallic);
         vRender.setTimingEnabled(toggles.timing);
         vRender.renderFrame(params);
 
