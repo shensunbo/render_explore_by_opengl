@@ -4,6 +4,7 @@
 #include <mutex>
 #include <stb_image.h>
 #include <thread>
+#include <unordered_set>
 #include "tool.h"
 
 void VehicleRenderer::create(const RendererConfig& cfg){
@@ -30,6 +31,8 @@ void VehicleRenderer::create(const RendererConfig& cfg){
                                     ? make_path(prefix, "res/shader/with_texture.fs")
                                     : make_path(prefix, cfg.vehicleFsPath);
     ourShader = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
+
+    textureCache_ = std::make_unique<TextureCache>();
     
     const std::string path = cfg.modelPath.empty()
                                  ? make_path(prefix, "res/model/halo/halo.fbx")
@@ -81,7 +84,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     }
 
     // VehicleMeshInfo ourModel(path);
-    ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data);
+    ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
 
     for(auto& it : ourModel->meshes) {
     unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
@@ -107,6 +110,11 @@ void VehicleRenderer::create(const RendererConfig& cfg){
 
 void VehicleRenderer::destroy(){
     mylog(LogLevel::I, "VehicleRenderer::destroy");
+    cleanupGpuTextures();
+    if (textureCache_) {
+        textureCache_->destroy();
+        textureCache_.reset();
+    }
     ourShader.reset();
     ourModel.reset();
 }
@@ -143,6 +151,55 @@ void VehicleRenderer::draw(){
     }
 
     // mylog(LogLevel::I, "VehicleRenderer::draw");
+}
+
+void VehicleRenderer::renderFrame(const FrameParams& params){
+    const bool useFbo = params.enableFbo && fbo_ != nullptr;
+    if (useFbo) {
+        fbo_->enable();
+    }
+
+    renderScenePass(params);
+    renderSkyboxPass(params);
+    if (useFbo) {
+        renderPostPass(params);
+    }
+}
+
+void VehicleRenderer::renderScenePass(const FrameParams& params){
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    ourShader->use();
+    cubemap->ActiveCubeMap();
+
+    const glm::mat4 mvp = params.projection * params.view * params.model;
+    ourShader->setMat4("uMVP", mvp);
+    ourShader->setVec3("viewPosition", params.eye);
+    ourShader->setInt("cubemap", cubemap->GetBindingPoint());
+
+    draw();
+}
+
+void VehicleRenderer::renderSkyboxPass(const FrameParams& params){
+    glm::mat4 skyView = glm::mat4(glm::mat3(params.view));
+    glm::mat4 skyMvp = params.projection * skyView;
+    cubemap->updateMvpMatrix(skyMvp);
+    cubemap->drawSkybox();
+}
+
+void VehicleRenderer::renderPostPass(const FrameParams& params){
+    if (!fbo_) return;
+    if (params.dumpOnce) {
+        fbo_->dumpTextureToFile("dump.png");
+    }
+    fbo_->renderToFullscreenQuad();
+}
+
+void VehicleRenderer::cleanupGpuTextures(){
+    if (!textureCache_) return;
+    textureCache_->destroy();
 }
 
 void VehicleRenderer::releaseTextureData(){

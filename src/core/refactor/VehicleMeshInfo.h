@@ -17,10 +17,11 @@ public:
     
     // constructor, expects a filepath to a 3D model.
     VehicleMeshInfo(std::string const &path, ConfigParser& vehInfo,
-        const std::unordered_map<std::string, imageParam>& textureData, 
+        const std::unordered_map<std::string, imageParam>& textureData,
+        TextureCache& textureCache,
         bool gamma = false) : gammaCorrection(gamma)
     {
-        loader.LoadModel(path, meshes, vehInfo, textureData);
+        loader.LoadModel(path, meshes, vehInfo, textureData, textureCache);
     }
 
     unsigned int getMaxTextureID() const {

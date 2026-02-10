@@ -95,21 +95,11 @@ void RendererAPI::render()
         return;
     }
 
-    // Clear the screen
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Render the vehicle
-    vRender->ourShader->use();
-    vRender->cubemap->ActiveCubeMap();
-    vRender->ourShader->setInt("cubemap", vRender->cubemap->GetBindingPoint());
-    vRender->draw();
-
-    // Render the skybox
-    glm::mat4 skymodel = glm::mat4(1.0f);
-    glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); // Remove translation component
-    glm::mat4 skyboxMvp = projection * skyboxView * skymodel;
-    vRender->cubemap->updateMvpMatrix(skyboxMvp);
-    vRender->cubemap->drawSkybox();
+    FrameParams params{};
+    params.projection = projection;
+    params.view = view;
+    params.model = model;
+    params.eye = glm::vec3(0.0f, 0.0f, 0.9f);
+    params.enableFbo = false;
+    vRender->renderFrame(params);
 }

@@ -8,20 +8,22 @@
 
 // #include "../mesh.h"
 #include "BufferObjectData.h"
+#include "TextureCache.h"
 #include <configParser/ConfigParser.h>
 
 class ModelLoader {
 public:
     bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
-            ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData);
+        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
+        TextureCache& textureCache);
     
     // static unsigned int ImageFromFile(std::string filename, imageParam& pngData);
 private:
     void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo,
-                    const std::unordered_map<std::string, imageParam>& textureData);
+                    const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
     BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, 
         const glm::mat4& translationMatrix, ConfigParser& vehInfo, 
-        const std::unordered_map<std::string, imageParam>& textureData);
+        const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
 
     myMaterial loadMaterial(aiMaterial* mat);
     unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
@@ -33,7 +35,8 @@ private:
                                           const char* typeName,
                                           std::string meshName,
                                           ConfigParser& vehInfo,
-                                          const std::unordered_map<std::string, imageParam>& textureData);
+                                          const std::unordered_map<std::string, imageParam>& textureData,
+                                          TextureCache& textureCache);
 
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
         glm::mat4 to;

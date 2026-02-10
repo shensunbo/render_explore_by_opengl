@@ -1,6 +1,33 @@
 #include "BufferObjectData.h"
 
 BufferObjectData::~BufferObjectData() {
+    resetGlHandles();
+}
+
+BufferObjectData::BufferObjectData(BufferObjectData&& other) noexcept {
+    *this = std::move(other);
+}
+
+BufferObjectData& BufferObjectData::operator=(BufferObjectData&& other) noexcept {
+    if (this != &other) {
+        resetGlHandles();
+
+        vertices = std::move(other.vertices);
+        indices = std::move(other.indices);
+        textures = std::move(other.textures);
+        meshName = std::move(other.meshName);
+        mMaterial = other.mMaterial;
+        mUboMat = other.mUboMat;
+
+        VAO = other.VAO; other.VAO = 0;
+        VBO = other.VBO; other.VBO = 0;
+        EBO = other.EBO; other.EBO = 0;
+        UBO = other.UBO; other.UBO = 0;
+    }
+    return *this;
+}
+
+void BufferObjectData::resetGlHandles(){
     if (UBO) {
         glDeleteBuffers(1, &UBO);
         UBO = 0;
@@ -17,30 +44,6 @@ BufferObjectData::~BufferObjectData() {
         glDeleteVertexArrays(1, &VAO);
         VAO = 0;
     }
-}
-
-BufferObjectData::BufferObjectData(BufferObjectData&& other) noexcept {
-    *this = std::move(other);
-}
-
-BufferObjectData& BufferObjectData::operator=(BufferObjectData&& other) noexcept {
-    if (this != &other) {
-        // clean existing
-        this->~BufferObjectData();
-
-        vertices = std::move(other.vertices);
-        indices = std::move(other.indices);
-        textures = std::move(other.textures);
-        meshName = std::move(other.meshName);
-        mMaterial = other.mMaterial;
-        mUboMat = other.mUboMat;
-
-        VAO = other.VAO; other.VAO = 0;
-        VBO = other.VBO; other.VBO = 0;
-        EBO = other.EBO; other.EBO = 0;
-        UBO = other.UBO; other.UBO = 0;
-    }
-    return *this;
 }
 
 void BufferObjectData::setupMesh()

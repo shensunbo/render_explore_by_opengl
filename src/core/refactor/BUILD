@@ -12,6 +12,7 @@ cc_library(
         "VehicleVirCamera.cpp",
         "FboHandler.cpp",
         "tool.cpp",
+        "TextureCache.cpp",
     ],
     hdrs = [
         "AnimationHandler.h",
@@ -26,6 +27,7 @@ cc_library(
         "CommonDataStruct.h",
         "FboHandler.h",
         "tool.h",
+        "TextureCache.h",
     ],
     deps = [
         "//include:log",

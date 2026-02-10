@@ -105,70 +105,28 @@ int main()
         processCameraInput(window);
         // camera.ProcessJump(deltaTime);
 
-        if(fboEnable && vRender.fbo_){
-            // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-            vRender.fbo_->enable();
-        }
-        CHECK_GLES_STATUS();
-        // render
-        // ------
-        glEnable(GL_DEPTH_TEST);
-        glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // don't forget to enable shader before setting uniforms
-        vRender.ourShader->use();
-        vRender.cubemap->ActiveCubeMap();
-
         if(camera.updateEvent){
-            // view/projection transformations
             projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
             view = camera.GetViewMatrix();
-
-            glm::mat4 mvp = projection * view * model;
-            vRender.ourShader->setMat4("uMVP", mvp);
-
-            glm::mat4 invLook = glm::inverse(view);
-            glm::vec3 viewPosition = glm::vec3(invLook[3]);
-            vRender.ourShader->setVec3("viewPosition", viewPosition);
         }
 
-        CHECK_GLES_STATUS();
+        FrameParams params{};
+        params.projection = projection;
+        params.view = view;
+        params.model = model;
+        glm::mat4 invLook = glm::inverse(view);
+        params.eye = glm::vec3(invLook[3]);
+        params.enableFbo = fboEnable;
+        params.dumpOnce = dumpRes;
 
-        vRender.ourShader->setInt("cubemap", vRender.cubemap->GetBindingPoint());
-        vRender.draw();
+        vRender.renderFrame(params);
 
-        // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        // glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        CHECK_GLES_STATUS();
-
-        if(camera.updateEvent){
-            glm::mat4 skymodel = glm::mat4(1.0f);
-            view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // Remove any translation component of the view matrix
-            glm::mat4 mvp = projection * view * skymodel;
-            vRender.cubemap->updateMvpMatrix(mvp);
+        if (dumpRes) {
+            dumpRes = false;
         }
-        
-        vRender.cubemap->drawSkybox();
+
         // clear update event
         camera.updateEvent = false;
-        
-        CHECK_GLES_STATUS();
-
-        
-
-        if(fboEnable && vRender.fbo_){
-            if(dumpRes){
-                vRender.fbo_->dumpTextureToFile("dump.png");
-                dumpRes = false;
-            }
-
-            vRender.fbo_->renderToFullscreenQuad();
-        }
 
         CHECK_GLES_STATUS();
         // frame end time stamp

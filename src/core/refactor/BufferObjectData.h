@@ -88,6 +88,8 @@ private:
     GLuint EBO{0};
     GLuint UBO{0};
 
+    void resetGlHandles();
+
     // initializes all the buffer objects/arrays
     void setupMesh();
 };
