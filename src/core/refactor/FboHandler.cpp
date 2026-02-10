@@ -4,6 +4,7 @@
 #include <stb_image_write.h>
 #include <memory>
 #include <chrono>
+#include "rhi/Rhi.h"
 
 void FboHandler::init(){
     initFullscreenQuad();
@@ -39,46 +40,42 @@ void FboHandler::initFullscreenQuad(){
 void FboHandler::initFramebuffer(){
     assert(width_ > 0 && height_ > 0);
     // Create framebuffer.
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    fbo = rhi::createFramebuffer();
+    rhi::bindFramebuffer(fbo);
+
     // Create color texture attachment.
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    texture = rhi::createTexture2D(width_, height_, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+    rhi::setFramebufferTexture2D(GL_COLOR_ATTACHMENT0, texture);
 
     // Create renderbuffer for depth and stencil attachments.
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width_, height_);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    rbo = rhi::createRenderbuffer();
+    rhi::setupRenderbufferStorage(rbo, width_, height_);
+    rhi::attachRenderbuffer(GL_DEPTH_STENCIL_ATTACHMENT, rbo);
 
     // Validate framebuffer completeness.
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE){
+    if(!rhi::framebufferComplete()){
         mylog(LogLevel::E, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
         MY_ASSERT(false, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    rhi::bindFramebuffer(0);
 }
 
 void FboHandler::renderToFullscreenQuad(){
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    rhi::bindFramebuffer(0);
 
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
 
     shader_.use();  
     glBindVertexArray(quadVAO_);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    rhi::setActiveTexture(0);
+    rhi::bindTexture2D(texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
 void FboHandler::enable(){
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    rhi::bindFramebuffer(fbo);
 }
 
 void FboHandler::dumpTextureToFile(const char* filename) {
