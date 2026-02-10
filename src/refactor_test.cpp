@@ -34,8 +34,6 @@ void dumpTextureToFile(GLuint texture, int width, int height, const char* filena
 static bool FrameRatemonitorAnd100msTick(void);
 static void loadConfigFromJson(const std::string& path, RendererConfig& config, RenderToggles& toggles);
 // settings
-const unsigned int SCR_WIDTH = 1600;
-const unsigned int SCR_HEIGHT = 900;
 // TODO: Handle callback event routing in a cleaner way.
 // Camera state.
 VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
@@ -61,88 +59,25 @@ struct RenderToggles {
     int targetFPS{60};
 };
 
-static RenderToggles toggles{.limitFPS = true, .targetFPS = 60};
 static FrameParams buildFrameParams(const glm::mat4& model,
                                     const glm::mat4& projection,
                                     const glm::mat4& view,
-                                    const RenderToggles& tgs) {
-    FrameParams params{};
-    params.projection = projection;
-    params.view = view;
-    params.model = model;
-    glm::mat4 invLook = glm::inverse(view);
-    params.eye = glm::vec3(invLook[3]);
-    params.enableFbo = tgs.fboEnable;
-    params.dumpOnce = tgs.dumpRes;
-    return params;
-}
+                                    const RenderToggles& tgs);
+static void drawControlWindow(RenderToggles &toggles, float frameDuration);
+static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles);
 
-static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
-    ImGui::SetNextWindowSize(ImVec2(360, 260), ImGuiCond_FirstUseEver);
-    if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse)) {
-        ImGui::TextUnformatted("Quick actions");
-        ImGui::Separator();
-        if (ImGui::Button("Dump frame", ImVec2(-FLT_MIN, 0))) {
-            toggles.dumpRes = true;
-        }
-
-        ImGui::Spacing();
-        ImGui::TextUnformatted("Render pipeline");
-        ImGui::Separator();
-        ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
-        ImGui::Checkbox("Show timing overlay", &toggles.timing);
-    ImGui::Checkbox("Use PBR shading", &toggles.usePbr);
-        ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
-
-        ImGui::Spacing();
-        ImGui::TextUnformatted("Textures");
-        ImGui::Separator();
-        if (ImGui::BeginTable("texture_toggles", 2, ImGuiTableFlags_SizingStretchProp)) {
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("Diffuse", &toggles.useDiffuse);
-            ImGui::Checkbox("Normal", &toggles.useNormal);
-            ImGui::Checkbox("Roughness", &toggles.useRoughness);
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("Specular", &toggles.useSpecular);
-            ImGui::Checkbox("AO", &toggles.useAO);
-            ImGui::Checkbox("Metallic", &toggles.useMetallic);
-            ImGui::EndTable();
-        }
-
-        ImGui::Spacing();
-        ImGui::TextUnformatted("Performance");
-        ImGui::Separator();
-        ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration,
-                    (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
-        ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
-        ImGui::BeginDisabled(!toggles.limitFPS);
-        ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
-        ImGui::EndDisabled();
-    }
-    ImGui::End();
-}
-
-static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles) {
-    renderer.setPbrEnabled(toggles.usePbr);
-    VehicleShader* shader = renderer.activeShader();
-    if (shader) {
-        shader->use();
-        shader->setFloat("exposure", toggles.exposure);
-        shader->setBool("enableDiffuseTex", toggles.useDiffuse);
-        shader->setBool("enableSpecularTex", toggles.useSpecular);
-        shader->setBool("enableNormalTex", toggles.useNormal);
-        shader->setBool("enableAOTex", toggles.useAO);
-        shader->setBool("enableRoughnessTex", toggles.useRoughness);
-        shader->setBool("enableMetallicTex", toggles.useMetallic);
-    }
-    renderer.setTimingEnabled(toggles.timing);
-}
+static RenderToggles toggles{.limitFPS = true, .targetFPS = 60};
 
 int main()
 {
     mylog(LogLevel::I, "Starting Refactor");
-    platform::Platform platform(SCR_WIDTH, SCR_HEIGHT, "explore render");
+    RendererConfig config{};
+    loadConfigFromJson("res/config/render_config.json", config, toggles);
+    // Fallback defaults if config did not set dimensions
+    if (config.width == 0) config.width = 1600;
+    if (config.height == 0) config.height = 900;
+
+    platform::Platform platform(static_cast<int>(config.width), static_cast<int>(config.height), "explore render");
     if (!platform.valid()) {
         return -1;
     }
@@ -151,8 +86,6 @@ int main()
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_FRAMEBUFFER_SRGB);
 
-    RendererConfig config{};
-    loadConfigFromJson("res/config/render_config.json", config, toggles);
     vRender.create(config);
 
     glm::mat4 skyboxModel = glm::mat4(1.0f);
@@ -253,6 +186,83 @@ int main()
     ImGui::DestroyContext();
 
     return 0;
+}
+
+static FrameParams buildFrameParams(const glm::mat4& model,
+                                    const glm::mat4& projection,
+                                    const glm::mat4& view,
+                                    const RenderToggles& tgs) {
+    FrameParams params{};
+    params.projection = projection;
+    params.view = view;
+    params.model = model;
+    glm::mat4 invLook = glm::inverse(view);
+    params.eye = glm::vec3(invLook[3]);
+    params.enableFbo = tgs.fboEnable;
+    params.dumpOnce = tgs.dumpRes;
+    return params;
+}
+
+static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
+    ImGui::SetNextWindowSize(ImVec2(360, 260), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse)) {
+        ImGui::TextUnformatted("Quick actions");
+        ImGui::Separator();
+        if (ImGui::Button("Dump frame", ImVec2(-FLT_MIN, 0))) {
+            toggles.dumpRes = true;
+        }
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Render pipeline");
+        ImGui::Separator();
+        ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
+        ImGui::Checkbox("Show timing overlay", &toggles.timing);
+        ImGui::Checkbox("Use PBR shading", &toggles.usePbr);
+        ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Textures");
+        ImGui::Separator();
+        if (ImGui::BeginTable("texture_toggles", 2, ImGuiTableFlags_SizingStretchProp)) {
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("Diffuse", &toggles.useDiffuse);
+            ImGui::Checkbox("Normal", &toggles.useNormal);
+            ImGui::Checkbox("Roughness", &toggles.useRoughness);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("Specular", &toggles.useSpecular);
+            ImGui::Checkbox("AO", &toggles.useAO);
+            ImGui::Checkbox("Metallic", &toggles.useMetallic);
+            ImGui::EndTable();
+        }
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Performance");
+        ImGui::Separator();
+        ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration,
+                    (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
+        ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
+        ImGui::BeginDisabled(!toggles.limitFPS);
+        ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
+        ImGui::EndDisabled();
+    }
+    ImGui::End();
+}
+
+static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles) {
+    renderer.setPbrEnabled(toggles.usePbr);
+    VehicleShader* shader = renderer.activeShader();
+    if (shader) {
+        shader->use();
+        shader->setFloat("exposure", toggles.exposure);
+        shader->setBool("enableDiffuseTex", toggles.useDiffuse);
+        shader->setBool("enableSpecularTex", toggles.useSpecular);
+        shader->setBool("enableNormalTex", toggles.useNormal);
+        shader->setBool("enableAOTex", toggles.useAO);
+        shader->setBool("enableRoughnessTex", toggles.useRoughness);
+        shader->setBool("enableMetallicTex", toggles.useMetallic);
+    }
+    renderer.setTimingEnabled(toggles.timing);
 }
 
 void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard)
