@@ -66,6 +66,7 @@ cc_binary(
         "//include:gl_headers",
         "//dependency/glm:glm",
         "//dependency/stb:stb",
+        "//dependency/imgui:imgui",
         "//src/core/refactor:render_core",
         ":configParser",
         ":platform",

@@ -3,6 +3,10 @@
 #include <stb_image.h>
 #include "gl/gl_headers.h"
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 
 // #include "core/shader.h"
 // #include "core/camera.h"
@@ -17,15 +21,15 @@
 #include "platform/Platform.h"
 
 struct RenderToggles;
-void processInput(platform::Platform &platform, RenderToggles &toggles);
-void processCameraInput(const platform::Platform &platform);
+void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard);
+void processCameraInput(const platform::Platform &platform, bool blockMouse, bool blockKeyboard);
 
 void dumpTextureToFile(GLuint texture, int width, int height, const char* filename);
 
 static bool FrameRatemonitorAnd100msTick(void);
 // settings
-const unsigned int SCR_WIDTH = 1080;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 900;
 
 // TODO: Handle callback event routing in a cleaner way.
 // Camera state.
@@ -43,6 +47,7 @@ struct RenderToggles {
     bool dumpRes{false};
     bool fboEnable{false};
     bool timing{false};
+    float exposure{1.1f};
 };
 
 static RenderToggles toggles;
@@ -84,7 +89,16 @@ int main()
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
-    vRender.ourShader->setFloat("exposure", 1.1f);
+    vRender.ourShader->setFloat("exposure", toggles.exposure);
+
+    // ImGui initialization
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    const char* glsl_version = "#version 330";
+    ImGui_ImplGlfw_InitForOpenGL(platform.rawWindow(), true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // Translate to center the asset.
@@ -108,17 +122,35 @@ int main()
     {   
         // per-frame time logic
         // --------------------
-    auto frameStartTime = std::chrono::high_resolution_clock::now();
-    float currentFrame = static_cast<float>(platform.timeSeconds());
+        auto frameStartTime = std::chrono::high_resolution_clock::now();
+        float currentFrame = static_cast<float>(platform.timeSeconds());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         (void)FrameRatemonitorAnd100msTick();
 
+        // ImGui frame start early so capture flags are valid for input handling.
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // UI controls
+        ImGui::SetNextWindowSize(ImVec2(340, 180), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Controls");
+        if (ImGui::Button("Dump frame")) {
+            toggles.dumpRes = true;
+        }
+        ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
+        ImGui::Checkbox("Timing", &toggles.timing);
+        ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
+        ImGui::End();
+
+        const ImGuiIO& io = ImGui::GetIO();
+
         // input
         // -----
-    processInput(platform, toggles);
-    processCameraInput(platform);
+        processInput(platform, toggles, io.WantCaptureKeyboard);
+        processCameraInput(platform, io.WantCaptureMouse, io.WantCaptureKeyboard);
         // camera.ProcessJump(deltaTime);
 
         int newW = platform.width();
@@ -132,9 +164,15 @@ int main()
                                       0.1f, 1000.0f);
         view = camera.GetViewMatrix();
 
-    FrameParams params = buildFrameParams(model, projection, view, toggles);
-    vRender.setTimingEnabled(toggles.timing);
-    vRender.renderFrame(params);
+        FrameParams params = buildFrameParams(model, projection, view, toggles);
+        vRender.ourShader->use();
+        vRender.ourShader->setFloat("exposure", toggles.exposure);
+        vRender.setTimingEnabled(toggles.timing);
+        vRender.renderFrame(params);
+
+        // ImGui render
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         if (toggles.dumpRes) {
             toggles.dumpRes = false;
@@ -167,13 +205,19 @@ int main()
         }
     }
 
+    // ImGui shutdown
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     return 0;
 }
 
 
 
-void processInput(platform::Platform &platform, RenderToggles &toggles)
+void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard)
 {
+    if (blockKeyboard) return;
     const auto &input = platform.input();
 
     if (input.isDown(platform::Key::Escape)) {
@@ -201,33 +245,34 @@ void processInput(platform::Platform &platform, RenderToggles &toggles)
     }
 }
 
-void processCameraInput(const platform::Platform &platform)
+void processCameraInput(const platform::Platform &platform, bool blockMouse, bool blockKeyboard)
 {
+    if (blockKeyboard && blockMouse) return;
     const auto &input = platform.input();
-    if (input.isDown(platform::Key::W))
+    if (!blockKeyboard && input.isDown(platform::Key::W))
         camera.ProcessKeyboard(FORWARD, deltaTime);
-    else if (input.isDown(platform::Key::S))
+    else if (!blockKeyboard && input.isDown(platform::Key::S))
         camera.ProcessKeyboard(BACKWARD, deltaTime);
-    else if (input.isDown(platform::Key::A))
+    else if (!blockKeyboard && input.isDown(platform::Key::A))
         camera.ProcessKeyboard(LEFT, deltaTime);
-    else if (input.isDown(platform::Key::D))
+    else if (!blockKeyboard && input.isDown(platform::Key::D))
         camera.ProcessKeyboard(RIGHT, deltaTime);
-    else if (input.isDown(platform::Key::T))
+    else if (!blockKeyboard && input.isDown(platform::Key::T))
         camera.ProcessKeyboard(UPROLL, deltaTime);
-    else if (input.isDown(platform::Key::G))
+    else if (!blockKeyboard && input.isDown(platform::Key::G))
         camera.ProcessKeyboard(DOWNROLL, deltaTime);
-    else if (input.isDown(platform::Key::Space) && camera.isOnGround)
+    else if (!blockKeyboard && input.isDown(platform::Key::Space) && camera.isOnGround)
         camera.ProcessKeyboard(SPACE, deltaTime);
-    else if (input.isDown(platform::Key::R))
+    else if (!blockKeyboard && input.isDown(platform::Key::R))
         camera.ProcessKeyboard(R, deltaTime);
-    else if (input.isDown(platform::Key::M))
+    else if (!blockKeyboard && input.isDown(platform::Key::M))
         camera.ProcessKeyboard(K1, deltaTime);
 
-    if (!input.leftButton && (input.deltaX != 0.0 || input.deltaY != 0.0)) {
+    if (!blockMouse && !input.leftButton && (input.deltaX != 0.0 || input.deltaY != 0.0)) {
         camera.ProcessMouseMovement(static_cast<float>(input.deltaX), static_cast<float>(input.deltaY));
     }
 
-    if (input.scrollY != 0.0) {
+    if (!blockMouse && input.scrollY != 0.0) {
         camera.ProcessMouseScroll(static_cast<float>(input.scrollY));
     }
 }

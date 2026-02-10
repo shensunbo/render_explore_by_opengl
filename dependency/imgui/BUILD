@@ -1,19 +1,21 @@
 cc_library(
     name = "imgui",
     srcs = [
-        "imgui.cpp",
-        "imgui_demo.cpp",
-        "imgui_draw.cpp",
-        "imgui_tables.cpp",
-        "imgui_widgets.cpp",
-        "backends/imgui_impl_glfw.cpp",
-        "backends/imgui_impl_opengl3.cpp",
+        "src/imgui.cpp",
+        "src/imgui_demo.cpp",
+        "src/imgui_draw.cpp",
+        "src/imgui_tables.cpp",
+        "src/imgui_widgets.cpp",
+        "src/imgui_impl_glfw.cpp",
+        "src/imgui_impl_opengl3.cpp",
     ],
     hdrs = glob([
         "include/*.h",
-        "include/*.hpp",
     ]),
-    includes = ["include"],
+    includes = [
+        "include",
+    ],
+    copts = ["-DIMGUI_IMPL_OPENGL_LOADER_GLAD"],
     visibility = [
         "//visibility:public"
     ],
