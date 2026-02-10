@@ -68,7 +68,7 @@ void Platform::requestClose() {
 }
 
 void Platform::pollEvents() {
-    inputState_.resetDeltas();
+    inputState_.beginFrame();
     glfwPollEvents();
 }
 
@@ -161,8 +161,12 @@ void Platform::keyCb(GLFWwindow *wnd, int key, int scancode, int action, int mod
 
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         self->inputState_.keyDown[k] = true;
+        if (action == GLFW_PRESS) {
+            self->inputState_.keyPressed[k] = true;
+        }
     } else if (action == GLFW_RELEASE) {
         self->inputState_.keyDown[k] = false;
+        self->inputState_.keyReleased[k] = true;
     }
 }
 

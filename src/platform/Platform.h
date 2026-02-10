@@ -37,6 +37,8 @@ struct InputState {
     double scrollY{0.0};
     bool leftButton{false};
     std::unordered_map<Key, bool> keyDown;
+    std::unordered_map<Key, bool> keyPressed;
+    std::unordered_map<Key, bool> keyReleased;
 
     void resetDeltas() {
         deltaX = 0.0;
@@ -44,9 +46,25 @@ struct InputState {
         scrollY = 0.0;
     }
 
+    void beginFrame() {
+        resetDeltas();
+        keyPressed.clear();
+        keyReleased.clear();
+    }
+
     bool isDown(Key k) const {
         auto it = keyDown.find(k);
         return it != keyDown.end() && it->second;
+    }
+
+    bool isPressed(Key k) const {
+        auto it = keyPressed.find(k);
+        return it != keyPressed.end() && it->second;
+    }
+
+    bool isReleased(Key k) const {
+        auto it = keyReleased.find(k);
+        return it != keyReleased.end() && it->second;
     }
 };
 

@@ -177,22 +177,25 @@ void processInput(platform::Platform &platform, RenderToggles &toggles)
     if (input.isDown(platform::Key::Escape)) {
         platform.requestClose();
     }
-    if (input.isDown(platform::Key::I)) {
+    if (input.isPressed(platform::Key::I)) {
         toggles.dumpRes = true;
         mylog(LogLevel::I, "Dump frame to file");
     }
-    if (input.isDown(platform::Key::F)) {
+    if (input.isPressed(platform::Key::F)) {
         toggles.fboEnable = true;
         mylog(LogLevel::I, "FBO enabled");
     }
-    if (input.isDown(platform::Key::E)) {
+    if (input.isPressed(platform::Key::E)) {
         toggles.fboEnable = false;
         mylog(LogLevel::I, "FBO disabled");
     }
-    if (input.isDown(platform::Key::P)) {
-        toggles.timing = true;
-    } else {
-        toggles.timing = false;
+    if (input.isPressed(platform::Key::P)) {
+        toggles.timing = !toggles.timing;
+        if (toggles.timing) {
+            mylog(LogLevel::I, "Timing enabled");
+        } else {
+            mylog(LogLevel::I, "Timing disabled");
+        }
     }
 }
 
