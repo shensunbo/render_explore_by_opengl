@@ -1,0 +1,23 @@
+{
+  "width": 1600,
+  "height": 900,
+  "resourceRoot": "",
+  "modelPath": "res/model/halo/halo.fbx",
+  "vehicleInfoPath": "res/model/halo/vehicle_info.json",
+  "vehicleVsPath": "",
+  "vehicleFsPath": "",
+  "vehiclePbrFsPath": "",
+  "enableFbo": true,
+  "usePbr": false,
+  "exposure": 1.1,
+  "limitFPS": true,
+  "targetFPS": 60,
+  "useDiffuse": true,
+  "useSpecular": true,
+  "useNormal": true,
+  "useAO": true,
+  "useRoughness": true,
+  "useMetallic": true,
+  "fboEnable": false,
+  "timing": false
+}

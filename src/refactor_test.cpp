@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <cfloat>
+#include <fstream>
 #include <stb_image.h>
 #include "gl/gl_headers.h"
 
@@ -18,6 +19,9 @@
 #include "log/mylog.h"
 #include "configParser/ConfigParser.h"
 #include "platform/Platform.h"
+#include "json.hpp"
+
+using nlohmann::json;
 
 struct RenderToggles;
 void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard);
@@ -28,6 +32,7 @@ static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &t
 void dumpTextureToFile(GLuint texture, int width, int height, const char* filename);
 
 static bool FrameRatemonitorAnd100msTick(void);
+static void loadConfigFromJson(const std::string& path, RendererConfig& config, RenderToggles& toggles);
 // settings
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
@@ -147,11 +152,7 @@ int main()
     glEnable(GL_FRAMEBUFFER_SRGB);
 
     RendererConfig config{};
-    config.width = SCR_WIDTH;
-    config.height = SCR_HEIGHT;
-    config.resourceRoot = ""; // Run from repo root or build copy.
-    config.modelPath = "res/model/halo/halo.fbx";
-    config.vehicleInfoPath = "res/model/halo/vehicle_info.json";
+    loadConfigFromJson("res/config/render_config.json", config, toggles);
     vRender.create(config);
 
     glm::mat4 skyboxModel = glm::mat4(1.0f);
@@ -345,4 +346,60 @@ static bool FrameRatemonitorAnd100msTick(void) {
     }
 
     return false;
+}
+
+static void loadConfigFromJson(const std::string& path, RendererConfig& config, RenderToggles& toggles) {
+    std::ifstream f(path);
+    if (!f.is_open()) {
+        mylog(LogLevel::W, "Config json not found, using defaults: %s", path.c_str());
+        assert(false);
+        return;
+    }
+
+    json j;
+    try {
+        f >> j;
+    } catch (const std::exception& e) {
+        mylog(LogLevel::E, "Failed to parse config json %s: %s", path.c_str(), e.what());
+        assert(false);
+        return;
+    }
+
+    auto get_int = [&](const char* key, int& dst) {
+        if (j.contains(key) && j[key].is_number_integer()) dst = j[key].get<int>();
+    };
+    auto get_bool = [&](const char* key, bool& dst) {
+        if (j.contains(key) && j[key].is_boolean()) dst = j[key].get<bool>();
+    };
+    auto get_string = [&](const char* key, std::string& dst) {
+        if (j.contains(key) && j[key].is_string()) dst = j[key].get<std::string>();
+    };
+    auto get_float = [&](const char* key, float& dst) {
+        if (j.contains(key) && j[key].is_number()) dst = j[key].get<float>();
+    };
+
+    get_int("width", reinterpret_cast<int&>(config.width));
+    get_int("height", reinterpret_cast<int&>(config.height));
+    get_string("resourceRoot", config.resourceRoot);
+    get_string("modelPath", config.modelPath);
+    get_string("vehicleInfoPath", config.vehicleInfoPath);
+    get_string("vehicleVsPath", config.vehicleVsPath);
+    get_string("vehicleFsPath", config.vehicleFsPath);
+    get_string("vehiclePbrFsPath", config.vehiclePbrFsPath);
+    get_bool("enableFbo", config.enableFbo);
+
+    get_bool("usePbr", toggles.usePbr);
+    get_float("exposure", toggles.exposure);
+    get_bool("limitFPS", toggles.limitFPS);
+    get_int("targetFPS", toggles.targetFPS);
+    get_bool("useDiffuse", toggles.useDiffuse);
+    get_bool("useSpecular", toggles.useSpecular);
+    get_bool("useNormal", toggles.useNormal);
+    get_bool("useAO", toggles.useAO);
+    get_bool("useRoughness", toggles.useRoughness);
+    get_bool("useMetallic", toggles.useMetallic);
+    get_bool("fboEnable", toggles.fboEnable);
+    get_bool("timing", toggles.timing);
+
+    mylog(LogLevel::I, "Loaded config from %s", path.c_str());
 }
