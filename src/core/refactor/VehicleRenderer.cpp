@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include "tool.h"
 #include "RenderPass.h"
+#include "RenderGraph.h"
 
 void VehicleRenderer::create(const RendererConfig& cfg){
 
@@ -90,8 +91,8 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
 
     for(auto& it : ourModel->meshes) {
-    unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
-    ourShader->uniformBlockBind(blockIndex, 0);
+        unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
+        ourShader->uniformBlockBind(blockIndex, 0);
         it.updateUbo(it.mUboMat);
         mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
     }
@@ -107,6 +108,16 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     } else {
         fbo_.reset();
     }
+
+    // Build render graphs: onscreen (scene + skybox) and fbo (scene + skybox + post).
+    onscreenGraph_ = std::make_unique<RenderGraph>();
+    onscreenGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    onscreenGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
+
+    fboGraph_ = std::make_unique<RenderGraph>();
+    fboGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    fboGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
+    fboGraph_->addPass(std::make_unique<PostPass>(fbo_.get()));
 
     releaseTextureData();
     mylog(LogLevel::I, "VehicleRenderer::create");
@@ -162,17 +173,9 @@ void VehicleRenderer::renderFrame(const FrameParams& params){
     const bool useFbo = params.enableFbo && fbo_ != nullptr;
     if (useFbo) {
         fbo_->enable();
-    }
-
-    ScenePass scenePass(ourShader.get(), cubemap.get(), &ourModel->meshes);
-    SkyboxPass skyboxPass(cubemap.get());
-    PostPass postPass(fbo_.get());
-
-    // Execute passes in order: scene geometry, skybox, then optional post.
-    scenePass.execute(params);
-    skyboxPass.execute(params);
-    if (useFbo) {
-        postPass.execute(params);
+        fboGraph_->execute(params);
+    } else {
+        onscreenGraph_->execute(params);
     }
 }
 

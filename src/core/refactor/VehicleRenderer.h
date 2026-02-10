@@ -6,6 +6,7 @@
 #include "FboHandler.h"
 #include "TextureCache.h"
 #include "RenderPass.h"
+#include "RenderGraph.h"
 
 #include <array>
 #include <memory>
@@ -53,6 +54,9 @@ public:
     std::shared_ptr<FboHandler> fbo_;
     ConfigParser  cfgParser;
     std::unique_ptr<TextureCache> textureCache_;
+
+    std::unique_ptr<RenderGraph> onscreenGraph_;
+    std::unique_ptr<RenderGraph> fboGraph_;
 
     std::set<std::string> m_texture_paths;
     std::unordered_map<std::string, imageParam> m_loaded_texture_data;

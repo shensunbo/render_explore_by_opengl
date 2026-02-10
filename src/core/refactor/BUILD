@@ -14,6 +14,7 @@ cc_library(
         "tool.cpp",
         "TextureCache.cpp",
         "RenderPass.cpp",
+        "RenderGraph.h",
     ],
     hdrs = [
         "AnimationHandler.h",
@@ -30,6 +31,7 @@ cc_library(
         "tool.h",
         "TextureCache.h",
         "RenderPass.h",
+        "RenderGraph.h",
     ],
     deps = [
         "//include:log",
