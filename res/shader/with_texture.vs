@@ -23,6 +23,7 @@ void main()
     vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
 
     TBN = mat3(T, B, N);
+    Normal = N;
 
     TexCoords = aTexCoords;    
     gl_Position = uMVP * vec4(aPos, 1.0);

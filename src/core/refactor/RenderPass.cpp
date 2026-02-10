@@ -12,6 +12,7 @@ void ScenePass::execute(const FrameParams& params) {
     if (skybox_) skybox_->ActiveCubeMap();
 
     const glm::mat4 mvp = params.projection * params.view * params.model;
+    shader_->setMat4("model", params.model);
     shader_->setMat4("uMVP", mvp);
     shader_->setVec3("viewPosition", params.eye);
     shader_->setInt("cubemap", skybox_ ? skybox_->GetBindingPoint() : 0);

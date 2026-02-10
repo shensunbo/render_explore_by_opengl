@@ -22,6 +22,7 @@ struct RendererConfig {
     std::string vehicleInfoPath;
     std::string vehicleVsPath;
     std::string vehicleFsPath;
+    std::string vehiclePbrFsPath;
     std::array<std::string, 6> skyboxFaces{};
     bool enableFbo{true};
 };
@@ -44,6 +45,10 @@ public:
     void renderFrame(const FrameParams& params);
     void resize(unsigned int width, unsigned int height);
     void setTimingEnabled(bool enabled) { timingEnabled_ = enabled; }
+    void setPbrEnabled(bool enabled);
+    bool isPbrEnabled() const { return usePbr_; }
+    VehicleShader* activeShader() const { return activeShader_; }
+    void setCubemapRotation(const glm::mat4& rotation);
 
 private:
     void releaseTextureData();
@@ -51,9 +56,12 @@ private:
     void rebuildGraphs();
     void ensureFbo();
     void rebuildFbo(unsigned int width, unsigned int height);
+    void applyCubemapRotation();
 
 public:
-    std::unique_ptr<VehicleShader> ourShader;
+    std::unique_ptr<VehicleShader> legacyShader_;
+    std::unique_ptr<VehicleShader> pbrShader_;
+    VehicleShader* activeShader_{nullptr};
     std::unique_ptr<VehicleMeshInfo> ourModel;
     // Skybox* cubemap;
     std::shared_ptr<Skybox> cubemap;
@@ -75,6 +83,8 @@ public:
     std::string fboFsPath_;
     std::vector<std::string> skyboxFaces_;
     std::string modelPath_;
+    glm::mat4 cubemapRotation_{1.0f};
+    bool usePbr_{false};
 
     std::set<std::string> m_texture_paths;
     std::unordered_map<std::string, imageParam> m_loaded_texture_data;

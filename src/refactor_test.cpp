@@ -45,6 +45,7 @@ struct RenderToggles {
     bool fboEnable{false};
     bool timing{false};
     float exposure{1.1f};
+    bool usePbr{false};
     bool useDiffuse{true};
     bool useSpecular{true};
     bool useNormal{true};
@@ -85,6 +86,7 @@ static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
         ImGui::Separator();
         ImGui::Checkbox("Enable FBO", &toggles.fboEnable);
         ImGui::Checkbox("Show timing overlay", &toggles.timing);
+    ImGui::Checkbox("Use PBR shading", &toggles.usePbr);
         ImGui::SliderFloat("Exposure", &toggles.exposure, 0.1f, 3.0f, "%.2f");
 
         ImGui::Spacing();
@@ -117,14 +119,18 @@ static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
 }
 
 static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles) {
-    renderer.ourShader->use();
-    renderer.ourShader->setFloat("exposure", toggles.exposure);
-    renderer.ourShader->setBool("enableDiffuseTex", toggles.useDiffuse);
-    renderer.ourShader->setBool("enableSpecularTex", toggles.useSpecular);
-    renderer.ourShader->setBool("enableNormalTex", toggles.useNormal);
-    renderer.ourShader->setBool("enableAOTex", toggles.useAO);
-    renderer.ourShader->setBool("enableRoughnessTex", toggles.useRoughness);
-    renderer.ourShader->setBool("enableMetallicTex", toggles.useMetallic);
+    renderer.setPbrEnabled(toggles.usePbr);
+    VehicleShader* shader = renderer.activeShader();
+    if (shader) {
+        shader->use();
+        shader->setFloat("exposure", toggles.exposure);
+        shader->setBool("enableDiffuseTex", toggles.useDiffuse);
+        shader->setBool("enableSpecularTex", toggles.useSpecular);
+        shader->setBool("enableNormalTex", toggles.useNormal);
+        shader->setBool("enableAOTex", toggles.useAO);
+        shader->setBool("enableRoughnessTex", toggles.useRoughness);
+        shader->setBool("enableMetallicTex", toggles.useMetallic);
+    }
     renderer.setTimingEnabled(toggles.timing);
 }
 
@@ -148,9 +154,7 @@ int main()
 
     glm::mat4 skyboxModel = glm::mat4(1.0f);
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    vRender.ourShader->use();
-    vRender.ourShader->setMat4("cubemapRotateMatrix", skyboxModel);
-    vRender.ourShader->setFloat("exposure", toggles.exposure);
+    vRender.setCubemapRotation(skyboxModel);
 
     // ImGui initialization
     IMGUI_CHECKVERSION();
@@ -165,7 +169,7 @@ int main()
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // Translate to center the asset.
     model = glm::scale(model, glm::vec3(0.0001f));                // Scale the asset down to fit the scene.
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    vRender.ourShader->setMat4("model", model);
+    // Model matrix is applied per frame via FrameParams
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
                                             static_cast<float>(platform.width()) / static_cast<float>(platform.height()),

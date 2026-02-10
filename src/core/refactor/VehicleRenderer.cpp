@@ -37,7 +37,12 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     const std::string fs_path = cfg.vehicleFsPath.empty()
                                     ? make_path(prefix, "res/shader/with_texture.fs")
                                     : make_path(prefix, cfg.vehicleFsPath);
-        ourShader = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
+    const std::string pbr_fs_path = cfg.vehiclePbrFsPath.empty()
+                                        ? make_path(prefix, "res/shader/pbr.fs")
+                                        : make_path(prefix, cfg.vehiclePbrFsPath);
+    legacyShader_ = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
+    pbrShader_ = std::make_unique<VehicleShader>(vs_path.c_str(), pbr_fs_path.c_str());
+    activeShader_ = legacyShader_.get();
 
     textureCache_ = std::make_unique<TextureCache>();
     
@@ -97,9 +102,15 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
 
     for(auto& it : ourModel->meshes) {
-        unsigned int blockIndex = ourShader->getBlockIndex("MaterialBlock");
-        ourShader->uniformBlockBind(blockIndex, 0);
-            it.updateUbo(it.mUboMat);
+        if (legacyShader_) {
+            unsigned int blockIndex = legacyShader_->getBlockIndex("MaterialBlock");
+            legacyShader_->uniformBlockBind(blockIndex, 0);
+        }
+        if (pbrShader_) {
+            unsigned int blockIndex = pbrShader_->getBlockIndex("MaterialBlock");
+            pbrShader_->uniformBlockBind(blockIndex, 0);
+        }
+        it.updateUbo(it.mUboMat);
         mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
     }
 
@@ -121,6 +132,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     rebuildGraphs();
 
     releaseTextureData();
+    applyCubemapRotation();
     mylog(LogLevel::I, "VehicleRenderer::create");
 }
 
@@ -131,7 +143,9 @@ void VehicleRenderer::destroy(){
         textureCache_->destroy();
         textureCache_.reset();
     }
-    ourShader.reset();
+    legacyShader_.reset();
+    pbrShader_.reset();
+    activeShader_ = nullptr;
     ourModel.reset();
     onscreenGraph_.reset();
     fboGraph_.reset();
@@ -143,21 +157,22 @@ void VehicleRenderer::update(){
 }
 
 void VehicleRenderer::draw(){
+    if (!activeShader_) return;
     for(auto& v :  ourModel->meshes){
         for (size_t i = 0; i < v.textures.size(); ++i) {
             auto uniform = v.textures[i].type;
             glActiveTexture(GL_TEXTURE0 + v.textures[i].bindId);
-            ourShader->setInt(uniform, v.textures[i].bindId);
+            activeShader_->setInt(uniform, v.textures[i].bindId);
             glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
 
-            // ourShader->setBool((uniform + "_load"), true);
-            // ourShader->setBool("textureLoad", true);
+            // activeShader_->setBool((uniform + "_load"), true);
+            // activeShader_->setBool("textureLoad", true);
         }
 
         if(v.textures.size()){
-            ourShader->setBool("textureLoad", true);
+            activeShader_->setBool("textureLoad", true);
         }else{
-            ourShader->setBool("textureLoad", false);
+            activeShader_->setBool("textureLoad", false);
         }
 
     // Draw current mesh.
@@ -166,7 +181,7 @@ void VehicleRenderer::draw(){
 
         glDrawElements(GL_TRIANGLES, v.getIndicesSize(), GL_UNSIGNED_INT, 0);
 
-        // ourShader->setBool("textureLoad", false);
+        // activeShader_->setBool("textureLoad", false);
     }
 
     // mylog(LogLevel::I, "VehicleRenderer::draw");
@@ -224,11 +239,11 @@ void VehicleRenderer::resize(unsigned int width, unsigned int height){
 
 void VehicleRenderer::rebuildGraphs(){
     onscreenGraph_ = std::make_unique<RenderGraph>();
-    onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes));
     onscreenGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
 
     fboGraph_ = std::make_unique<RenderGraph>();
-    fboGraph_->addPass("ScenePass", std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    fboGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes));
     fboGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
     fboGraph_->addPass("PostPass", std::make_unique<PostPass>(fbo_.get()));
 }
@@ -252,6 +267,39 @@ void VehicleRenderer::rebuildFbo(unsigned int width, unsigned int height){
 void VehicleRenderer::cleanupGpuTextures(){
     if (!textureCache_) return;
     textureCache_->destroy();
+}
+
+void VehicleRenderer::setPbrEnabled(bool enabled) {
+    bool wantPbr = enabled && pbrShader_ != nullptr;
+    VehicleShader* newShader = wantPbr ? pbrShader_.get() : legacyShader_.get();
+    if (activeShader_ == newShader) {
+        usePbr_ = wantPbr;
+        return;
+    }
+    usePbr_ = wantPbr;
+    activeShader_ = newShader;
+    rebuildGraphs();
+    applyCubemapRotation();
+}
+
+void VehicleRenderer::setCubemapRotation(const glm::mat4& rotation) {
+    cubemapRotation_ = rotation;
+    applyCubemapRotation();
+}
+
+void VehicleRenderer::applyCubemapRotation() {
+    if (activeShader_) {
+        activeShader_->use();
+        activeShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
+    }
+    if (legacyShader_ && activeShader_ != legacyShader_.get()) {
+        legacyShader_->use();
+        legacyShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
+    }
+    if (pbrShader_ && activeShader_ != pbrShader_.get()) {
+        pbrShader_->use();
+        pbrShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
+    }
 }
 
 void VehicleRenderer::releaseTextureData(){
