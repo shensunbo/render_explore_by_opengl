@@ -20,6 +20,9 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     };
 
     const std::string prefix = cfg.resourceRoot;
+    width_ = cfg.width;
+    height_ = cfg.height;
+    resRoot_ = cfg.resourceRoot;
 
     // Resolve config and shader paths with reasonable defaults.
     const std::string cfgPath = cfg.vehicleInfoPath.empty()
@@ -41,6 +44,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     const std::string path = cfg.modelPath.empty()
                                  ? make_path(prefix, "res/model/halo/halo.fbx")
                                  : make_path(prefix, cfg.modelPath);
+    modelPath_ = path;
 
     // Build skybox face list.
     std::vector<std::string> faces;
@@ -59,6 +63,8 @@ void VehicleRenderer::create(const RendererConfig& cfg){
             make_path(prefix, "res/model/skybox/nz.png"),
         };
     }
+
+    skyboxFaces_ = faces;
 
     m_texture_paths.insert(faces[0]);
     m_texture_paths.insert(faces[1]);
@@ -102,22 +108,17 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     cubemap->Init(faces, m_loaded_texture_data);
 
     // Optional FBO for post-processing or dumps.
+    fboVsPath_ = make_path(prefix, "res/shader/fbo_rect.vs");
+    fboFsPath_ = make_path(prefix, "res/shader/fbo_rect.fs");
     if (cfg.enableFbo) {
-        fbo_ = std::make_shared<FboHandler>(cfg.width, cfg.height, make_path(prefix, "res/shader/fbo_rect.vs"), make_path(prefix, "res/shader/fbo_rect.fs"));
+        fbo_ = std::make_shared<FboHandler>(cfg.width, cfg.height, fboVsPath_, fboFsPath_);
         fbo_->init();
     } else {
         fbo_.reset();
     }
 
     // Build render graphs: onscreen (scene + skybox) and fbo (scene + skybox + post).
-    onscreenGraph_ = std::make_unique<RenderGraph>();
-    onscreenGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
-    onscreenGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
-
-    fboGraph_ = std::make_unique<RenderGraph>();
-    fboGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
-    fboGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
-    fboGraph_->addPass(std::make_unique<PostPass>(fbo_.get()));
+    rebuildGraphs();
 
     releaseTextureData();
     mylog(LogLevel::I, "VehicleRenderer::create");
@@ -170,15 +171,44 @@ void VehicleRenderer::draw(){
 
 void VehicleRenderer::renderFrame(const FrameParams& params){
     // Choose between onscreen render and offscreen FBO path.
-    const bool useFbo = params.enableFbo && fbo_ != nullptr;
+    const bool wantFbo = params.enableFbo;
+    const bool hasFbo = fbo_ != nullptr;
+
+    if (wantFbo && !hasFbo) {
+        ensureFbo();
+        rebuildGraphs();
+    }
+
+    const bool useFbo = wantFbo && fbo_ != nullptr;
     if (useFbo) {
         fbo_->enable();
-        fboGraph_->execute(params);
+        if (fboGraph_) {
+            fboGraph_->execute(params);
+        }
     } else {
-        onscreenGraph_->execute(params);
+        if (onscreenGraph_) {
+            onscreenGraph_->execute(params);
+        }
     }
 }
 
+void VehicleRenderer::rebuildGraphs(){
+    onscreenGraph_ = std::make_unique<RenderGraph>();
+    onscreenGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    onscreenGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
+
+    fboGraph_ = std::make_unique<RenderGraph>();
+    fboGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    fboGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
+    fboGraph_->addPass(std::make_unique<PostPass>(fbo_.get()));
+}
+
+void VehicleRenderer::ensureFbo(){
+    if (fbo_) return;
+    if (width_ == 0 || height_ == 0) return;
+    fbo_ = std::make_shared<FboHandler>(width_, height_, fboVsPath_, fboFsPath_);
+    fbo_->init();
+}
 void VehicleRenderer::cleanupGpuTextures(){
     if (!textureCache_) return;
     textureCache_->destroy();

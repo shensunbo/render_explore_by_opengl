@@ -45,6 +45,8 @@ public:
 private:
     void releaseTextureData();
     void cleanupGpuTextures();
+    void rebuildGraphs();
+    void ensureFbo();
 
 public:
     std::unique_ptr<VehicleShader> ourShader;
@@ -57,6 +59,15 @@ public:
 
     std::unique_ptr<RenderGraph> onscreenGraph_;
     std::unique_ptr<RenderGraph> fboGraph_;
+
+    // cached config needed for lazy FBO creation / graph rebuild
+    unsigned int width_{0};
+    unsigned int height_{0};
+    std::string resRoot_;
+    std::string fboVsPath_;
+    std::string fboFsPath_;
+    std::vector<std::string> skyboxFaces_;
+    std::string modelPath_;
 
     std::set<std::string> m_texture_paths;
     std::unordered_map<std::string, imageParam> m_loaded_texture_data;
