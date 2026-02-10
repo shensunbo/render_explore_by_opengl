@@ -57,11 +57,11 @@ public:
         setupMesh();
     }
 
-    void bindVao(){
+    void bindVao() const {
         glBindVertexArray(VAO);
     }
 
-    size_t getIndicesSize(){
+    size_t getIndicesSize() const {
         return indices.size();
     }
 
@@ -71,7 +71,7 @@ public:
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
-    void bindUbo() {
+    void bindUbo() const {
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO);
     }
 

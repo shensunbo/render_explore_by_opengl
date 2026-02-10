@@ -5,6 +5,7 @@
 #include "configParser/ConfigParser.h"
 #include "FboHandler.h"
 #include "TextureCache.h"
+#include "RenderPass.h"
 
 #include <array>
 #include <memory>
@@ -42,9 +43,6 @@ public:
 
 private:
     void releaseTextureData();
-    void renderScenePass(const FrameParams& params);
-    void renderSkyboxPass(const FrameParams& params);
-    void renderPostPass(const FrameParams& params);
     void cleanupGpuTextures();
 
 public:

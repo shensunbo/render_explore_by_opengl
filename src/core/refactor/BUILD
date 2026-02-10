@@ -13,6 +13,7 @@ cc_library(
         "FboHandler.cpp",
         "tool.cpp",
         "TextureCache.cpp",
+        "RenderPass.cpp",
     ],
     hdrs = [
         "AnimationHandler.h",
@@ -28,6 +29,7 @@ cc_library(
         "FboHandler.h",
         "tool.h",
         "TextureCache.h",
+        "RenderPass.h",
     ],
     deps = [
         "//include:log",

@@ -28,6 +28,7 @@ target_sources(render_explore_by_opengl PRIVATE
     core/refactor/DataManager.cpp
     core/refactor/AnimationHandler.cpp
     core/refactor/TextureCache.cpp
+    core/refactor/RenderPass.cpp
 )
 
 # for NDK29
