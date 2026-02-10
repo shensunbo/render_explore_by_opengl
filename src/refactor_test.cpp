@@ -54,6 +54,8 @@ struct RenderToggles {
     bool useAO{true};
     bool useRoughness{true};
     bool useMetallic{true};
+    bool limitFPS{false};
+    int targetFPS{60};
 };
 
 static RenderToggles toggles;
@@ -157,7 +159,11 @@ int main()
         ImGui::Checkbox("AO", &toggles.useAO);
         ImGui::Checkbox("Roughness", &toggles.useRoughness);
         ImGui::Checkbox("Metallic", &toggles.useMetallic);
-        ImGui::End();
+    ImGui::Separator();
+    ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration, (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
+    ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
+    ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
+    ImGui::End();
 
 
 
@@ -207,23 +213,23 @@ int main()
         // frame end time stamp
         auto frameEndTime = std::chrono::high_resolution_clock::now();
         auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
-        
+
         auto swapBufStartTime = std::chrono::high_resolution_clock::now();
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-    platform.swapBuffers();
-    platform.pollEvents();
+        platform.swapBuffers();
+        platform.pollEvents();
 
         auto swapBufEndTime = std::chrono::high_resolution_clock::now();
         auto swapBufCostTime = std::chrono::duration<float, std::milli>(swapBufEndTime - swapBufStartTime).count();
 
-        // Optionally print timing information (can be enabled/disabled)
-        static bool printTiming = false;
-        if (printTiming) {
-            std::cout << "Frame Timing (ms):\n"
-                    << "  rendering time: " << frameDuration << "\n"
-                    << "  swap buffer time: " << swapBufCostTime << "\n"
-                    << "------------------------\n";
+        // Frame limiter
+        if (toggles.limitFPS && toggles.targetFPS > 0) {
+            float minFrameTime = 1000.0f / toggles.targetFPS;
+            float sleepTime = minFrameTime - frameDuration;
+            if (sleepTime > 0.0f) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(sleepTime)));
+            }
         }
     }
 
