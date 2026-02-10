@@ -17,6 +17,7 @@ target_include_directories(render_explore_by_opengl PRIVATE
 
 target_sources(render_explore_by_opengl PRIVATE 
     ${COMMON_DEP_SRC_FILES}
+    platform/Platform.cpp
     core/refactor/VehicleRenderer.cpp
     core/refactor/VehicleVirCamera.cpp
     core/refactor/Skybox.cpp

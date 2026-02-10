@@ -19,6 +19,26 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "platform",
+    srcs = [
+        "platform/Platform.cpp",
+    ],
+    hdrs = [
+        "platform/Platform.h",
+    ],
+    includes = [
+        ".",
+    ],
+    deps = [
+        "//include:log",
+        "//include:gl_headers",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
 cc_binary(
     name = "refactor_test",
     srcs = [
@@ -31,6 +51,7 @@ cc_binary(
         "//dependency/stb:stb",
         "//src/core/refactor:render_core",
         ":configParser",
+        ":platform",
     ],
     copts = [
         "-g",

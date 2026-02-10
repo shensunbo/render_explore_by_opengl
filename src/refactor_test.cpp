@@ -1,11 +1,7 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <chrono>
 #include <stb_image.h>
+#include "gl/gl_headers.h"
 
 
 // #include "core/shader.h"
@@ -18,16 +14,13 @@
 #include "log/mylog.h"
 
 #include "configParser/ConfigParser.h"
+#include "platform/Platform.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
-void processCameraInput(GLFWwindow* window);
+void processInput(platform::Platform &platform, RenderToggles &toggles);
+void processCameraInput(const platform::Platform &platform);
 
 void dumpTextureToFile(GLuint texture, int width, int height, const char* filename);
 
-static GLFWwindow* windowAndGlInit(int width, int height);
 static bool FrameRatemonitorAnd100msTick(void);
 // settings
 const unsigned int SCR_WIDTH = 1080;
@@ -36,9 +29,6 @@ const unsigned int SCR_HEIGHT = 720;
 // TODO: Handle callback event routing in a cleaner way.
 // Camera state.
 VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
 
 // timing
 float deltaTime = 0.0f;
@@ -73,7 +63,10 @@ int main()
 {
     mylog(LogLevel::I, "Starting Refactor");
 
-    GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);
+    platform::Platform platform(SCR_WIDTH, SCR_HEIGHT, "explore render");
+    if (!platform.valid()) {
+        return -1;
+    }
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
@@ -98,8 +91,6 @@ int main()
     glm::mat4 projection = glm::mat4(1.0);
     glm::mat4 view = glm::mat4(1.0);
 
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
     CHECK_GLES_STATUS();
 
     // Optional: draw in wireframe.
@@ -107,12 +98,12 @@ int main()
 
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
+    while (!platform.shouldClose())
     {   
         // per-frame time logic
         // --------------------
-        auto frameStartTime = std::chrono::high_resolution_clock::now();
-        float currentFrame = static_cast<float>(glfwGetTime());
+    auto frameStartTime = std::chrono::high_resolution_clock::now();
+    float currentFrame = static_cast<float>(platform.timeSeconds());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -120,8 +111,8 @@ int main()
 
         // input
         // -----
-        processInput(window);
-        processCameraInput(window);
+    processInput(platform, toggles);
+    processCameraInput(platform);
         // camera.ProcessJump(deltaTime);
 
         if(camera.updateEvent){
@@ -148,8 +139,8 @@ int main()
         auto swapBufStartTime = std::chrono::high_resolution_clock::now();
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+    platform.swapBuffers();
+    platform.pollEvents();
 
         auto swapBufEndTime = std::chrono::high_resolution_clock::now();
         auto swapBufCostTime = std::chrono::duration<float, std::milli>(swapBufEndTime - swapBufStartTime).count();
@@ -164,62 +155,61 @@ int main()
         }
     }
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
-    glfwTerminate();
     return 0;
 }
 
 
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void processInput(platform::Platform &platform, RenderToggles &toggles)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
+    const auto &input = platform.input();
 
-void processInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void processCameraInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
-        camera.ProcessKeyboard(UPROLL, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWNROLL, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && camera.isOnGround)
-        camera.ProcessKeyboard(SPACE, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-        camera.ProcessKeyboard(R, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
-        camera.ProcessKeyboard(K1, deltaTime);
-    else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
+    if (input.isDown(platform::Key::Escape)) {
+        platform.requestClose();
+    }
+    if (input.isDown(platform::Key::I)) {
         toggles.dumpRes = true;
         mylog(LogLevel::I, "Dump frame to file");
     }
-    else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+    if (input.isDown(platform::Key::F)) {
         toggles.fboEnable = true;
         mylog(LogLevel::I, "FBO enabled");
     }
-    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){
+    if (input.isDown(platform::Key::E)) {
         toggles.fboEnable = false;
         mylog(LogLevel::I, "FBO disabled");
     }
+}
 
+void processCameraInput(const platform::Platform &platform)
+{
+    const auto &input = platform.input();
+    if (input.isDown(platform::Key::W))
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    else if (input.isDown(platform::Key::S))
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    else if (input.isDown(platform::Key::A))
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    else if (input.isDown(platform::Key::D))
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    else if (input.isDown(platform::Key::T))
+        camera.ProcessKeyboard(UPROLL, deltaTime);
+    else if (input.isDown(platform::Key::G))
+        camera.ProcessKeyboard(DOWNROLL, deltaTime);
+    else if (input.isDown(platform::Key::Space) && camera.isOnGround)
+        camera.ProcessKeyboard(SPACE, deltaTime);
+    else if (input.isDown(platform::Key::R))
+        camera.ProcessKeyboard(R, deltaTime);
+    else if (input.isDown(platform::Key::M))
+        camera.ProcessKeyboard(K1, deltaTime);
+
+    if (!input.leftButton && (input.deltaX != 0.0 || input.deltaY != 0.0)) {
+        camera.ProcessMouseMovement(static_cast<float>(input.deltaX), static_cast<float>(input.deltaY));
+    }
+
+    if (input.scrollY != 0.0) {
+        camera.ProcessMouseScroll(static_cast<float>(input.scrollY));
+    }
 }
 
 static bool FrameRatemonitorAnd100msTick(void) {
@@ -251,71 +241,4 @@ static bool FrameRatemonitorAnd100msTick(void) {
     }
 
     return false;
-}
-
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
-{
-        float xpos = static_cast<float>(xposIn);
-        float ypos = static_cast<float>(yposIn);
-
-        if (firstMouse)
-        {
-            lastX = xpos;
-            lastY = ypos;
-            firstMouse = false;
-        }
-
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-        lastX = xpos;
-        lastY = ypos;
-
-        if (!(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS))
-            camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
-}
-
-static GLFWwindow* windowAndGlInit(int width, int height){
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow* wnd = glfwCreateWindow(width, height, "explore render", NULL, NULL);
-    if (wnd == NULL)
-    {
-        mylog(LogLevel::E, "Failed to create GLFW window");
-        glfwTerminate();
-        return nullptr;
-    }
-    glfwMakeContextCurrent(wnd);
-    glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
-    glfwSetCursorPosCallback(wnd, mouse_callback);
-    glfwSetScrollCallback(wnd, scroll_callback);
-
-    // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        mylog(LogLevel::E, "Failed to initialize GLAD");
-        return nullptr;
-    }
-
-    // // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    // stbi_set_flip_vertically_on_load(true);
-
-    return wnd;
 }
