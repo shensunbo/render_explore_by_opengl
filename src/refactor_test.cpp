@@ -89,8 +89,10 @@ int main()
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender.ourShader->setMat4("model", model);
 
-    glm::mat4 projection = glm::mat4(1.0);
-    glm::mat4 view = glm::mat4(1.0);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
+                                            static_cast<float>(platform.width()) / static_cast<float>(platform.height()),
+                                            0.1f, 1000.0f);
+    glm::mat4 view = camera.GetViewMatrix();
 
     CHECK_GLES_STATUS();
 
@@ -120,13 +122,12 @@ int main()
         int newH = platform.height();
         if (platform.consumeResize(newW, newH)) {
             vRender.resize(newW, newH);
-            projection = glm::perspective(glm::radians(camera.Zoom), (float)newW / (float)newH, 0.1f, 1000.0f);
         }
 
-        if(camera.updateEvent){
-            projection = glm::perspective(glm::radians(camera.Zoom), (float)platform.width() / (float)platform.height(), 0.1f, 1000.0f);
-            view = camera.GetViewMatrix();
-        }
+        projection = glm::perspective(glm::radians(camera.Zoom),
+                                      static_cast<float>(platform.width()) / static_cast<float>(platform.height()),
+                                      0.1f, 1000.0f);
+        view = camera.GetViewMatrix();
 
         FrameParams params = buildFrameParams(model, projection, view, toggles);
 

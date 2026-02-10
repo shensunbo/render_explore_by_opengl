@@ -207,13 +207,13 @@ void VehicleRenderer::resize(unsigned int width, unsigned int height){
 
 void VehicleRenderer::rebuildGraphs(){
     onscreenGraph_ = std::make_unique<RenderGraph>();
-    onscreenGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
-    onscreenGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
+    onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    onscreenGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
 
     fboGraph_ = std::make_unique<RenderGraph>();
-    fboGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
-    fboGraph_->addPass(std::make_unique<SkyboxPass>(cubemap.get()));
-    fboGraph_->addPass(std::make_unique<PostPass>(fbo_.get()));
+    fboGraph_->addPass("ScenePass", std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
+    fboGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
+    fboGraph_->addPass("PostPass", std::make_unique<PostPass>(fbo_.get()));
 }
 
 void VehicleRenderer::ensureFbo(){
