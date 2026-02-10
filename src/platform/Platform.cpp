@@ -102,6 +102,7 @@ Key Platform::mapKey(int key) {
     case GLFW_KEY_I: return Key::I;
     case GLFW_KEY_F: return Key::F;
     case GLFW_KEY_E: return Key::E;
+    case GLFW_KEY_P: return Key::P;
     case GLFW_KEY_ESCAPE: return Key::Escape;
     default: return Key::Unknown;
     }

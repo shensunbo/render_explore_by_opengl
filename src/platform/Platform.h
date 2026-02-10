@@ -24,6 +24,7 @@ enum class Key {
     I,
     F,
     E,
+    P,
     Escape,
     Unknown,
 };

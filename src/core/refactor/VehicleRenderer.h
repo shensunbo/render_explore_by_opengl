@@ -10,6 +10,7 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 #include <glm/glm.hpp>
 
 struct RendererConfig {
@@ -42,6 +43,7 @@ public:
     void draw();
     void renderFrame(const FrameParams& params);
     void resize(unsigned int width, unsigned int height);
+    void setTimingEnabled(bool enabled) { timingEnabled_ = enabled; }
 
 private:
     void releaseTextureData();
@@ -61,6 +63,9 @@ public:
 
     std::unique_ptr<RenderGraph> onscreenGraph_;
     std::unique_ptr<RenderGraph> fboGraph_;
+
+    bool timingEnabled_{false};
+    std::vector<PassTiming> timings_;
 
     // cached config needed for lazy FBO creation / graph rebuild
     unsigned int width_{0};

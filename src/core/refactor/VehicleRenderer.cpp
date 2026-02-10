@@ -186,11 +186,28 @@ void VehicleRenderer::renderFrame(const FrameParams& params){
     if (useFbo) {
         fbo_->enable();
         if (fboGraph_) {
-            fboGraph_->execute(params);
+            if (timingEnabled_) {
+                fboGraph_->execute(params, &timings_);
+            } else {
+                fboGraph_->execute(params);
+            }
         }
     } else {
         if (onscreenGraph_) {
-            onscreenGraph_->execute(params);
+            if (timingEnabled_) {
+                onscreenGraph_->execute(params, &timings_);
+            } else {
+                onscreenGraph_->execute(params);
+            }
+        }
+    }
+
+    if (timingEnabled_ && !timings_.empty()) {
+        double totalMs = 0.0;
+        for (const auto& t : timings_) totalMs += t.milliseconds;
+        mylog(LogLevel::I, "Frame timings: total=%.3f ms", totalMs);
+        for (const auto& t : timings_) {
+            mylog(LogLevel::I, "  %s: %.3f ms", t.name.c_str(), t.milliseconds);
         }
     }
 }

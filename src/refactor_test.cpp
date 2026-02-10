@@ -42,6 +42,7 @@ static VehicleRenderer vRender;
 struct RenderToggles {
     bool dumpRes{false};
     bool fboEnable{false};
+    bool timing{false};
 };
 
 static RenderToggles toggles;
@@ -129,9 +130,9 @@ int main()
                                       0.1f, 1000.0f);
         view = camera.GetViewMatrix();
 
-        FrameParams params = buildFrameParams(model, projection, view, toggles);
-
-        vRender.renderFrame(params);
+    FrameParams params = buildFrameParams(model, projection, view, toggles);
+    vRender.setTimingEnabled(toggles.timing);
+    vRender.renderFrame(params);
 
         if (toggles.dumpRes) {
             toggles.dumpRes = false;
@@ -187,6 +188,11 @@ void processInput(platform::Platform &platform, RenderToggles &toggles)
     if (input.isDown(platform::Key::E)) {
         toggles.fboEnable = false;
         mylog(LogLevel::I, "FBO disabled");
+    }
+    if (input.isDown(platform::Key::P)) {
+        toggles.timing = true;
+    } else {
+        toggles.timing = false;
     }
 }
 
