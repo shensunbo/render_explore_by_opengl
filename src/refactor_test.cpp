@@ -116,8 +116,15 @@ int main()
     processCameraInput(platform);
         // camera.ProcessJump(deltaTime);
 
+        int newW = platform.width();
+        int newH = platform.height();
+        if (platform.consumeResize(newW, newH)) {
+            vRender.resize(newW, newH);
+            projection = glm::perspective(glm::radians(camera.Zoom), (float)newW / (float)newH, 0.1f, 1000.0f);
+        }
+
         if(camera.updateEvent){
-            projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+            projection = glm::perspective(glm::radians(camera.Zoom), (float)platform.width() / (float)platform.height(), 0.1f, 1000.0f);
             view = camera.GetViewMatrix();
         }
 

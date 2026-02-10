@@ -41,6 +41,8 @@ Platform::Platform(int width, int height, const std::string &title) {
         return;
     }
 
+    width_ = width;
+    height_ = height;
     glViewport(0, 0, width, height);
     lastX_ = static_cast<double>(width) * 0.5;
     lastY_ = static_cast<double>(height) * 0.5;
@@ -78,6 +80,14 @@ void Platform::swapBuffers() {
 
 double Platform::timeSeconds() const { return glfwGetTime(); }
 
+bool Platform::consumeResize(int &w, int &h) {
+    if (!sizeDirty_) return false;
+    sizeDirty_ = false;
+    w = width_;
+    h = height_;
+    return true;
+}
+
 Key Platform::mapKey(int key) {
     switch (key) {
     case GLFW_KEY_W: return Key::W;
@@ -98,7 +108,11 @@ Key Platform::mapKey(int key) {
 }
 
 void Platform::framebufferCb(GLFWwindow *wnd, int width, int height) {
-    (void)width; (void)height;
+    auto *self = static_cast<Platform *>(glfwGetWindowUserPointer(wnd));
+    if (!self) return;
+    self->width_ = width;
+    self->height_ = height;
+    self->sizeDirty_ = true;
     glViewport(0, 0, width, height);
 }
 

@@ -61,6 +61,11 @@ public:
     void swapBuffers();
     double timeSeconds() const;
 
+    int width() const { return width_; }
+    int height() const { return height_; }
+    // Returns true if size changed since last poll; outputs new size.
+    bool consumeResize(int &w, int &h);
+
     const InputState &input() const { return inputState_; }
     GLFWwindow *rawWindow() const { return window_; }
 
@@ -70,6 +75,9 @@ private:
     bool firstMouse_{true};
     double lastX_{0.0};
     double lastY_{0.0};
+    int width_{0};
+    int height_{0};
+    bool sizeDirty_{false};
 
     static Key mapKey(int key);
     static void framebufferCb(GLFWwindow *wnd, int width, int height);
