@@ -24,7 +24,7 @@ enum class LogLevel {
 };
 
 //set log level
-#define LOG_LEVEL LogLevel::D
+#define LOG_LEVEL LogLevel::I
 
 #define GET_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 

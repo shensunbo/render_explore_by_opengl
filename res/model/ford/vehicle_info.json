@@ -227,19 +227,7 @@
 
     "texture":{
         "diffuse":{
-            "file_list":["APTIV.png"],
-            "APTIV.png":{
-                "components":[
-                    {
-                        "mesh_name":"Door_Front_Left_paint.001",
-                        "material_name":""
-                    },
-                    {
-                        "mesh_name":"Door_Back_Left_Paint.001",
-                        "material_name":""
-                    }
-                ]
-            }
+            "file_list":[]
         }
     },
 

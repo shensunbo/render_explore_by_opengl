@@ -9,14 +9,14 @@ layout (std140) uniform MaterialBlock {
     float Opacity;
     float Shininess;
     float ShininessStrength;
-    bool texture_diffuse_load;
-    bool texture_specular_load;
-    bool texture_normal_load;
-    bool texture_ao_load;
-    bool texture_alpha_load;
-    bool texture_roughness_load;
-    bool texture_metallic_load;
-    bool texture_emissive_load;
+    int texture_diffuse_load;
+    int texture_specular_load;
+    int texture_normal_load;
+    int texture_ao_load;
+    int texture_alpha_load;
+    int texture_roughness_load;
+    int texture_metallic_load;
+    int texture_emissive_load;
 } material;
 
 in vec3 Normal;
@@ -83,29 +83,29 @@ void main()
     if(textureLoad){
         vec2 index = vec2(TexCoords.x, TexCoords.y);
 
-        if(material.texture_diffuse_load && enableDiffuseTex){
+        if(material.texture_diffuse_load != 0 && enableDiffuseTex){
             realMaterialDiffuseColor = texture(texture_diffuse, index).rgb;
         }
 
-        if(material.texture_specular_load && enableSpecularTex){
+        if(material.texture_specular_load != 0 && enableSpecularTex){
             realShininess = texture(texture_specular, index).r * 128.0;
         }
 
-        if(material.texture_ao_load && enableAOTex){
+        if(material.texture_ao_load != 0 && enableAOTex){
             diffCoef = texture(texture_ao, index).r;
         }
 
-        if(material.texture_normal_load && enableNormalTex){
+        if(material.texture_normal_load != 0 && enableNormalTex){
             realNormal = texture(texture_normal, TexCoords).rgb;
             realNormal = normalize(realNormal * 2.0 - 1.0);
             realNormal = normalize(TBN * realNormal);
         }
 
-        if(material.texture_roughness_load && enableRoughnessTex){
+        if(material.texture_roughness_load != 0 && enableRoughnessTex){
             roughness = texture(texture_roughness, index).r;
         }
 
-        if(material.texture_metallic_load && enableMetallicTex){
+        if(material.texture_metallic_load != 0 && enableMetallicTex){
             metallic = texture(texture_metallic, index).r;
         }
     }

@@ -56,7 +56,7 @@ struct RenderToggles {
     int targetFPS{60};
 };
 
-static RenderToggles toggles;
+static RenderToggles toggles{.limitFPS = true, .targetFPS = 60};
 static FrameParams buildFrameParams(const glm::mat4& model,
                                     const glm::mat4& projection,
                                     const glm::mat4& view,
@@ -150,6 +150,8 @@ int main()
     config.width = SCR_WIDTH;
     config.height = SCR_HEIGHT;
     config.resourceRoot = ""; // Run from repo root or build copy.
+    config.modelPath = "res/model/halo/halo.fbx";
+    config.vehicleInfoPath = "res/model/halo/vehicle_info.json";
     vRender.create(config);
 
     glm::mat4 skyboxModel = glm::mat4(1.0f);

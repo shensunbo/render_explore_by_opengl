@@ -210,34 +210,31 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
 
 myMaterial ModelLoader::loadMaterial(aiMaterial* mat)
 {
+    // Sensible defaults so texture-less materials still render visibly.
     myMaterial material = {};
+    material.diffuseColor = glm::vec3(0.8f);
+    material.specularColor = glm::vec3(0.2f);
+    material.ambientColor = glm::vec3(0.05f);
+    material.shininess = 32.0f;
 
     aiColor3D diffuseColor;
     if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor)) {
         material.diffuseColor = glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b);
-    } else {
-        std::cout << "Failed to get diffuse color" << std::endl;
     }
 
     aiColor3D specularColor;
     if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor)) {
-    material.specularColor = glm::vec3(specularColor.r, specularColor.g, specularColor.b);
-    } else {
-        std::cout << "Failed to get specular color" << std::endl;
+        material.specularColor = glm::vec3(specularColor.r, specularColor.g, specularColor.b);
     }
 
     aiColor3D ambientColor;
     if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor)) {
         material.ambientColor = glm::vec3(ambientColor.r, ambientColor.g, ambientColor.b);
-    } else {
-        std::cout << "Failed to get ambient color" << std::endl;
     }
 
     float shininess;
     if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess)) {
-    material.shininess = shininess;
-    } else {
-        std::cout << "Failed to get shininess" << std::endl;
+        material.shininess = shininess;
     }
 
     float opacity = 1.0f;
