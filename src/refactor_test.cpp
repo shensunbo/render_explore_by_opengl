@@ -3,9 +3,11 @@
 #include <stb_image.h>
 #include "gl/gl_headers.h"
 
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <thread>
 
 
 // #include "core/shader.h"
@@ -126,6 +128,7 @@ int main()
 
     // render loop
     // -----------
+    float frameDuration = 0.0f;
     while (!platform.shouldClose())
     {   
         // per-frame time logic
@@ -159,11 +162,11 @@ int main()
         ImGui::Checkbox("AO", &toggles.useAO);
         ImGui::Checkbox("Roughness", &toggles.useRoughness);
         ImGui::Checkbox("Metallic", &toggles.useMetallic);
-    ImGui::Separator();
-    ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration, (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
-    ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
-    ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
-    ImGui::End();
+        ImGui::Separator();
+        ImGui::Text("Frame time: %.2f ms (%.1f FPS)", frameDuration, (frameDuration > 0.0f ? 1000.0f / frameDuration : 0.0f));
+        ImGui::Checkbox("Limit FPS", &toggles.limitFPS);
+        ImGui::SliderInt("Target FPS", &toggles.targetFPS, 10, 240);
+        ImGui::End();
 
 
 
@@ -210,9 +213,9 @@ int main()
         camera.updateEvent = false;
 
         CHECK_GLES_STATUS();
-        // frame end time stamp
-        auto frameEndTime = std::chrono::high_resolution_clock::now();
-        auto frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
+    // frame end time stamp
+    auto frameEndTime = std::chrono::high_resolution_clock::now();
+    frameDuration = std::chrono::duration<float, std::milli>(frameEndTime - frameStartTime).count();
 
         auto swapBufStartTime = std::chrono::high_resolution_clock::now();
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
