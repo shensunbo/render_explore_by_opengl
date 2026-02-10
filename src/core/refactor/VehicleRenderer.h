@@ -41,12 +41,14 @@ public:
     void update();
     void draw();
     void renderFrame(const FrameParams& params);
+    void resize(unsigned int width, unsigned int height);
 
 private:
     void releaseTextureData();
     void cleanupGpuTextures();
     void rebuildGraphs();
     void ensureFbo();
+    void rebuildFbo(unsigned int width, unsigned int height);
 
 public:
     std::unique_ptr<VehicleShader> ourShader;

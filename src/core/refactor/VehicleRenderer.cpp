@@ -133,6 +133,9 @@ void VehicleRenderer::destroy(){
     }
     ourShader.reset();
     ourModel.reset();
+    onscreenGraph_.reset();
+    fboGraph_.reset();
+    fbo_.reset();
 }
 
 void VehicleRenderer::update(){
@@ -192,6 +195,16 @@ void VehicleRenderer::renderFrame(const FrameParams& params){
     }
 }
 
+void VehicleRenderer::resize(unsigned int width, unsigned int height){
+    width_ = width;
+    height_ = height;
+    if (width_ == 0 || height_ == 0) return;
+
+    // Recreate FBO if it exists or if future frames enable it.
+    rebuildFbo(width_, height_);
+    rebuildGraphs();
+}
+
 void VehicleRenderer::rebuildGraphs(){
     onscreenGraph_ = std::make_unique<RenderGraph>();
     onscreenGraph_->addPass(std::make_unique<ScenePass>(ourShader.get(), cubemap.get(), &ourModel->meshes));
@@ -207,6 +220,16 @@ void VehicleRenderer::ensureFbo(){
     if (fbo_) return;
     if (width_ == 0 || height_ == 0) return;
     fbo_ = std::make_shared<FboHandler>(width_, height_, fboVsPath_, fboFsPath_);
+    fbo_->init();
+}
+
+void VehicleRenderer::rebuildFbo(unsigned int width, unsigned int height){
+    // If FBO is not desired, just drop it; it will be recreated lazily when needed.
+    if (!fbo_) {
+        return;
+    }
+    fbo_.reset();
+    fbo_ = std::make_shared<FboHandler>(width, height, fboVsPath_, fboFsPath_);
     fbo_->init();
 }
 void VehicleRenderer::cleanupGpuTextures(){
