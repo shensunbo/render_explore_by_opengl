@@ -33,6 +33,23 @@ cc_library(
     deps = [
         "//include:log",
         "//include:gl_headers",
+        "//dependency/glad:glad",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+cc_library(
+    name = "rhi",
+    hdrs = [
+        "rhi/Rhi.h",
+    ],
+    includes = [
+        ".",
+    ],
+    deps = [
+        "//include:gl_headers",
     ],
     visibility = [
         "//visibility:public",
@@ -52,6 +69,7 @@ cc_binary(
         "//src/core/refactor:render_core",
         ":configParser",
         ":platform",
+        ":rhi",
     ],
     copts = [
         "-g",

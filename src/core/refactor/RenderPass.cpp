@@ -1,11 +1,12 @@
 #include "RenderPass.h"
 #include "VehicleRenderer.h" // for FrameParams
+#include "rhi/Rhi.h"
 
 void ScenePass::execute(const FrameParams& params) {
     if (!shader_ || !meshes_) return;
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.2f, 0.5f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    rhi::enableDepthTest(true);
+    rhi::setClearColor(0.2f, 0.5f, 0.1f, 1.0f);
+    rhi::clearColorDepth();
 
     shader_->use();
     if (skybox_) skybox_->ActiveCubeMap();
@@ -18,14 +19,14 @@ void ScenePass::execute(const FrameParams& params) {
     for (const auto& v : *meshes_) {
         for (size_t i = 0; i < v.textures.size(); ++i) {
             auto uniform = v.textures[i].type;
-            glActiveTexture(GL_TEXTURE0 + v.textures[i].bindId);
+            rhi::setActiveTexture(v.textures[i].bindId);
             shader_->setInt(uniform, v.textures[i].bindId);
-            glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
+            rhi::bindTexture2D(v.textures[i].id);
         }
         shader_->setBool("textureLoad", !v.textures.empty());
         v.bindVao();
         v.bindUbo();
-        glDrawElements(GL_TRIANGLES, v.getIndicesSize(), GL_UNSIGNED_INT, 0);
+        rhi::drawIndexedTriangles(v.getIndicesSize());
     }
 }
 

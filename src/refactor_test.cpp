@@ -16,6 +16,7 @@
 #include "configParser/ConfigParser.h"
 #include "platform/Platform.h"
 
+struct RenderToggles;
 void processInput(platform::Platform &platform, RenderToggles &toggles);
 void processCameraInput(const platform::Platform &platform);
 

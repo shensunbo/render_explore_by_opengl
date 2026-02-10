@@ -41,6 +41,7 @@ cc_library(
         # "//dependency/egl:egl_glad",
         "//src:configParser",
         "//dependency/ktx:ktx",
+        "//src:rhi",
     ],
     linkopts = [
         "-lglfw",
