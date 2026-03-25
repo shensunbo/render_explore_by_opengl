@@ -37,6 +37,10 @@ texconv -f BC7_UNORM -m 10 input.png -o output.dds`
 
 --- 
 
+## android
+- [ ] 首次运行解压文件到私有目录，通过标记文件记录是否首次运行
+
+
 ## low priority
 - [ ] FPS optimize 
     - [ ]  static rendering 
