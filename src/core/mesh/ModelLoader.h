@@ -1,61 +1,45 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
-#include <assimp/scene.h>
-#include <glm/glm.hpp>
+#include <string>
 
-// #include "../mesh.h"
 #include "BufferObjectData.h"
 #include "texture/TextureCache.h"
 #include <configParser/ConfigParser.h>
 
+/**
+ * @class ModelLoader
+ * @brief Loads 3D models via Assimp.
+ *
+ * Uses PIMPL to keep Assimp headers out of consumers.
+ * Construct once, call LoadModel, then discard or reuse.
+ */
 class ModelLoader {
 public:
-    ModelLoader() = default;
-    ~ModelLoader() = default;
-    ModelLoader(const ModelLoader&) = delete;
+    ModelLoader();
+    ~ModelLoader(); ///< Defined in .cpp where Impl is complete.
+
+    ModelLoader(const ModelLoader&)            = delete;
     ModelLoader& operator=(const ModelLoader&) = delete;
-    ModelLoader(ModelLoader&&) = delete;
-    ModelLoader& operator=(ModelLoader&&) = delete;
+    ModelLoader(ModelLoader&&)                 = default;
+    ModelLoader& operator=(ModelLoader&&)      = default;
 
-    bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
-        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
-        TextureCache& textureCache);
-    
-    // static unsigned int ImageFromFile(std::string filename, imageParam& pngData);
+    /**
+     * @brief Load a model from disk.
+     * @param resPath      Path to the model file.
+     * @param meshInfo     Output: list of GPU-ready mesh buffers.
+     * @param cfgInfo      Mesh/material configuration parser.
+     * @param textureData  Pre-loaded CPU texture data.
+     * @param textureCache GPU texture cache.
+     * @return true on success.
+     */
+    bool LoadModel(const std::string& resPath,
+                   std::vector<BufferObjectData>& meshInfo,
+                   ConfigParser& cfgInfo,
+                   const std::unordered_map<std::string, imageParam>& textureData,
+                   TextureCache& textureCache);
+
 private:
-    void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, ConfigParser& vehInfo,
-                    const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
-    BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, 
-        const glm::mat4& translationMatrix, ConfigParser& vehInfo, 
-        const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
-
-    myMaterial loadMaterial(aiMaterial* mat);
-    unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
-    unsigned int TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData);
-    // unsigned int ImageFromFile(std::string filename, imageParam& pngData);
-    unsigned int TextureFromKTXFile(const char *path, const std::string &directory);
-    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName);
-    std::vector<Texture> LoadTextures(aiMaterial* mat, aiTextureType type,
-                                          const char* typeName,
-                                          std::string meshName,
-                                          ConfigParser& vehInfo,
-                                          const std::unordered_map<std::string, imageParam>& textureData,
-                                          TextureCache& textureCache);
-
-    glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
-        glm::mat4 to;
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                to[i][j] =
-                    from[j][i];  // Transpose matrix by swapping rows and columns
-            }
-        }
-        return to;
-    }
-
-    // std::vector<Texture> textures_loaded;
-    std::vector<Texture> m_textures_loaded;
-    std::string directory;
-    // std::unordered_map<std::string, imageParam> m_loaded_texture_data;
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
 };

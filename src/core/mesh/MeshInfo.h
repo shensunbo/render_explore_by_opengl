@@ -1,88 +1,58 @@
 #pragma once
-// #include "../mesh.h"
-// #include "../shader.h"
 #include "shader/Shader.h"
-#include "log/mylog.h"
 #include "ModelLoader.h"
 #include "common/CommonDataStruct.h"
 #include "BufferObjectData.h"
+#include <unordered_map>
+#include <string>
+#include <vector>
 
 /**
  * @class MeshInfo
- * @brief Holds mesh and texture information for a model.
+ * @brief Loads and owns all GPU mesh buffers for a single model.
  *
- * This class manages the loading and storage of mesh and texture data for a model,
- * using ModelLoader and BufferObjectData. It provides access to loaded textures and meshes,
- * and exposes utility functions for texture ID management.
+ * Wraps ModelLoader (PIMPL) so assimp headers don't leak further up the
+ * include tree. Destructor is defined in MeshInfo.cpp where ModelLoader's
+ * Impl type is reachable via the linker.
  */
 class MeshInfo {
 public:
     /**
-     * @brief Constructs a MeshInfo object and loads the model.
-     * @param path Path to the 3D model file.
-     * @param vehInfo Reference to configuration parser.
-     * @param textureData Map of texture names to image parameters.
-     * @param textureCache Reference to the texture cache.
-     * @param gamma Enable gamma correction if true.
+     * @brief Load a model from disk and upload its meshes to the GPU.
+     * @param path         Path to the model file.
+     * @param cfgInfo      Mesh/material configuration parser.
+     * @param textureData  Pre-loaded CPU texture data map.
+     * @param textureCache GPU texture cache.
+     * @param gamma        Enable gamma correction.
      */
-    MeshInfo(std::string const &path, ConfigParser& vehInfo,
-        const std::unordered_map<std::string, imageParam>& textureData,
-        TextureCache& textureCache,
-        bool gamma = false) : gammaCorrection(gamma)
-    {
-        loader.LoadModel(path, meshes, vehInfo, textureData, textureCache);
-    }
+    MeshInfo(const std::string& path,
+             ConfigParser& cfgInfo,
+             const std::unordered_map<std::string, imageParam>& textureData,
+             TextureCache& textureCache,
+             bool gamma = false);
 
-    MeshInfo(const MeshInfo&) = delete;
+    /// Defined in MeshInfo.cpp — ModelLoader dtor must be complete at that point.
+    ~MeshInfo();
+
+    MeshInfo(const MeshInfo&)            = delete;
     MeshInfo& operator=(const MeshInfo&) = delete;
-    MeshInfo(MeshInfo&&) = delete;
-    MeshInfo& operator=(MeshInfo&&) = delete;
+    MeshInfo(MeshInfo&&)                 = delete;
+    MeshInfo& operator=(MeshInfo&&)      = delete;
 
-    ~MeshInfo() = default;
+    /** @brief All GPU-ready mesh buffers for this model. */
+    const std::vector<BufferObjectData>& getMeshes() const { return meshes_; }
 
-    /**
-     * @brief Returns the maximum texture ID used by this model.
-     * @return Maximum texture ID.
-     */
-    unsigned int getMaxTextureID() const {
-        return maxTextureID;
-    }
-    // /**
-    //  * @brief Draws the model and all its meshes.
-    //  * @param shader Pointer to the shader.
-    //  */
-    // void Draw(Shader *shader)
-    // {
-    //     for(unsigned int i = 0; i < meshes.size(); i++)
-    //         meshes[i].Draw(shader);
-    // }
+    /** @brief Maximum texture slot index used by this model. */
+    unsigned int getMaxTextureID() const { return maxTextureID_; }
 
-public:
-    /**
-     * @brief Stores all the textures loaded so far.
-     *
-     * Optimization to ensure textures are not loaded more than once.
-     */
-    std::vector<Texture> textures_loaded;
+    /** @brief Whether gamma correction is enabled. */
+    bool isGammaCorrected() const { return gammaCorrection_; }
 
-    /**
-     * @brief Stores all mesh data for the model.
-     */
-    std::vector<BufferObjectData> meshes;
-
-    /**
-     * @brief Indicates if gamma correction is enabled for this model.
-     */
-    bool gammaCorrection;
-
-    /**
-     * @brief Loader used to load the model data.
-     */
-    ModelLoader loader;
+    // Allow Renderer direct mesh access for render loop performance.
+    std::vector<BufferObjectData> meshes_;
 
 private:
-    /**
-     * @brief Maximum texture ID (should be determined automatically in future).
-     */
-    const unsigned int maxTextureID = 6; ///< TODO: get this automatically
+    ModelLoader       loader_;
+    bool              gammaCorrection_{false};
+    unsigned int      maxTextureID_{6}; ///< TODO: derive automatically
 };

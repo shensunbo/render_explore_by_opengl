@@ -232,7 +232,7 @@ static GLFWwindow* windowAndGlInit(int width, int height){
     GLFWwindow* wnd = glfwCreateWindow(width, height, "explore render", NULL, NULL);
     if (wnd == NULL)
     {
-        mylog(LogLevel::E, "Failed to create GLFW window");
+        LOG_E("Failed to create GLFW window");
         glfwTerminate();
         return nullptr;
     }
@@ -248,7 +248,7 @@ static GLFWwindow* windowAndGlInit(int width, int height){
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        mylog(LogLevel::E, "Failed to initialize GLAD");
+        LOG_E("Failed to initialize GLAD");
         return nullptr;
     }
 

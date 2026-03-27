@@ -101,7 +101,7 @@ void Renderer::create(const RendererConfig& cfg){
     // Build GPU meshes using the loaded texture data and cache.
     ourModel = std::make_unique<MeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
 
-    for(auto& it : ourModel->meshes) {
+    for(auto& it : ourModel->meshes_) {
         if (legacyShader_) {
             unsigned int blockIndex = legacyShader_->getBlockIndex("MaterialBlock");
             legacyShader_->uniformBlockBind(blockIndex, 0);
@@ -158,7 +158,7 @@ void Renderer::update(){
 
 void Renderer::draw(){
     if (!activeShader_) return;
-    for(auto& v :  ourModel->meshes){
+    for(auto& v :  ourModel->meshes_){
         for (size_t i = 0; i < v.textures.size(); ++i) {
             auto uniform = v.textures[i].type;
             glActiveTexture(GL_TEXTURE0 + v.textures[i].bindId);
@@ -239,11 +239,11 @@ void Renderer::resize(unsigned int width, unsigned int height){
 
 void Renderer::rebuildGraphs(){
     onscreenGraph_ = std::make_unique<RenderGraph>();
-    onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes));
+    onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes_));
     onscreenGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
 
     fboGraph_ = std::make_unique<RenderGraph>();
-    fboGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes));
+    fboGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes_));
     fboGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
     fboGraph_->addPass("PostPass", std::make_unique<PostPass>(fbo_.get()));
 }
