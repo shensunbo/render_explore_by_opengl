@@ -1,5 +1,4 @@
-#include "RenderPass.h"
-#include "Renderer.h" // for FrameParams
+#include "ScenePass.h"
 #include "rhi/Rhi.h"
 
 void ScenePass::execute(const FrameParams& params) {
@@ -29,20 +28,4 @@ void ScenePass::execute(const FrameParams& params) {
         v.bindUbo();
         rhi::drawIndexedTriangles(v.getIndicesSize());
     }
-}
-
-void SkyboxPass::execute(const FrameParams& params) {
-    if (!skybox_) return;
-    glm::mat4 skyView = glm::mat4(glm::mat3(params.view));
-    glm::mat4 skyMvp = params.projection * skyView;
-    skybox_->updateMvpMatrix(skyMvp);
-    skybox_->drawSkybox();
-}
-
-void PostPass::execute(const FrameParams& params) {
-    if (!fbo_) return;
-    if (params.dumpOnce) {
-        fbo_->dumpTextureToFile("dump.png");
-    }
-    fbo_->renderToFullscreenQuad();
 }

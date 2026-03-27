@@ -16,41 +16,6 @@
 class BufferObjectData {
 public:
     /**
-     * @brief Vertex data for the mesh.
-     */
-    std::vector<Vertex> vertices;
-
-    /**
-     * @brief Index data for the mesh.
-     */
-    std::vector<unsigned int> indices;
-
-    /**
-     * @brief Textures associated with the mesh.
-     */
-    std::vector<Texture> textures;
-
-    /**
-     * @brief Name of the mesh.
-     */
-    std::string meshName;
-
-    /**
-     * @brief Material properties for the mesh.
-     */
-    myMaterial mMaterial;
-
-    /**
-     * @brief Uniform buffer object material data.
-     */
-    UboMat mUboMat{};
-
-    /**
-     * @brief OpenGL Vertex Array Object ID.
-     */
-    unsigned int VAO;
-
-    /**
      * @brief Constructs a BufferObjectData object and initializes OpenGL buffers.
      * @param vertices Vertex data.
      * @param indices Index data.
@@ -59,42 +24,17 @@ public:
      * @param mName Name of the mesh.
      */
     BufferObjectData(std::vector<Vertex> vertices, std::vector<unsigned int> indices, 
-        std::vector<Texture> textures, myMaterial mMaterial, std::string mName)
-    {
-        this->vertices = vertices;
-        this->indices = indices;
-        this->textures = textures;
-        this->mMaterial = mMaterial;
-        this->meshName = mName;
+        std::vector<Texture> textures, myMaterial mMaterial, std::string mName);
+    
+    /**
+     * @brief Destructor for BufferObjectData. Releases OpenGL resources.
+     */
+    ~BufferObjectData();
 
-        this->mUboMat.diffuseColor = glm::vec4(mMaterial.diffuseColor, 1.0f);
-        this->mUboMat.specularColor = glm::vec4(mMaterial.specularColor, 1.0f);
-        this->mUboMat.shininess = mMaterial.shininess;
-        this->mUboMat.shininessStrength = mMaterial.ShininessStrength;
-
-        for (const auto& tex : textures) {
-            if (tex.type == "texture_diffuse") {
-                this->mUboMat.texture_diffuse_load = 1;
-            } else if (tex.type == "texture_specular") {
-                this->mUboMat.texture_specular_load = 1;
-            } else if (tex.type == "texture_normal") {
-                this->mUboMat.texture_normal_load = 1;
-            } else if (tex.type == "texture_ao") {
-                this->mUboMat.texture_ao_load = 1;
-            } else if (tex.type == "texture_alpha") {
-                this->mUboMat.texture_alpha_load = 1;
-            } else if (tex.type == "texture_roughness") {
-                this->mUboMat.texture_roughness_load = 1;
-            } else if (tex.type == "texture_metallic") {
-                this->mUboMat.texture_metallic_load = 1;
-            } else if (tex.type == "texture_emissive") {
-                this->mUboMat.texture_emissive_load = 1;
-            }
-        }
-
-        // now that we have all the required data, set the vertex buffers and its attribute pointers.
-        setupMesh();
-    }
+    BufferObjectData(const BufferObjectData&) = delete;
+    BufferObjectData& operator=(const BufferObjectData&) = delete;
+    BufferObjectData(BufferObjectData&& other) noexcept;
+    BufferObjectData& operator=(BufferObjectData&& other) noexcept;
 
     /**
      * @brief Binds the VAO for this mesh.
@@ -128,39 +68,27 @@ public:
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO);
     }
 
-    /**
-     * @brief Destructor for BufferObjectData. Releases OpenGL resources.
-     */
-    ~BufferObjectData();
-
-    BufferObjectData(const BufferObjectData&) = delete;
-    BufferObjectData& operator=(const BufferObjectData&) = delete;
-    BufferObjectData(BufferObjectData&& other) noexcept;
-    BufferObjectData& operator=(BufferObjectData&& other) noexcept;
-
 private:
-    /**
-     * @brief OpenGL Vertex Buffer Object ID.
-     */
-    GLuint VBO{0};
-
-    /**
-     * @brief OpenGL Element Buffer Object ID.
-     */
-    GLuint EBO{0};
-
-    /**
-     * @brief OpenGL Uniform Buffer Object ID.
-     */
-    GLuint UBO{0};
-
-    /**
-     * @brief Resets OpenGL buffer handles to zero.
-     */
     void resetGlHandles();
 
     /**
      * @brief Initializes all OpenGL buffer objects and attribute pointers for the mesh.
      */
     void setupMesh();
+
+public:
+    unsigned int VAO{0};
+
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Texture> textures;
+    std::string meshName;
+    myMaterial mMaterial;
+    UboMat mUboMat{};
+
+private:
+
+    GLuint VBO{0};
+    GLuint EBO{0};
+    GLuint UBO{0};
 };

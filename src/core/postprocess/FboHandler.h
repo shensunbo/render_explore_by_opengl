@@ -12,6 +12,11 @@ public:
         shader_(vs.c_str(), fs.c_str()) {
     }
 
+    FboHandler(const FboHandler&) = delete;
+    FboHandler& operator=(const FboHandler&) = delete;
+    FboHandler(FboHandler&&) = delete;
+    FboHandler& operator=(FboHandler&&) = delete;
+
     ~FboHandler(){
         glDeleteFramebuffers(1, &fbo);
         glDeleteTextures(1, &texture);
@@ -44,8 +49,6 @@ private:
     GLuint fbo{0}; 
     GLuint texture{0};
     GLuint rbo{0};
-
-    
 
     bool fboState_ = false;
 };

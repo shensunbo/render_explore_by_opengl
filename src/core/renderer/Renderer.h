@@ -1,11 +1,11 @@
 #pragma once 
+#include "FrameParams.h"
 #include "shader/Shader.h"
 #include "scene/Skybox.h"
 #include "mesh/MeshInfo.h"
 #include "configParser/ConfigParser.h"
 #include "postprocess/FboHandler.h"
 #include "texture/TextureCache.h"
-#include "RenderPass.h"
 #include "RenderGraph.h"
 
 #include <array>
@@ -25,15 +25,6 @@ struct RendererConfig {
     std::string pbrFsPath;
     std::array<std::string, 6> skyboxFaces{};
     bool enableFbo{true};
-};
-
-struct FrameParams {
-    glm::mat4 projection{1.0f};
-    glm::mat4 view{1.0f};
-    glm::mat4 model{1.0f};
-    glm::vec3 eye{0.0f, 0.0f, 0.0f};
-    bool enableFbo{false};
-    bool dumpOnce{false};
 };
 
 class Renderer {

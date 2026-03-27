@@ -13,6 +13,13 @@
 
 class ModelLoader {
 public:
+    ModelLoader() = default;
+    ~ModelLoader() = default;
+    ModelLoader(const ModelLoader&) = delete;
+    ModelLoader& operator=(const ModelLoader&) = delete;
+    ModelLoader(ModelLoader&&) = delete;
+    ModelLoader& operator=(ModelLoader&&) = delete;
+
     bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
         ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
         TextureCache& textureCache);

@@ -15,6 +15,14 @@ struct PassTiming {
 // them in order. It keeps existing pass interfaces intact to minimize churn.
 class RenderGraph {
 public:
+    RenderGraph() = default;
+    ~RenderGraph() = default;
+
+    RenderGraph(const RenderGraph&) = delete;
+    RenderGraph& operator=(const RenderGraph&) = delete;
+    RenderGraph(RenderGraph&&) = delete;
+    RenderGraph& operator=(RenderGraph&&) = delete;
+
     void addPass(const std::string& name, std::unique_ptr<IRenderPass> pass) {
         names_.emplace_back(name);
         passes_.emplace_back(std::move(pass));

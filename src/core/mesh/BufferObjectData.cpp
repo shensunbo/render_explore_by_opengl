@@ -1,5 +1,42 @@
 #include "BufferObjectData.h"
 
+BufferObjectData::BufferObjectData(std::vector<Vertex> vertices,
+    std::vector<unsigned int> indices,
+    std::vector<Texture> textures,
+    myMaterial mMaterial,
+    std::string mName)
+        : vertices(std::move(vertices)),
+            indices(std::move(indices)),
+            textures(std::move(textures)),
+            meshName(std::move(mName)),
+            mMaterial(std::move(mMaterial))
+{
+    // Zero-initialize UBO struct to ensure all flags/values are deterministic.
+    mUboMat = {};
+
+    // Fill material-derived fields (POD members are safe after move).
+    mUboMat.diffuseColor = glm::vec4(mMaterial.diffuseColor, 1.0f);
+    mUboMat.specularColor = glm::vec4(mMaterial.specularColor, 1.0f);
+    mUboMat.shininess = mMaterial.shininess;
+    mUboMat.shininessStrength = mMaterial.ShininessStrength;
+
+    // Set texture-load flags based on moved-in textures member.
+    for (const auto& tex : this->textures) {
+        const auto& t = tex.type;
+        if (t == "texture_diffuse") mUboMat.texture_diffuse_load = 1;
+        else if (t == "texture_specular") mUboMat.texture_specular_load = 1;
+        else if (t == "texture_normal") mUboMat.texture_normal_load = 1;
+        else if (t == "texture_ao") mUboMat.texture_ao_load = 1;
+        else if (t == "texture_alpha") mUboMat.texture_alpha_load = 1;
+        else if (t == "texture_roughness") mUboMat.texture_roughness_load = 1;
+        else if (t == "texture_metallic") mUboMat.texture_metallic_load = 1;
+        else if (t == "texture_emissive") mUboMat.texture_emissive_load = 1;
+    }
+
+    // now that we have all the required data, set the vertex buffers and its attribute pointers.
+    setupMesh();
+}
+
 BufferObjectData::~BufferObjectData() {
     resetGlHandles();
 }

@@ -1,10 +1,17 @@
 cc_library(
     name = "render_core",
     srcs = [
-        "RenderPass.cpp",
+        "ScenePass.cpp",
+        "SkyboxPass.cpp",
+        "PostPass.cpp",
         "Renderer.cpp",
     ],
     hdrs = [
+        "FrameParams.h",
+        "IRenderPass.h",
+        "ScenePass.h",
+        "SkyboxPass.h",
+        "PostPass.h",
         "RenderPass.h",
         "RenderGraph.h",
         "Renderer.h",
