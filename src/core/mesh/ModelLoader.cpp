@@ -20,6 +20,28 @@ struct ModelLoader::Impl {
     std::vector<Texture> m_textures_loaded;
     std::string directory;
 
+    bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
+                                        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
+                                        TextureCache& textureCache);
+    void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, 
+        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
+    
+    BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4& translationMatrix, 
+        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
+    
+    myMaterial loadMaterial(aiMaterial* mat);
+    
+    unsigned int TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData);
+    unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma);
+    unsigned int TextureFromKTXFile(const char *path, const std::string &directory);
+    std::vector<Texture> LoadTextures(aiMaterial* mat,
+                                        aiTextureType type,
+                                        const char* typeName,
+                                        std::string meshName,
+                                        ConfigParser& vehInfo,
+                                        const std::unordered_map<std::string, imageParam>& textureData,
+                                        TextureCache& textureCache);
+    
     glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
         glm::mat4 to;
         for (int i = 0; i < 4; ++i) {
@@ -31,9 +53,32 @@ struct ModelLoader::Impl {
         return to;
     }
 
-    bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
-    ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
-    TextureCache& textureCache){
+};
+
+/*
+ * use the Pimpl idiom to hide implementation details and reduce compile-time dependencies.
+ * The ModelLoader class provides a clean interface for loading models, while the Impl class contains the actual implementation logic. This separation allows for easier maintenance and potential future enhancements without affecting the public interface.
+ */
+
+ModelLoader::ModelLoader() : pImpl_(std::make_unique<Impl>()) {}
+ModelLoader::~ModelLoader() = default;
+
+bool ModelLoader::LoadModel(const std::string& resPath,
+                            std::vector<BufferObjectData>& meshInfo,
+                            ConfigParser& cfgInfo,
+                            const std::unordered_map<std::string, imageParam>& textureData,
+                            TextureCache& textureCache) {
+    return pImpl_->LoadModel(resPath, meshInfo, cfgInfo, textureData, textureCache);
+}
+
+
+/*
+ * impl definitions ************************************
+ */
+
+bool ModelLoader::Impl::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
+                                    ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
+                                    TextureCache& textureCache){
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(resPath, aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
@@ -50,8 +95,8 @@ struct ModelLoader::Impl {
     return true;
 }
 
- // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, 
+  // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
+void ModelLoader::Impl::processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, 
     ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache)
 {
     aiMatrix4x4 mTransformation = node->mTransformation;
@@ -75,12 +120,13 @@ void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectDat
     // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
     for(unsigned int i = 0; i < node->mNumChildren; i++)
     {
-    processNode(node->mChildren[i], scene, meshInfo, vehInfo, textureData, textureCache);
+        processNode(node->mChildren[i], scene, meshInfo, vehInfo, textureData, textureCache);
     }
 
 }
 
-BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4& translationMatrix, 
+
+BufferObjectData ModelLoader::Impl::processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4& translationMatrix, 
     ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache)
 {
     // data to fill
@@ -227,7 +273,7 @@ BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4
     return BufferObjectData(vertices, indices, textures, mMaterial, meshName);
 }
 
-myMaterial loadMaterial(aiMaterial* mat)
+myMaterial ModelLoader::Impl::loadMaterial(aiMaterial* mat)
 {
     // Sensible defaults so texture-less materials still render visibly.
     myMaterial material = {};
@@ -290,7 +336,7 @@ myMaterial loadMaterial(aiMaterial* mat)
     return material;
 }
 
-unsigned int TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData){
+unsigned int ModelLoader::Impl::TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData){
     // Retrieve preloaded texture data from the in-memory map.
     auto it = textureData.find(path);
     if (it == textureData.end()) {
@@ -337,7 +383,7 @@ unsigned int TextureFromBuffer(const std::string& path, const std::unordered_map
     return textureID;
 }
 
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma)
+unsigned int ModelLoader::Impl::TextureFromFile(const char *path, const std::string &directory, bool gamma)
 {
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
@@ -379,8 +425,7 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
 
     return textureID;
 }
-
-unsigned int TextureFromKTXFile(const char *path, const std::string &directory)
+unsigned int ModelLoader::Impl::TextureFromKTXFile(const char *path, const std::string &directory)
 {
     auto total_start = std::chrono::high_resolution_clock::now();
     
@@ -493,7 +538,7 @@ unsigned int TextureFromKTXFile(const char *path, const std::string &directory)
  *
  * @note typename will be used to bind the texture to the shader
  */
-std::vector<Texture> LoadTextures(aiMaterial* mat,
+std::vector<Texture> ModelLoader::Impl::LoadTextures(aiMaterial* mat,
                                                     aiTextureType type,
                                                     const char* typeName,
                                                     std::string meshName,
@@ -605,18 +650,5 @@ std::vector<Texture> LoadTextures(aiMaterial* mat,
     }
 
     return textures;
-}
-};
-
-
-ModelLoader::ModelLoader() : pImpl_(std::make_unique<Impl>()) {}
-ModelLoader::~ModelLoader() = default;
-
-bool ModelLoader::LoadModel(const std::string& resPath,
-                            std::vector<BufferObjectData>& meshInfo,
-                            ConfigParser& cfgInfo,
-                            const std::unordered_map<std::string, imageParam>& textureData,
-                            TextureCache& textureCache) {
-    return pImpl_->LoadModel(resPath, meshInfo, cfgInfo, textureData, textureCache);
 }
 
