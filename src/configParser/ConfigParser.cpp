@@ -5,7 +5,7 @@
 bool ConfigParser::loadConfigFile(const std::string& config_file_path, std::set<std::string>& texture_paths_set){
     std::ifstream file(config_file_path);
     if (!file.is_open()) {
-        mylog(LogLevel::E, "%s open failed", config_file_path.c_str());
+        LOG_E("{} open failed", config_file_path);
         assert(false);
         return false;
     }
@@ -15,7 +15,7 @@ bool ConfigParser::loadConfigFile(const std::string& config_file_path, std::set<
         file >> js;
         file.close();
     } catch (const nlohmann::json::parse_error& e) {
-        mylog(LogLevel::E, "error %s ", e.what());
+        LOG_E("error {} ", e.what());
         assert(false);
         return false;
     }
@@ -331,7 +331,7 @@ bool ConfigParser::parserCarPaintMeshes(const nlohmann::json& carPaint){
 
 bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std::string>& texture_paths_set){
     if(texture.contains("diffuse")){
-        mylog(LogLevel::I, "---> diffuse texture");
+        LOG_I("---> diffuse texture");
         std::vector<std::string> fileName = texture.at("diffuse").at("file_list").get<std::vector<std::string>>();
         auto diffuseNode = texture.at("diffuse");
 
@@ -346,11 +346,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
             texture_paths_set.insert(fullPath);
         }
     }else{
-        mylog(LogLevel::I, "no diffuse texture in config file");
+        LOG_I("no diffuse texture in config file");
     }
 
     if(texture.contains("specular")){
-        mylog(LogLevel::I, "---> specular texture");
+        LOG_I("---> specular texture");
         std::vector<std::string> fileName = texture.at("specular").at("file_list").get<std::vector<std::string>>();
         auto specularNode = texture.at("specular");
 
@@ -366,11 +366,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
         }
 
     } else{
-        mylog(LogLevel::I, "---> no specular texture");
+        LOG_I("---> no specular texture");
     }
 
     if(texture.contains("normal")){
-        mylog(LogLevel::I, "---> normal texture");
+        LOG_I("---> normal texture");
         std::vector<std::string> fileName = texture.at("normal").at("file_list").get<std::vector<std::string>>();
         auto normalNode = texture.at("normal");
 
@@ -386,11 +386,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
         }
 
     } else{
-        mylog(LogLevel::I, "---> no normal texture");
+        LOG_I("---> no normal texture");
     }
 
     if(texture.contains("ao")){
-        mylog(LogLevel::I, "---> ao texture");
+        LOG_I("---> ao texture");
         std::vector<std::string> fileName = texture.at("ao").at("file_list").get<std::vector<std::string>>();
         auto aoNode = texture.at("ao");
 
@@ -405,11 +405,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
             texture_paths_set.insert(fullPath);
         }
     } else{
-        mylog(LogLevel::I, "---> no ao texture");
+        LOG_I("---> no ao texture");
     }
 
     if(texture.contains("alpha")){
-        mylog(LogLevel::I, "---> alpha texture");
+        LOG_I("---> alpha texture");
         std::vector<std::string> fileName = texture.at("alpha").at("file_list").get<std::vector<std::string>>();
         auto alphaNode = texture.at("alpha");
 
@@ -424,11 +424,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
             texture_paths_set.insert(fullPath);
         }
     } else{
-        mylog(LogLevel::I, "---> no alpha texture");
+        LOG_I("---> no alpha texture");
     }
 
     if(texture.contains("roughness")){
-        mylog(LogLevel::I, "---> roughness texture");
+        LOG_I("---> roughness texture");
         std::vector<std::string> fileName = texture.at("roughness").at("file_list").get<std::vector<std::string>>();
         auto roughnessNode = texture.at("roughness");
 
@@ -443,11 +443,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
             texture_paths_set.insert(fullPath);
         }
     } else{
-        mylog(LogLevel::I, "---> no roughness texture");
+        LOG_I("---> no roughness texture");
     }
 
     if(texture.contains("metallic")){
-        mylog(LogLevel::I, "---> metallic texture");
+        LOG_I("---> metallic texture");
         std::vector<std::string> fileName = texture.at("metallic").at("file_list").get<std::vector<std::string>>();
         auto metallicNode = texture.at("metallic");
 
@@ -462,11 +462,11 @@ bool ConfigParser::parserTextureData(const nlohmann::json& texture, std::set<std
             texture_paths_set.insert(fullPath);
         }
     } else{
-        mylog(LogLevel::I, "---> no metallic texture");
+        LOG_I("---> no metallic texture");
     }
 
 
-    mylog(LogLevel::I, "total texture files: %d", texture_paths_set.size());
+    LOG_I("total texture files: {}", texture_paths_set.size());
 
     return true;
 }

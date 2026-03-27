@@ -33,7 +33,7 @@ static GLFWwindow* windowAndGlInit(int width, int height)
     GLFWwindow* wnd = glfwCreateWindow(width, height, "RendererAPI Test", NULL, NULL);
     if (wnd == NULL)
     {
-        mylog(LogLevel::E, "Failed to create GLFW window");
+        LOG_E("Failed to create GLFW window");
         glfwTerminate();
         return nullptr;
     }
@@ -43,7 +43,7 @@ static GLFWwindow* windowAndGlInit(int width, int height)
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        mylog(LogLevel::E, "Failed to initialize GLAD");
+        LOG_E("Failed to initialize GLAD");
         return nullptr;
     }
 
@@ -52,19 +52,19 @@ static GLFWwindow* windowAndGlInit(int width, int height)
 
 int main()
 {
-    mylog(LogLevel::I, "Starting RendererAPI Test");
+    LOG_I("Starting RendererAPI Test");
 
     GLFWwindow* window = windowAndGlInit(SCR_WIDTH, SCR_HEIGHT);
     if (!window)
     {
-        mylog(LogLevel::E, "Window initialization failed");
+        LOG_E("Window initialization failed");
         return -1;
     }
 
     // Initialize RendererAPI
     rendererAPI.init(SCR_WIDTH, SCR_HEIGHT, "../");
 
-    mylog(LogLevel::I, "Entering render loop");
+    LOG_I("Entering render loop");
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -93,6 +93,6 @@ int main()
     rendererAPI.deinit();
     glfwTerminate();
 
-    mylog(LogLevel::I, "RendererAPI Test completed");
+    LOG_I("RendererAPI Test completed");
     return 0;
 }

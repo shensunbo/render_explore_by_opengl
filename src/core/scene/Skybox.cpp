@@ -86,7 +86,7 @@ unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces,
     // Read texture data from preloaded buffer map.
         auto it = textureData.find(faces[i]);
         if (it == textureData.end()) {
-            mylog(LogLevel::E, "Texture data not found in buffer: %s", faces[i].c_str());
+            LOG_E("Texture data not found in buffer: {}", faces[i]);
             assert(false);
             return 0;
         }
@@ -107,7 +107,7 @@ unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces,
 
             // stbi_image_free(data);
         } else {
-            mylog(LogLevel::E, "Texture data is null for path: %s", faces[i].c_str());
+            LOG_E("Texture data is null for path: {}", faces[i]);
             assert(false);
             return 0;
         }
@@ -187,7 +187,7 @@ void Skybox::initSkybox(){
 
     shader_.setInt("skyboxTexture",  bind_point_);
     
-    mylog(LogLevel::I, "Skybox created");
+    LOG_I("Skybox created");
 }
 void Skybox::drawSkybox(){
     shader_.use();

@@ -1,102 +1,92 @@
-#ifndef __MYLOG_H__
-#define __MYLOG_H__
+#pragma once
 
-#include <cerrno>
-#include <cstring>
-#include <cassert>
+/**
+ * @brief Logging interface for the renderer.
+ *
+ * Wraps spdlog. Call Log::init() once in main() before any other logging.
+ * Use the LOG_D/I/W/E macros throughout the codebase.
+ *
+ * Compile-time minimum level is controlled by SPDLOG_ACTIVE_LEVEL:
+ *   DEBUG builds:   SPDLOG_LEVEL_DEBUG
+ *   Release builds: SPDLOG_LEVEL_INFO  (default if not set)
+ */
 
-// Android logging support
-#ifdef __ANDROID__
-#include <android/log.h>
-#define TAG "MY_APP"
-#else
-#include <iostream>
-#include <cstdio>
-#include <ctime>
-#include <sys/time.h>
+#ifndef SPDLOG_ACTIVE_LEVEL
+#  ifdef NDEBUG
+#    define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_INFO
+#  else
+#    define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+#  endif
 #endif
 
-enum class LogLevel {
-    E,
-    W,
-    I,
-    D,
-};
-
-//set log level
-#define LOG_LEVEL LogLevel::I
-
-#define GET_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-
+#include <spdlog/spdlog.h>
 
 #ifdef __ANDROID__
-// Android logging implementation
-#define mylog(level, M, ...) \
-    do { \
-        if ((int)level <= (int)LOG_LEVEL) { \
-            switch (level) { \
-                case LogLevel::D: \
-                    __android_log_print(ANDROID_LOG_DEBUG, TAG, "[%s:%d %s]: " M, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-                case LogLevel::E: \
-                    __android_log_print(ANDROID_LOG_ERROR, TAG, "[%s:%d %s]: " M, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-                case LogLevel::W: \
-                    __android_log_print(ANDROID_LOG_WARN, TAG, "[%s:%d %s]: " M, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-                case LogLevel::I: \
-                    __android_log_print(ANDROID_LOG_INFO, TAG, "[%s:%d %s]: " M, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-            } \
-        } \
-    } while(0)
-
-#define MY_ASSERT(cond, M, ...) \
-    do { \
-        if (!(cond)) { \
-            __android_log_print(ANDROID_LOG_ERROR, TAG, "[ASSERT] " M, ##__VA_ARGS__); \
-            assert(cond); \
-        } \
-    } while(0)
-
+#  include <spdlog/sinks/android_sink.h>
 #else
-// Standard logging implementation for non-Android platforms
-#define mylog(level, M, ...) \
-    do { \
-        if ((int)level <= (int)LOG_LEVEL) { \
-            struct timeval tv; \
-            gettimeofday(&tv, nullptr); \
-            struct tm* tstruct = localtime(&tv.tv_sec); \
-            char timebuf[32]; \
-            strftime(timebuf, sizeof(timebuf), "%Y-%m-%d %H:%M:%S", tstruct); \
-            char fulltimebuf[40]; \
-            snprintf(fulltimebuf, sizeof(fulltimebuf), "%s.%03ld", timebuf, tv.tv_usec / 1000); \
-            switch (level) { \
-                case LogLevel::D: \
-                    fprintf(stderr, "[%s][DEBUG][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-                case LogLevel::E: \
-                    fprintf(stderr, "[%s][ERROR][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-                case LogLevel::W: \
-                    fprintf(stderr, "[%s][WARN][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-                case LogLevel::I: \
-                    fprintf(stderr, "[%s][INFO][%s:%d %s]: " M "\n", fulltimebuf, GET_FILENAME, __LINE__, __func__, ##__VA_ARGS__); \
-                    break; \
-            } \
-        } \
-    } while(0)
+#  include <spdlog/sinks/stdout_color_sinks.h>
+#endif
 
-#define MY_ASSERT(cond, M, ...) \
+#include <spdlog/sinks/basic_file_sink.h>
+
+#include <cassert>
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace Log {
+
+/**
+ * @brief Initialize the default spdlog logger.
+ *        Call exactly once from main() before any LOG_* usage.
+ * @param level  Runtime minimum log level.
+ * @param logFile  Optional path to a log file (empty = no file sink).
+ */
+inline void init(spdlog::level::level_enum level = spdlog::level::debug,
+                 const std::string& logFile = "") {
+#ifdef __ANDROID__
+    auto consoleSink = std::make_shared<spdlog::sinks::android_sink_mt>("renderer");
+#else
+    auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+#endif
+    consoleSink->set_pattern("[%H:%M:%S.%e][%^%-5l%$][%s:%#] %v");
+
+    std::vector<spdlog::sink_ptr> sinks{consoleSink};
+
+    if (!logFile.empty()) {
+        auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
+        fileSink->set_pattern("[%Y-%m-%d %H:%M:%S.%e][%-5l][%s:%#] %v");
+        sinks.push_back(fileSink);
+    }
+
+    auto logger = std::make_shared<spdlog::logger>("renderer", sinks.begin(), sinks.end());
+    logger->set_level(level);
+    logger->flush_on(spdlog::level::err);
+    spdlog::set_default_logger(logger);
+    spdlog::set_pattern("[%H:%M:%S.%e][%^%-5l%$][%s:%#] %v");
+}
+
+/**
+ * @brief Shut down spdlog (flush all sinks). Call at program exit.
+ */
+inline void shutdown() {
+    spdlog::shutdown();
+}
+
+} // namespace Log
+
+// ---------------------------------------------------------------------------
+// Convenience macros — source file and line captured automatically
+// ---------------------------------------------------------------------------
+#define LOG_D(...) SPDLOG_DEBUG(__VA_ARGS__)
+#define LOG_I(...) SPDLOG_INFO(__VA_ARGS__)
+#define LOG_W(...) SPDLOG_WARN(__VA_ARGS__)
+#define LOG_E(...) SPDLOG_ERROR(__VA_ARGS__)
+
+#define MY_ASSERT(cond, ...) \
     do { \
         if (!(cond)) { \
-            fprintf(stderr, "[msg]" M "\n", ##__VA_ARGS__); \
+            SPDLOG_ERROR(__VA_ARGS__); \
             assert(cond); \
         } \
-    } while(0)
-
-#endif // __ANDROID__
-
-
-#endif // __MYLOG_H__
+    } while (0)

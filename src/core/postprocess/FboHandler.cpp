@@ -54,7 +54,7 @@ void FboHandler::initFramebuffer(){
 
     // Validate framebuffer completeness.
     if(!rhi::framebufferComplete()){
-        mylog(LogLevel::E, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+        LOG_E("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
         MY_ASSERT(false, "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
     }
 
@@ -108,5 +108,5 @@ void FboHandler::dumpTextureToFile(const char* filename) {
     delete[] pixels;
 
     auto dumpEndTime = std::chrono::high_resolution_clock::now();
-    mylog(LogLevel::I, "Dump texture to file %s, width %d, height %d, time %f ms", filename, width_, height_, std::chrono::duration<double, std::milli>(dumpEndTime - dumpStartTime).count());
+    LOG_I("Dump texture to file {}, width {}, height {}, time {:.3f} ms", filename, width_, height_, std::chrono::duration<double, std::milli>(dumpEndTime - dumpStartTime).count());
 }

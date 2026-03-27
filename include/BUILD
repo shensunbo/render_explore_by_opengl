@@ -6,6 +6,9 @@ cc_library(
     includes = [
         ".",
     ],
+    deps = [
+        "//dependency/spdlog:spdlog",
+    ],
     visibility = [
         "//visibility:public"
     ]

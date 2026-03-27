@@ -8,7 +8,7 @@ namespace platform {
 
 Platform::Platform(int width, int height, const std::string &title) {
     if (!glfwInit()) {
-        mylog(LogLevel::E, "Failed to initialize GLFW");
+        LOG_E("Failed to initialize GLFW");
         return;
     }
 
@@ -19,7 +19,7 @@ Platform::Platform(int width, int height, const std::string &title) {
 
     window_ = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (!window_) {
-        mylog(LogLevel::E, "Failed to create GLFW window");
+        LOG_E("Failed to create GLFW window");
         glfwTerminate();
         return;
     }
@@ -34,7 +34,7 @@ Platform::Platform(int width, int height, const std::string &title) {
     glfwSetKeyCallback(window_, keyCb);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        mylog(LogLevel::E, "Failed to initialize GLAD");
+        LOG_E("Failed to initialize GLAD");
         glfwDestroyWindow(window_);
         window_ = nullptr;
         glfwTerminate();

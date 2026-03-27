@@ -9,12 +9,12 @@ int Tool::ImageFromFile(std::string filename, imageParam& pngData)
     if (data)
     {
         pngData.data = data;
-        mylog(LogLevel::I, "Texture loaded at path: %s, width %d, height %d, channels: %d", filename.c_str(), pngData.width, pngData.height, pngData.nrChannels);
+        LOG_I("Texture loaded at path: {}, width {}, height {}, channels: {}", filename, pngData.width, pngData.height, pngData.nrChannels);
     }
     else
     {
         pngData.data = nullptr;
-        mylog(LogLevel::E, "Texture failed to load at path: %s", filename.c_str());
+        LOG_E("Texture failed to load at path: {}", filename);
         assert(false);
         return -1;
     }

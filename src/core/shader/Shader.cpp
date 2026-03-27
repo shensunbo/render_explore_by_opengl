@@ -28,8 +28,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     }
     catch (std::ifstream::failure& e)
     {
-        mylog(LogLevel::E, "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: %s", e.what());
-        mylog(LogLevel::E, "vertexPath: %s, fragmentPath: %s", vertexPath,  fragmentPath);
+        LOG_E("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: {}", e.what());
+        LOG_E("vertexPath: {}, fragmentPath: {}", vertexPath, fragmentPath);
     }
     const char* vShaderCode = vertexCode.c_str();
     const char * fShaderCode = fragmentCode.c_str();
@@ -70,7 +70,7 @@ void Shader::checkCompileErrors(GLuint shader, std::string type)
         if (!success)
         {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            mylog(LogLevel::E,  "ERROR::SHADER_COMPILATION_ERROR of type: [%s] \n [%s] ", type.c_str(),infoLog);
+            LOG_E("ERROR::SHADER_COMPILATION_ERROR of type: [{}] \n [{}] ", type, infoLog);
             assert(0);
         }
     }
@@ -80,7 +80,7 @@ void Shader::checkCompileErrors(GLuint shader, std::string type)
         if (!success)
         {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            mylog(LogLevel::E,  "ERROR::PROGRAM_LINKING_ERROR of type: [%s] \n [%s] ", type.c_str(),infoLog);
+            LOG_E("ERROR::PROGRAM_LINKING_ERROR of type: [{}] \n [{}] ", type, infoLog);
             assert(0);
         }
     }

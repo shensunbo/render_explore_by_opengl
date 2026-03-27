@@ -13,7 +13,7 @@
     do {                                   \
         auto err = glGetError();           \
         if (err != GL_NO_ERROR) {          \
-            mylog(LogLevel::E, "gl error: 0x%x", err); \
+            LOG_E("gl error: {:#x}", err); \
         }                                  \
     } while (0)
 

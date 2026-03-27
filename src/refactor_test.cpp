@@ -70,7 +70,8 @@ static RenderToggles toggles{.limitFPS = true, .targetFPS = 60};
 
 int main()
 {
-    mylog(LogLevel::I, "Starting Refactor");
+    Log::init();
+    LOG_I("Starting Refactor");
     RendererConfig config{};
     loadConfigFromJson("res/config/render_config.json", config, toggles);
     // Fallback defaults if config did not set dimensions
@@ -185,6 +186,7 @@ int main()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+    Log::shutdown();
     return 0;
 }
 
@@ -275,22 +277,22 @@ void processInput(platform::Platform &platform, RenderToggles &toggles, bool blo
     }
     if (input.isPressed(platform::Key::I)) {
         toggles.dumpRes = true;
-        mylog(LogLevel::I, "Dump frame to file");
+        LOG_I("Dump frame to file");
     }
     if (input.isPressed(platform::Key::F)) {
         toggles.fboEnable = true;
-        mylog(LogLevel::I, "FBO enabled");
+        LOG_I("FBO enabled");
     }
     if (input.isPressed(platform::Key::E)) {
         toggles.fboEnable = false;
-        mylog(LogLevel::I, "FBO disabled");
+        LOG_I("FBO disabled");
     }
     if (input.isPressed(platform::Key::P)) {
         toggles.timing = !toggles.timing;
         if (toggles.timing) {
-            mylog(LogLevel::I, "Timing enabled");
+            LOG_I("Timing enabled");
         } else {
-            mylog(LogLevel::I, "Timing disabled");
+            LOG_I("Timing disabled");
         }
     }
 }
@@ -345,7 +347,7 @@ static bool FrameRatemonitorAnd100msTick(void) {
 
     if (deltaTime >= 3) {
         double fps = frameCount / deltaTime;
-        mylog(LogLevel::I, "FPS: %d", static_cast<int>(fps));
+        LOG_I("FPS: {}", static_cast<int>(fps));
         startTime = currentTime;
         frameCount = 0;
     }
@@ -361,7 +363,7 @@ static bool FrameRatemonitorAnd100msTick(void) {
 static void loadConfigFromJson(const std::string& path, RendererConfig& config, RenderToggles& toggles) {
     std::ifstream f(path);
     if (!f.is_open()) {
-        mylog(LogLevel::W, "Config json not found, using defaults: %s", path.c_str());
+        LOG_W("Config json not found, using defaults: {}", path);
         assert(false);
         return;
     }
@@ -370,7 +372,7 @@ static void loadConfigFromJson(const std::string& path, RendererConfig& config, 
     try {
         f >> j;
     } catch (const std::exception& e) {
-        mylog(LogLevel::E, "Failed to parse config json %s: %s", path.c_str(), e.what());
+        LOG_E("Failed to parse config json {}: {}", path, e.what());
         assert(false);
         return;
     }
@@ -411,5 +413,5 @@ static void loadConfigFromJson(const std::string& path, RendererConfig& config, 
     get_bool("fboEnable", toggles.fboEnable);
     get_bool("timing", toggles.timing);
 
-    mylog(LogLevel::I, "Loaded config from %s", path.c_str());
+    LOG_I("Loaded config from {}", path);
 }

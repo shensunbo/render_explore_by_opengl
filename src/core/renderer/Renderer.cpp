@@ -28,7 +28,7 @@ void Renderer::create(const RendererConfig& cfg){
     const std::string cfgPath = cfg.infoPath.empty()
                                     ? make_path(prefix, "res/model/halo/vehicle_info.json")
                                     : make_path(prefix, cfg.infoPath);
-    mylog(LogLevel::I, "Loading config file: %s", cfgPath.c_str());
+    LOG_I("Loading config file: {}", cfgPath);
     cfgParser.loadConfigFile(cfgPath, m_texture_paths);
 
     const std::string vs_path = cfg.vsPath.empty()
@@ -111,7 +111,7 @@ void Renderer::create(const RendererConfig& cfg){
             pbrShader_->uniformBlockBind(blockIndex, 0);
         }
         it.updateUbo(it.mUboMat);
-        mylog(LogLevel::D, "Renderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
+        LOG_D("Renderer::create: mesh name: {}, MaterialName: {}", it.meshName, it.mMaterial.MaterialName);
     }
 
     unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
@@ -133,11 +133,11 @@ void Renderer::create(const RendererConfig& cfg){
 
     releaseTextureData();
     applyCubemapRotation();
-    mylog(LogLevel::I, "Renderer::create");
+    LOG_I("Renderer::create");
 }
 
 void Renderer::destroy(){
-    mylog(LogLevel::I, "Renderer::destroy");
+    LOG_I("Renderer::destroy");
     cleanupGpuTextures();
     if (textureCache_) {
         textureCache_->destroy();
@@ -153,7 +153,7 @@ void Renderer::destroy(){
 }
 
 void Renderer::update(){
-    mylog(LogLevel::I, "Renderer::update");
+    LOG_I("Renderer::update");
 }
 
 void Renderer::draw(){
@@ -184,7 +184,7 @@ void Renderer::draw(){
         // activeShader_->setBool("textureLoad", false);
     }
 
-    // mylog(LogLevel::I, "Renderer::draw");
+    // LOG_I("Renderer::draw");
 }
 
 void Renderer::renderFrame(const FrameParams& params){
@@ -220,9 +220,9 @@ void Renderer::renderFrame(const FrameParams& params){
     if (timingEnabled_ && !timings_.empty()) {
         double totalMs = 0.0;
         for (const auto& t : timings_) totalMs += t.milliseconds;
-        mylog(LogLevel::I, "Frame timings: total=%.3f ms", totalMs);
+        LOG_I("Frame timings: total={:.3f} ms", totalMs);
         for (const auto& t : timings_) {
-            mylog(LogLevel::I, "  %s: %.3f ms", t.name.c_str(), t.milliseconds);
+            LOG_I("  {}: {:.3f} ms", t.name, t.milliseconds);
         }
     }
 }
@@ -310,5 +310,5 @@ void Renderer::releaseTextureData(){
     }
 
     m_loaded_texture_data.clear();
-    mylog(LogLevel::I, "All texture data released.");
+    LOG_I("All texture data released.");
 }

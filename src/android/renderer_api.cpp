@@ -65,7 +65,7 @@ void RendererAPI::init(int w, int h, const std::string& resourcePrefix)
 
     glViewport(0, 0, width, height);
 
-    mylog(LogLevel::I, "RendererAPI initialized");
+    LOG_I("RendererAPI initialized");
 }
 
 void RendererAPI::deinit()
@@ -75,7 +75,7 @@ void RendererAPI::deinit()
         delete vRender;
         vRender = nullptr;
     }
-    mylog(LogLevel::I, "RendererAPI deinitialized");
+    LOG_I("RendererAPI deinitialized");
 }
 
 void RendererAPI::update()
@@ -87,7 +87,7 @@ void RendererAPI::update()
 void RendererAPI::render()
 {
     if (vRender == nullptr) {
-        mylog(LogLevel::W, "RendererAPI not initialized");
+        LOG_W("RendererAPI not initialized");
         return;
     }
 

@@ -6,6 +6,9 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "BufferObjectData.h"
 #include "log/mylog.h"
@@ -21,7 +24,7 @@ bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObject
     // check for errors
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
-        mylog(LogLevel::E,"ERROR::ASSIMP:: %s, ", importer.GetErrorString());
+        LOG_E("ASSIMP error: {}, ", importer.GetErrorString());
         return false;
     }
 
@@ -120,7 +123,7 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
             vertex.Tangent = glm::vec3(0.0f, 0.0f, 0.0f);
             // bitangent
             vertex.Bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            mylog(LogLevel::I,"%s No TangentsAndBitangents", mesh->mName.C_Str());
+            LOG_I("{} No TangentsAndBitangents", mesh->mName.C_Str());
         }
 
         vertices.push_back(vertex);
@@ -195,7 +198,7 @@ BufferObjectData ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene, co
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        mylog(LogLevel::I, "[ModelLoader] mesh %s material %s texture load cost: %lld ms", mesh->mName.C_Str(), material->GetName().C_Str(), cost);
+        LOG_I("[ModelLoader] mesh {} material {} texture load cost: {} ms", mesh->mName.C_Str(), material->GetName().C_Str(), cost);
     }
 
     myMaterial mMaterial;
@@ -275,7 +278,7 @@ unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::
     // Retrieve preloaded texture data from the in-memory map.
     auto it = textureData.find(path);
     if (it == textureData.end()) {
-        mylog(LogLevel::E, "Texture data not found in buffer: %s", path.c_str());
+        LOG_E("Texture data not found in buffer: {}", path);
         assert(false);
         return 0;
     }
@@ -284,7 +287,7 @@ unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::
     
     // Ensure the texture payload is valid.
     if (!imgData.data) {
-        mylog(LogLevel::E, "Texture data is null for path: %s", path.c_str());
+        LOG_E("Texture data is null for path: {}", path);
         assert(false);
         return 0;
     }
@@ -300,7 +303,7 @@ unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::
     else if (imgData.nrChannels == 4)
         format = GL_RGBA;
     else {
-        mylog(LogLevel::E, "Unsupported channel count %d for texture: %s", imgData.nrChannels, path.c_str());
+        LOG_E("Unsupported channel count {} for texture: {}", imgData.nrChannels, path);
         return 0;
     }
 
@@ -313,7 +316,7 @@ unsigned int ModelLoader::TextureFromBuffer(const std::string& path, const std::
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    mylog(LogLevel::I, "Texture created from buffer: %s, %dx%d, channels: %d", path.c_str(), imgData.width, imgData.height, imgData.nrChannels);
+    LOG_I("Texture created from buffer: {}, {}x{}, channels: {}", path, imgData.width, imgData.height, imgData.nrChannels);
 
     return textureID;
 }
@@ -350,11 +353,11 @@ unsigned int ModelLoader::TextureFromFile(const char *path, const std::string &d
 
         stbi_image_free(data);
 
-        mylog(LogLevel::I, "Texture loaded at path: %s, channels: %d", path, nrComponents);
+        LOG_I("Texture loaded at path: {}, channels: {}", path, nrComponents);
     }
     else
     {
-        mylog(LogLevel::E, "Texture failed to load at path: %s", path);
+        LOG_E("Texture failed to load at path: {}", path);
         stbi_image_free(data);
     }
 
@@ -368,7 +371,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
 
-    mylog(LogLevel::I, "Loading KTX texture: %s", filename.c_str());
+    LOG_I("Loading KTX texture: {}", filename);
     
     auto load_start = std::chrono::high_resolution_clock::now();
     ktxTexture* texture = nullptr;
@@ -379,12 +382,11 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     auto load_cost = std::chrono::duration_cast<std::chrono::milliseconds>(load_end - load_start).count();
     
     if (result != KTX_SUCCESS) {
-        mylog(LogLevel::E, "Failed to load KTX file: %s, error: %s", filename.c_str(), ktxErrorString(result));
+        LOG_E("Failed to load KTX file: {}, error: {}", filename, ktxErrorString(result));
         return 0;
     }
     
-    mylog(LogLevel::I, "KTX file read cost: %lld ms - Dimensions: %dx%d, Levels: %d, Layers: %d, Faces: %d", 
-          load_cost, texture->baseWidth, texture->baseHeight, texture->numLevels, texture->numLayers, texture->numFaces);
+    LOG_I("KTX file read cost: {} ms - Dimensions: {}x{}, Levels: {}, Layers: {}, Faces: {}", load_cost, texture->baseWidth, texture->baseHeight, texture->numLevels, texture->numLayers, texture->numFaces);
     
     GLuint textureID = 0;  // Initialize texture handle.
     GLenum target = 0;     // Initialize target placeholder.
@@ -397,9 +399,9 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     auto upload_cost = std::chrono::duration_cast<std::chrono::milliseconds>(upload_end - upload_start).count();
     
     if (result != KTX_SUCCESS) {
-        mylog(LogLevel::E, "Failed to upload KTX texture to OpenGL: %s", ktxErrorString(result));
+        LOG_E("Failed to upload KTX texture to OpenGL: {}", ktxErrorString(result));
         if (glerror != GL_NO_ERROR) {
-            mylog(LogLevel::E, "OpenGL error during upload: 0x%x", glerror);
+            LOG_E("OpenGL error during upload: {:#x}", glerror);
         }
         ktxTexture_Destroy(texture);
         return 0;
@@ -407,17 +409,17 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     
     // Check for GL errors reported by ktxTexture_GLUpload.
     if (glerror != GL_NO_ERROR) {
-        mylog(LogLevel::E, "GL error reported by ktxTexture_GLUpload: 0x%x", glerror);
+        LOG_E("GL error reported by ktxTexture_GLUpload: {:#x}", glerror);
         ktxTexture_Destroy(texture);
         return 0;
     }
     
-    mylog(LogLevel::I, "KTX GPU upload cost: %lld ms - Texture ID: %u, Target: 0x%x", upload_cost, textureID, target);
+    LOG_I("KTX GPU upload cost: {} ms - Texture ID: {}, Target: {:#x}", upload_cost, textureID, target);
     
     // Validate the returned texture ID.
     GLboolean isTexture = glIsTexture(textureID);
     if (!isTexture) {
-        mylog(LogLevel::E, "ktxTexture_GLUpload returned invalid texture ID: %u", textureID);
+        LOG_E("ktxTexture_GLUpload returned invalid texture ID: {}", textureID);
         ktxTexture_Destroy(texture);
         return 0;
     }
@@ -425,7 +427,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     // Inspect GL error state after upload.
     GLenum err1 = glGetError();
     if (err1 != GL_NO_ERROR) {
-        mylog(LogLevel::E, "GL error after ktxTexture_GLUpload: 0x%x", err1);
+        LOG_E("GL error after ktxTexture_GLUpload: {:#x}", err1);
     }
     
     // Configure texture sampling parameters.
@@ -433,7 +435,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     glBindTexture(target, textureID);
     GLenum err2 = glGetError();
     if (err2 != GL_NO_ERROR) {
-        mylog(LogLevel::E, "GL error after glBindTexture: 0x%x", err2);
+        LOG_E("GL error after glBindTexture: {:#x}", err2);
     }
     
     glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -442,7 +444,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     GLenum err3 = glGetError();
     if (err3 != GL_NO_ERROR) {
-        mylog(LogLevel::E, "GL error after glTexParameteri: 0x%x", err3);
+        LOG_E("GL error after glTexParameteri: {:#x}", err3);
     }
     
     glBindTexture(target, 0);
@@ -456,8 +458,7 @@ unsigned int ModelLoader::TextureFromKTXFile(const char *path, const std::string
     auto total_end = std::chrono::high_resolution_clock::now();
     auto total_cost = std::chrono::duration_cast<std::chrono::milliseconds>(total_end - total_start).count();
     
-    mylog(LogLevel::I, "KTX total cost: %lld ms (read: %lld, upload: %lld, param: %lld)", 
-          total_cost, load_cost, upload_cost, param_cost);
+    LOG_I("KTX total cost: {} ms (read: {}, upload: {}, param: {})", total_cost, load_cost, upload_cost, param_cost);
     
     return textureID;
 }
@@ -526,8 +527,7 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
             break;
         default:
             textureName = INVALID_TEXTURE_NAME;
-            mylog(LogLevel::E, "couldn't load typeName %s for mesh %s ", typeName,
-                   meshName.c_str());
+            LOG_E("couldn't load typeName {} for mesh {} ", typeName, meshName);
             break;
     }
 
@@ -571,14 +571,13 @@ std::vector<Texture> ModelLoader::LoadTextures(aiMaterial* mat,
             const bool isSrgb = (type == aiTextureType_DIFFUSE || type == aiTextureType_SPECULAR);
             auto texIt = textureData.find(textureName);
             if (texIt == textureData.end()) {
-                mylog(LogLevel::W, "Texture data missing for %s", textureName.c_str());
+                LOG_W("Texture data missing for {}", textureName);
                 texture.id = 0;
             } else {
                 texture.id = textureCache.getOrCreate(textureName, texIt->second, isSrgb);
             }
             if(texture.id == 0){
-                mylog(LogLevel::E, "Failed to load texture: %s for mesh %s ", textureName.c_str(),
-                       meshName.c_str());
+                LOG_E("Failed to load texture: {} for mesh {} ", textureName, meshName);
                 assert(false);
             }
             texture.bindId = texId;
