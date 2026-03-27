@@ -19,12 +19,12 @@ target_sources(render_explore_by_opengl PRIVATE
     ${COMMON_DEP_SRC_FILES}
     platform/Platform.cpp
     rhi/Rhi.h
-    core/refactor/VehicleRenderer.cpp
-    core/refactor/VehicleVirCamera.cpp
+    core/refactor/Renderer.cpp
+    core/refactor/VirCamera.cpp
     core/refactor/Skybox.cpp
     core/refactor/ModelLoader.cpp
-    core/refactor/VehicleMeshInfo.cpp
-    core/refactor/VehicleShader.cpp
+    core/refactor/MeshInfo.cpp
+    core/refactor/Shader.cpp
     core/refactor/BufferObjectData.cpp
     core/refactor/FboHandler.cpp
     core/refactor/DataManager.cpp

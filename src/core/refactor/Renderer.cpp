@@ -1,4 +1,4 @@
-#include "VehicleRenderer.h"
+#include "Renderer.h"
 #include "log/mylog.h"
 #include <memory>
 #include <mutex>
@@ -9,7 +9,7 @@
 #include "RenderPass.h"
 #include "RenderGraph.h"
 
-void VehicleRenderer::create(const RendererConfig& cfg){
+void Renderer::create(const RendererConfig& cfg){
 
     // Helper to prefix resource paths with an optional root (works for in-tree and out-of-tree runs).
     auto make_path = [](const std::string& root, const std::string& relative) {
@@ -25,23 +25,23 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     resRoot_ = cfg.resourceRoot;
 
     // Resolve config and shader paths with reasonable defaults.
-    const std::string cfgPath = cfg.vehicleInfoPath.empty()
+    const std::string cfgPath = cfg.infoPath.empty()
                                     ? make_path(prefix, "res/model/halo/vehicle_info.json")
-                                    : make_path(prefix, cfg.vehicleInfoPath);
+                                    : make_path(prefix, cfg.infoPath);
     mylog(LogLevel::I, "Loading config file: %s", cfgPath.c_str());
     cfgParser.loadConfigFile(cfgPath, m_texture_paths);
 
-    const std::string vs_path = cfg.vehicleVsPath.empty()
+    const std::string vs_path = cfg.vsPath.empty()
                                     ? make_path(prefix, "res/shader/with_texture.vs")
-                                    : make_path(prefix, cfg.vehicleVsPath);
-    const std::string fs_path = cfg.vehicleFsPath.empty()
+                                    : make_path(prefix, cfg.vsPath);
+    const std::string fs_path = cfg.fsPath.empty()
                                     ? make_path(prefix, "res/shader/with_texture.fs")
-                                    : make_path(prefix, cfg.vehicleFsPath);
-    const std::string pbr_fs_path = cfg.vehiclePbrFsPath.empty()
+                                    : make_path(prefix, cfg.fsPath);
+    const std::string pbr_fs_path = cfg.pbrFsPath.empty()
                                         ? make_path(prefix, "res/shader/pbr.fs")
-                                        : make_path(prefix, cfg.vehiclePbrFsPath);
-    legacyShader_ = std::make_unique<VehicleShader>(vs_path.c_str(), fs_path.c_str());
-    pbrShader_ = std::make_unique<VehicleShader>(vs_path.c_str(), pbr_fs_path.c_str());
+                                        : make_path(prefix, cfg.pbrFsPath);
+    legacyShader_ = std::make_unique<Shader>(vs_path.c_str(), fs_path.c_str());
+    pbrShader_ = std::make_unique<Shader>(vs_path.c_str(), pbr_fs_path.c_str());
     activeShader_ = legacyShader_.get();
 
     textureCache_ = std::make_unique<TextureCache>();
@@ -99,7 +99,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
     }
 
     // Build GPU meshes using the loaded texture data and cache.
-    ourModel = std::make_unique<VehicleMeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
+    ourModel = std::make_unique<MeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);
 
     for(auto& it : ourModel->meshes) {
         if (legacyShader_) {
@@ -111,7 +111,7 @@ void VehicleRenderer::create(const RendererConfig& cfg){
             pbrShader_->uniformBlockBind(blockIndex, 0);
         }
         it.updateUbo(it.mUboMat);
-        mylog(LogLevel::D, "VehicleRenderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
+        mylog(LogLevel::D, "Renderer::create: mesh name: %s, MaterialName: %s", it.meshName.c_str(), it.mMaterial.MaterialName.c_str());
     }
 
     unsigned int skyboxBindID = ourModel->getMaxTextureID() + 1;
@@ -133,11 +133,11 @@ void VehicleRenderer::create(const RendererConfig& cfg){
 
     releaseTextureData();
     applyCubemapRotation();
-    mylog(LogLevel::I, "VehicleRenderer::create");
+    mylog(LogLevel::I, "Renderer::create");
 }
 
-void VehicleRenderer::destroy(){
-    mylog(LogLevel::I, "VehicleRenderer::destroy");
+void Renderer::destroy(){
+    mylog(LogLevel::I, "Renderer::destroy");
     cleanupGpuTextures();
     if (textureCache_) {
         textureCache_->destroy();
@@ -152,11 +152,11 @@ void VehicleRenderer::destroy(){
     fbo_.reset();
 }
 
-void VehicleRenderer::update(){
-    mylog(LogLevel::I, "VehicleRenderer::update");
+void Renderer::update(){
+    mylog(LogLevel::I, "Renderer::update");
 }
 
-void VehicleRenderer::draw(){
+void Renderer::draw(){
     if (!activeShader_) return;
     for(auto& v :  ourModel->meshes){
         for (size_t i = 0; i < v.textures.size(); ++i) {
@@ -184,10 +184,10 @@ void VehicleRenderer::draw(){
         // activeShader_->setBool("textureLoad", false);
     }
 
-    // mylog(LogLevel::I, "VehicleRenderer::draw");
+    // mylog(LogLevel::I, "Renderer::draw");
 }
 
-void VehicleRenderer::renderFrame(const FrameParams& params){
+void Renderer::renderFrame(const FrameParams& params){
     // Choose between onscreen render and offscreen FBO path.
     const bool wantFbo = params.enableFbo;
     const bool hasFbo = fbo_ != nullptr;
@@ -227,7 +227,7 @@ void VehicleRenderer::renderFrame(const FrameParams& params){
     }
 }
 
-void VehicleRenderer::resize(unsigned int width, unsigned int height){
+void Renderer::resize(unsigned int width, unsigned int height){
     width_ = width;
     height_ = height;
     if (width_ == 0 || height_ == 0) return;
@@ -237,7 +237,7 @@ void VehicleRenderer::resize(unsigned int width, unsigned int height){
     rebuildGraphs();
 }
 
-void VehicleRenderer::rebuildGraphs(){
+void Renderer::rebuildGraphs(){
     onscreenGraph_ = std::make_unique<RenderGraph>();
     onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes));
     onscreenGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
@@ -248,14 +248,14 @@ void VehicleRenderer::rebuildGraphs(){
     fboGraph_->addPass("PostPass", std::make_unique<PostPass>(fbo_.get()));
 }
 
-void VehicleRenderer::ensureFbo(){
+void Renderer::ensureFbo(){
     if (fbo_) return;
     if (width_ == 0 || height_ == 0) return;
     fbo_ = std::make_shared<FboHandler>(width_, height_, fboVsPath_, fboFsPath_);
     fbo_->init();
 }
 
-void VehicleRenderer::rebuildFbo(unsigned int width, unsigned int height){
+void Renderer::rebuildFbo(unsigned int width, unsigned int height){
     // If FBO is not desired, just drop it; it will be recreated lazily when needed.
     if (!fbo_) {
         return;
@@ -264,14 +264,14 @@ void VehicleRenderer::rebuildFbo(unsigned int width, unsigned int height){
     fbo_ = std::make_shared<FboHandler>(width, height, fboVsPath_, fboFsPath_);
     fbo_->init();
 }
-void VehicleRenderer::cleanupGpuTextures(){
+void Renderer::cleanupGpuTextures(){
     if (!textureCache_) return;
     textureCache_->destroy();
 }
 
-void VehicleRenderer::setPbrEnabled(bool enabled) {
+void Renderer::setPbrEnabled(bool enabled) {
     bool wantPbr = enabled && pbrShader_ != nullptr;
-    VehicleShader* newShader = wantPbr ? pbrShader_.get() : legacyShader_.get();
+    Shader* newShader = wantPbr ? pbrShader_.get() : legacyShader_.get();
     if (activeShader_ == newShader) {
         usePbr_ = wantPbr;
         return;
@@ -282,12 +282,12 @@ void VehicleRenderer::setPbrEnabled(bool enabled) {
     applyCubemapRotation();
 }
 
-void VehicleRenderer::setCubemapRotation(const glm::mat4& rotation) {
+void Renderer::setCubemapRotation(const glm::mat4& rotation) {
     cubemapRotation_ = rotation;
     applyCubemapRotation();
 }
 
-void VehicleRenderer::applyCubemapRotation() {
+void Renderer::applyCubemapRotation() {
     if (activeShader_) {
         activeShader_->use();
         activeShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
@@ -302,7 +302,7 @@ void VehicleRenderer::applyCubemapRotation() {
     }
 }
 
-void VehicleRenderer::releaseTextureData(){
+void Renderer::releaseTextureData(){
     for (const auto& tex : m_loaded_texture_data) {
         if (tex.second.data) {
             stbi_image_free(tex.second.data);

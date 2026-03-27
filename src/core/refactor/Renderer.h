@@ -1,7 +1,7 @@
 #pragma once 
-#include "VehicleShader.h"
+#include "Shader.h"
 #include "Skybox.h"
-#include "VehicleMeshInfo.h"
+#include "MeshInfo.h"
 #include "configParser/ConfigParser.h"
 #include "FboHandler.h"
 #include "TextureCache.h"
@@ -19,10 +19,10 @@ struct RendererConfig {
     // resource root path, e.g. "" for run-from-root or "../" for out-of-tree
     std::string resourceRoot;
     std::string modelPath;
-    std::string vehicleInfoPath;
-    std::string vehicleVsPath;
-    std::string vehicleFsPath;
-    std::string vehiclePbrFsPath;
+    std::string infoPath;
+    std::string vsPath;
+    std::string fsPath;
+    std::string pbrFsPath;
     std::array<std::string, 6> skyboxFaces{};
     bool enableFbo{true};
 };
@@ -36,7 +36,7 @@ struct FrameParams {
     bool dumpOnce{false};
 };
 
-class VehicleRenderer {
+class Renderer {
 public:
     void create(const RendererConfig& cfg);
     void destroy();
@@ -47,7 +47,7 @@ public:
     void setTimingEnabled(bool enabled) { timingEnabled_ = enabled; }
     void setPbrEnabled(bool enabled);
     bool isPbrEnabled() const { return usePbr_; }
-    VehicleShader* activeShader() const { return activeShader_; }
+    Shader* activeShader() const { return activeShader_; }
     void setCubemapRotation(const glm::mat4& rotation);
 
 private:
@@ -59,10 +59,10 @@ private:
     void applyCubemapRotation();
 
 public:
-    std::unique_ptr<VehicleShader> legacyShader_;
-    std::unique_ptr<VehicleShader> pbrShader_;
-    VehicleShader* activeShader_{nullptr};
-    std::unique_ptr<VehicleMeshInfo> ourModel;
+    std::unique_ptr<Shader> legacyShader_;
+    std::unique_ptr<Shader> pbrShader_;
+    Shader* activeShader_{nullptr};
+    std::unique_ptr<MeshInfo> ourModel;
     // Skybox* cubemap;
     std::shared_ptr<Skybox> cubemap;
     std::shared_ptr<FboHandler> fbo_;

@@ -9,7 +9,7 @@
 
 #include "BufferObjectData.h"
 #include "log/mylog.h"
-#include "VehicleShader.h"
+#include "Shader.h"
 #include "TextureCache.h"
 
 bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 

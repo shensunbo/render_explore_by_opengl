@@ -11,11 +11,11 @@
 #include <thread>
 
 // #include "core/shader.h"
-#include "core/refactor/VehicleVirCamera.h"
-#include "core/refactor/VehicleMeshInfo.h"
-#include "core/refactor/VehicleShader.h"
+#include "core/refactor/VirCamera.h"
+#include "core/refactor/MeshInfo.h"
+#include "core/refactor/Shader.h"
 #include "core/refactor/Skybox.h"
-#include "core/refactor/VehicleRenderer.h"
+#include "core/refactor/Renderer.h"
 #include "log/mylog.h"
 #include "configParser/ConfigParser.h"
 #include "platform/Platform.h"
@@ -27,7 +27,7 @@ struct RenderToggles;
 void processInput(platform::Platform &platform, RenderToggles &toggles, bool blockKeyboard);
 void processCameraInput(const platform::Platform &platform, bool blockMouse, bool blockKeyboard);
 static void drawControlWindow(RenderToggles &toggles, float frameDuration);
-static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles);
+static void applyRenderToggles(Renderer &renderer, const RenderToggles &toggles);
 
 void dumpTextureToFile(GLuint texture, int width, int height, const char* filename);
 
@@ -36,13 +36,13 @@ static void loadConfigFromJson(const std::string& path, RendererConfig& config, 
 // settings
 // TODO: Handle callback event routing in a cleaner way.
 // Camera state.
-VehicleVirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
+VirCamera camera(glm::vec3(0.0f, 0.0f, 0.9f));
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 // static unsigned int glerror = 0;
 
-static VehicleRenderer vRender;
+static Renderer vRender;
 struct RenderToggles {
     bool dumpRes{false};
     bool fboEnable{false};
@@ -64,7 +64,7 @@ static FrameParams buildFrameParams(const glm::mat4& model,
                                     const glm::mat4& view,
                                     const RenderToggles& tgs);
 static void drawControlWindow(RenderToggles &toggles, float frameDuration);
-static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles);
+static void applyRenderToggles(Renderer &renderer, const RenderToggles &toggles);
 
 static RenderToggles toggles{.limitFPS = true, .targetFPS = 60};
 
@@ -249,9 +249,9 @@ static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
     ImGui::End();
 }
 
-static void applyRenderToggles(VehicleRenderer &renderer, const RenderToggles &toggles) {
+static void applyRenderToggles(Renderer &renderer, const RenderToggles &toggles) {
     renderer.setPbrEnabled(toggles.usePbr);
-    VehicleShader* shader = renderer.activeShader();
+    Shader* shader = renderer.activeShader();
     if (shader) {
         shader->use();
         shader->setFloat("exposure", toggles.exposure);
@@ -392,10 +392,10 @@ static void loadConfigFromJson(const std::string& path, RendererConfig& config, 
     get_int("height", reinterpret_cast<int&>(config.height));
     get_string("resourceRoot", config.resourceRoot);
     get_string("modelPath", config.modelPath);
-    get_string("vehicleInfoPath", config.vehicleInfoPath);
-    get_string("vehicleVsPath", config.vehicleVsPath);
-    get_string("vehicleFsPath", config.vehicleFsPath);
-    get_string("vehiclePbrFsPath", config.vehiclePbrFsPath);
+    get_string("infoPath", config.infoPath);
+    get_string("vsPath", config.vsPath);
+    get_string("fsPath", config.fsPath);
+    get_string("pbrFsPath", config.pbrFsPath);
     get_bool("enableFbo", config.enableFbo);
 
     get_bool("usePbr", toggles.usePbr);

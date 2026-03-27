@@ -17,12 +17,12 @@
         }                                  \
     } while (0)
 
-class VehicleShader
+class Shader
 {
 public:
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    VehicleShader(const char* vertexPath, const char* fragmentPath);
+    Shader(const char* vertexPath, const char* fragmentPath);
    
     // activate the shader
     // ------------------------------------------------------------------------

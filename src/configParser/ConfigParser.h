@@ -42,8 +42,8 @@ typedef struct TextureData {
     std::string metallic;
 } TextureData;
 
-typedef struct VehicleParam {
-    // min and max value of vehicle model coordinate
+typedef struct Param {
+    // min and max value of model coordinate
     float min_x;
     float max_x;
     float min_y;
@@ -80,7 +80,7 @@ typedef struct VehicleParam {
     float translation_x_skybox_3d;
     float translation_y_skybox_3d;
     float translation_z_skybox_3d;
-} VehicleParam;
+} Param;
 
 class ConfigParser {
 public:
@@ -101,7 +101,7 @@ public:
     bool needTexture(const std::string& mesh, const std::string& material);
     bool haveAlphaTexture(const std::string& mesh, const std::string& material);
 
-    std::string getVehicleName() { return m_vehicle_name; }
+    std::string getName() { return m_name; }
     RotateData getRotatableMeshData(const std::string& mesh);
     glm::vec3 getLightMeshColor(const std::string& mesh, bool state);
     glm::vec3 getFrontWheelDirectionAxis(const std::string& mesh);
@@ -109,7 +109,7 @@ public:
     std::set<std::string> getDisabledMeshes() {return m_disabledMeshes; }
     std::pair <std::string, glm::vec3> getCurrentCarPaint() { return m_current_car_paint; }
     std::set<std::string> getHideMeshesInChassis() { return m_hide_chassis_meshes; }
-    VehicleParam getVehicleParam() { return m_vehicle_param; }
+    Param getParam() { return m_param; }
     // const std::set<std::string>& getTexturePaths() const { return m_texture_paths; }
 
     void updateFlTargetDoorAngle(int angle);
@@ -139,10 +139,10 @@ private:
     bool parserTextureData(const nlohmann::json& texture, std::set<std::string>& texture_paths_set);
     bool parserDisabledMeshes(const nlohmann::json& disabledMeshes);
     bool parserTransparentChassisMeshes(const nlohmann::json& transparentChassis);
-    bool parserVehicleParam(const nlohmann::json& vehicleParam);
+    bool parserParam(const nlohmann::json& param);
     void meshSetInit();
 private:
-    std::string m_vehicle_name;
+    std::string m_name;
     std::set<std::string> m_adjustableMeshes;
     std::set<std::string> m_rotatableMeshes;
     std::set<std::string> m_disabledMeshes;
@@ -182,5 +182,5 @@ private:
     std::set<std::string> m_not_transparent_chassis_meshes;
     std::set<std::string> m_hide_chassis_meshes;
 
-    VehicleParam m_vehicle_param;
+    Param m_param;
 };

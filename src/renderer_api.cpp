@@ -1,6 +1,6 @@
 #include "renderer_api.h"
 #include "gl/gl_headers.h"
-#include "core/refactor/VehicleRenderer.h"
+#include "core/refactor/Renderer.h"
 #include "log/mylog.h"
 
 RendererAPI::RendererAPI() 
@@ -22,9 +22,9 @@ void RendererAPI::init(int w, int h, const std::string& resourcePrefix)
     width = w;
     height = h;
 
-    // Create the vehicle renderer instance
+    // Create the renderer instance
     if (vRender == nullptr) {
-        vRender = new VehicleRenderer();
+        vRender = new Renderer();
     }
 
     // Configure global OpenGL state
@@ -38,7 +38,7 @@ void RendererAPI::init(int w, int h, const std::string& resourcePrefix)
     cfg.height = height;
     cfg.resourceRoot = resourcePrefix;
     vRender->create(cfg);
-    VehicleShader* shader = vRender->activeShader();
+    Shader* shader = vRender->activeShader();
     if (shader) {
         shader->use();
     }
@@ -48,7 +48,7 @@ void RendererAPI::init(int w, int h, const std::string& resourcePrefix)
     skyboxModel = glm::rotate(skyboxModel, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     vRender->setCubemapRotation(skyboxModel);
 
-    // Setup model matrix for the vehicle
+    // Setup model matrix
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(0.00007f)); // it's a bit too big for our scene, so scale it down

@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "VehicleShader.h"
+#include "Shader.h"
 #include "Skybox.h"
 #include "FboHandler.h"
 #include "CommonDataStruct.h"
@@ -46,11 +46,11 @@ class ScenePass : public IRenderPass {
 public:
     /**
      * @brief Constructs a ScenePass with shader, skybox, and mesh data.
-     * @param shader Pointer to the vehicle shader.
+     * @param shader Pointer to the shader.
      * @param skybox Pointer to the skybox object.
      * @param meshes Pointer to the vector of mesh data.
      */
-    ScenePass(VehicleShader* shader, Skybox* skybox,
+    ScenePass(Shader* shader, Skybox* skybox,
               const std::vector<BufferObjectData>* meshes)
         : shader_(shader), skybox_(skybox), meshes_(meshes) {}
 
@@ -60,7 +60,7 @@ public:
      */
     void execute(const FrameParams& params) override;
 private:
-    VehicleShader* shader_; ///< Pointer to the vehicle shader.
+    Shader* shader_; ///< Pointer to the shader.
     Skybox* skybox_; ///< Pointer to the skybox object.
     const std::vector<BufferObjectData>* meshes_; ///< Pointer to the mesh data.
 };

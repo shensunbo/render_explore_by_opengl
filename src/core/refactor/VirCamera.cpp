@@ -1,4 +1,4 @@
-#include "VehicleVirCamera.h"
+#include "VirCamera.h"
 
 // TODO: Implement full camera behavior.
 // Default camera values
@@ -14,7 +14,7 @@ glm::vec3 rPos = glm::vec3(0.0f, 0.0f, 0.8f);
 
 glm::vec3 K1Pos = glm::vec3(0.0f, 150.0f, 10.0f);
 
-VehicleVirCamera::VehicleVirCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+VirCamera::VirCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 {
     Position = position;
     WorldUp = up;
@@ -29,7 +29,7 @@ VehicleVirCamera::VehicleVirCamera(glm::vec3 position, glm::vec3 up, float yaw, 
     playerVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 // constructor with scalar values
-VehicleVirCamera::VehicleVirCamera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+VirCamera::VirCamera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 {
     Position = glm::vec3(posX, posY, posZ);
     WorldUp = glm::vec3(upX, upY, upZ);
@@ -45,7 +45,7 @@ VehicleVirCamera::VehicleVirCamera(float posX, float posY, float posZ, float upX
 }
 
 // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-void VehicleVirCamera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
+void VirCamera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
     updateEvent = true;
 
@@ -91,7 +91,7 @@ void VehicleVirCamera::ProcessKeyboard(Camera_Movement direction, float deltaTim
 }
 
 // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-void VehicleVirCamera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
+void VirCamera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch)
 {
     updateEvent = true;
 
@@ -115,7 +115,7 @@ void VehicleVirCamera::ProcessMouseMovement(float xoffset, float yoffset, GLbool
 }
 
 // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-void VehicleVirCamera::ProcessMouseScroll(float yoffset)
+void VirCamera::ProcessMouseScroll(float yoffset)
 {
     updateEvent = true;
     
@@ -126,7 +126,7 @@ void VehicleVirCamera::ProcessMouseScroll(float yoffset)
         Zoom = 45.0f;
 }
 
-void VehicleVirCamera::ProcessJump(float deltaTime)
+void VirCamera::ProcessJump(float deltaTime)
 {
     if (isJumping)
     {
@@ -147,7 +147,7 @@ void VehicleVirCamera::ProcessJump(float deltaTime)
     }
 }
 
-void VehicleVirCamera::updateCameraVectors()
+void VirCamera::updateCameraVectors()
 {
     // calculate the new Front vector
     glm::vec3 front;

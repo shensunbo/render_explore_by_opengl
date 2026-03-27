@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 // Forward declarations
-class VehicleRenderer;
+class Renderer;
 
 class RendererAPI {
 public:
@@ -17,7 +17,7 @@ public:
     void render();
 
 private:
-    VehicleRenderer* vRender;
+    Renderer* vRender;
     int width;
     int height;
     

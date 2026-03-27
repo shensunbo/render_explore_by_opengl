@@ -20,7 +20,7 @@ bool ConfigParser::loadConfigFile(const std::string& config_file_path, std::set<
         return false;
     }
 
-    m_vehicle_name = js.at("vehicleName").get<std::string>();
+    m_name = js.at("vehicleName").get<std::string>();
     m_path_prefix = config_file_path.substr(0, config_file_path.find_last_of('/'));
 
     // auto door = js.at("rotatable").at("door");
@@ -44,8 +44,8 @@ bool ConfigParser::loadConfigFile(const std::string& config_file_path, std::set<
     // auto transparentChassis = js.at("transparent_chassis");
     // parserTransparentChassisMeshes(transparentChassis);
 
-    // auto vehicleParam = js.at("vehicle_params");
-    // parserVehicleParam(vehicleParam);
+    // auto param = js.at("vehicle_params");
+    // parserParam(param);
 
     // meshSetInit();
  
@@ -498,24 +498,24 @@ bool ConfigParser::parserTransparentChassisMeshes(const nlohmann::json& transpar
     return true;
 }
 
-bool ConfigParser::parserVehicleParam(const nlohmann::json& vehicleParam){
-    m_vehicle_param.min_x = vehicleParam.at("min_x").get<float>();
-    m_vehicle_param.max_x = vehicleParam.at("max_x").get<float>();
-    m_vehicle_param.min_y = vehicleParam.at("min_y").get<float>();
-    m_vehicle_param.max_y = vehicleParam.at("max_y").get<float>();
-    m_vehicle_param.min_z = vehicleParam.at("min_z").get<float>();
-    m_vehicle_param.max_z = vehicleParam.at("max_z").get<float>();
-    m_vehicle_param.coordinate_scale_to_mm = vehicleParam.at("coordinate_scale_to_mm").get<unsigned int>();
+bool ConfigParser::parserParam(const nlohmann::json& param){
+    m_param.min_x = param.at("min_x").get<float>();
+    m_param.max_x = param.at("max_x").get<float>();
+    m_param.min_y = param.at("min_y").get<float>();
+    m_param.max_y = param.at("max_y").get<float>();
+    m_param.min_z = param.at("min_z").get<float>();
+    m_param.max_z = param.at("max_z").get<float>();
+    m_param.coordinate_scale_to_mm = param.at("coordinate_scale_to_mm").get<unsigned int>();
 
-    m_vehicle_param.scale_x_3d = vehicleParam.at("layout").at("scale_x").get<float>();
-    m_vehicle_param.scale_y_3d = vehicleParam.at("layout").at("scale_y").get<float>();
-    m_vehicle_param.scale_z_3d = vehicleParam.at("layout").at("scale_z").get<float>();
-    m_vehicle_param.rotation_axis_x_3d = vehicleParam.at("layout").at("rotation_axis_x").get<float>();
-    m_vehicle_param.rotation_axis_y_3d = vehicleParam.at("layout").at("rotation_axis_y").get<float>();
-    m_vehicle_param.rotation_axis_z_3d = vehicleParam.at("layout").at("rotation_axis_z").get<float>();
-    m_vehicle_param.translation_x_3d = vehicleParam.at("layout").at("translation_x").get<float>();
-    m_vehicle_param.translation_y_3d = vehicleParam.at("layout").at("translation_y").get<float>();
-    m_vehicle_param.translation_z_3d = vehicleParam.at("layout").at("translation_z").get<float>();
+    m_param.scale_x_3d = param.at("layout").at("scale_x").get<float>();
+    m_param.scale_y_3d = param.at("layout").at("scale_y").get<float>();
+    m_param.scale_z_3d = param.at("layout").at("scale_z").get<float>();
+    m_param.rotation_axis_x_3d = param.at("layout").at("rotation_axis_x").get<float>();
+    m_param.rotation_axis_y_3d = param.at("layout").at("rotation_axis_y").get<float>();
+    m_param.rotation_axis_z_3d = param.at("layout").at("rotation_axis_z").get<float>();
+    m_param.translation_x_3d = param.at("layout").at("translation_x").get<float>();
+    m_param.translation_y_3d = param.at("layout").at("translation_y").get<float>();
+    m_param.translation_z_3d = param.at("layout").at("translation_z").get<float>();
 
     return true;
 }

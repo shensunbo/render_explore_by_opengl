@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VehicleShader.h"
+#include "Shader.h"
 
 
 class FboHandler {
@@ -38,7 +38,7 @@ private:
     unsigned int width_;
     unsigned int height_;
 
-    VehicleShader shader_;
+    Shader shader_;
     GLuint quadVAO_;
     GLuint quadVBO_;
     GLuint fbo{0}; 

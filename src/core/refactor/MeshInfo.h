@@ -1,21 +1,21 @@
 #pragma once
 // #include "../mesh.h"
 // #include "../shader.h"
-#include "VehicleShader.h"
+#include "Shader.h"
 #include "log/mylog.h"
 #include "ModelLoader.h"
 #include "CommonDataStruct.h"
 #include "BufferObjectData.h"
 
 /**
- * @class VehicleMeshInfo
- * @brief Holds mesh and texture information for a vehicle model.
+ * @class MeshInfo
+ * @brief Holds mesh and texture information for a model.
  *
- * This class manages the loading and storage of mesh and texture data for a vehicle,
+ * This class manages the loading and storage of mesh and texture data for a model,
  * using ModelLoader and BufferObjectData. It provides access to loaded textures and meshes,
  * and exposes utility functions for texture ID management.
  */
-class VehicleMeshInfo {
+class MeshInfo {
 public:
     /**
      * @brief Stores all the textures loaded so far.
@@ -25,7 +25,7 @@ public:
     std::vector<Texture> textures_loaded;
 
     /**
-     * @brief Stores all mesh data for the vehicle.
+     * @brief Stores all mesh data for the model.
      */
     std::vector<BufferObjectData> meshes;
 
@@ -40,14 +40,14 @@ public:
     ModelLoader loader;
 
     /**
-     * @brief Constructs a VehicleMeshInfo object and loads the model.
+     * @brief Constructs a MeshInfo object and loads the model.
      * @param path Path to the 3D model file.
-     * @param vehInfo Reference to vehicle configuration parser.
+     * @param vehInfo Reference to configuration parser.
      * @param textureData Map of texture names to image parameters.
      * @param textureCache Reference to the texture cache.
      * @param gamma Enable gamma correction if true.
      */
-    VehicleMeshInfo(std::string const &path, ConfigParser& vehInfo,
+    MeshInfo(std::string const &path, ConfigParser& vehInfo,
         const std::unordered_map<std::string, imageParam>& textureData,
         TextureCache& textureCache,
         bool gamma = false) : gammaCorrection(gamma)
@@ -56,7 +56,7 @@ public:
     }
 
     /**
-     * @brief Returns the maximum texture ID used by this vehicle.
+     * @brief Returns the maximum texture ID used by this model.
      * @return Maximum texture ID.
      */
     unsigned int getMaxTextureID() const {
@@ -64,9 +64,9 @@ public:
     }
     // /**
     //  * @brief Draws the model and all its meshes.
-    //  * @param shader Pointer to the vehicle shader.
+    //  * @param shader Pointer to the shader.
     //  */
-    // void Draw(VehicleShader *shader)
+    // void Draw(Shader *shader)
     // {
     //     for(unsigned int i = 0; i < meshes.size(); i++)
     //         meshes[i].Draw(shader);

@@ -42,8 +42,8 @@ Resources must be available in the working directory. CMake handles this via the
 
 ```
 RendererAPI (public C interface)
-  └─ VehicleRenderer::create()
-       ├─ Load shaders (VehicleShader: .vs/.fs pairs)
+  └─ Renderer::create()
+       ├─ Load shaders (Shader: .vs/.fs pairs)
        ├─ Load model (ModelLoader via Assimp → BufferObjectData per mesh)
        ├─ Pre-load all textures → TextureCache
        └─ Build RenderGraph
@@ -59,16 +59,16 @@ Each frame, the caller fills a `FrameParams` struct (MVP matrices, eye position,
 | Class | Role |
 |---|---|
 | `RendererAPI` | Public C-style API; lifecycle + per-frame entry point |
-| `VehicleRenderer` | Core orchestrator; creates graph, manages shader selection |
+| `Renderer` | Core orchestrator; creates graph, manages shader selection |
 | `RenderGraph` / `IRenderPass` | Composable render-pass sequencer |
-| `VehicleShader` | GLSL program wrapper with typed uniform setters |
+| `Shader` | GLSL program wrapper with typed uniform setters |
 | `ModelLoader` | Assimp-based importer; produces `BufferObjectData` per mesh |
 | `TextureCache` | Path-keyed GLuint cache; prevents duplicate GPU uploads |
 | `BufferObjectData` | RAII owner of VAO/VBO/EBO/UBO for one mesh |
 | `Skybox` | Cubemap texture + geometry |
 | `FboHandler` | Offscreen framebuffer for post-processing |
 | `ConfigParser` | JSON-driven mesh/material classification and overrides |
-| `VehicleVirCamera` | View matrix management |
+| `VirCamera` | View matrix management |
 
 ### Platform Abstraction
 
@@ -79,7 +79,7 @@ Each frame, the caller fills a `FrameParams` struct (MVP matrices, eye position,
 ## Conventions
 
 ### Naming
-- **Classes/structs**: `PascalCase` — `VehicleRenderer`, `TextureCache`
+- **Classes/structs**: `PascalCase` — `Renderer`, `TextureCache`
 - **Methods**: `camelCase` — `execute()`, `loadModel()`, `bindVao()`
 - **Private members**: `snake_case_` (trailing underscore) — `width_`, `shader_`
 - **Enums / config structs**: `PascalCase` — `RendererConfig`, `FrameParams`, `UboMat`
@@ -100,7 +100,7 @@ Every GL object gets a wrapper class:
 ### Shaders
 - Paired files in `res/shader/`: `<name>.vs` (vertex) + `<name>.fs` (fragment)
 - Current shaders: `with_texture` (Phong/legacy), `pbr` (PBR), `skybox`, `fbo_rect` (post-process quad)
-- Loaded by `VehicleShader` at startup; runtime toggling between legacy and PBR is supported via `FrameParams` flags
+- Loaded by `Shader` at startup; runtime toggling between legacy and PBR is supported via `FrameParams` flags
 
 ### Texture Types
 Seven slots are defined: **diffuse, specular, normal, AO, roughness, metallic, emissive**. Binding slots 0–9 are reserved for scene textures; 10+ for skybox. Color textures (diffuse, emissive) are uploaded as sRGB.
@@ -136,3 +136,7 @@ GLuint getOrCreate(const std::string& path, const imageParam& imgData, bool srgb
 | EGL | Off-screen context (Mesa/Android) |
 
 GLFW is a system library (linked as `-lglfw`); all other dependencies are vendored under `dependency/`.
+
+## Build verification
+
+Always run: bazel build //src:refactor_test after making any code changes to verify the repository builds.

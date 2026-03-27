@@ -75,7 +75,7 @@ texconv -f BC7_UNORM -m 10 input.png -o output.dds`
 ---
 
 # BUGs
-- [ ] [ERROR][VehicleShader.cpp:42 VehicleShader]: gl error: 0x502
+- [ ] [ERROR][Shader.cpp:42 Shader]: gl error: 0x502
 
 # structure 
 - [ ] meet C++ best practices

@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include "glm/glm.hpp"
-#include "VehicleShader.h"
+#include "Shader.h"
 #include "CommonDataStruct.h"
 
 // TODO: Use texture binding IDs starting at 10 to avoid conflicts with other textures.
@@ -54,5 +54,5 @@ private:
     GLuint vao_{0}; 
     GLuint vbo_{0};
 
-    VehicleShader shader_;
+    Shader shader_;
 };

@@ -1,5 +1,5 @@
 #include "RenderPass.h"
-#include "VehicleRenderer.h" // for FrameParams
+#include "Renderer.h" // for FrameParams
 #include "rhi/Rhi.h"
 
 void ScenePass::execute(const FrameParams& params) {

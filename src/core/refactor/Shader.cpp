@@ -1,6 +1,6 @@
-#include "VehicleShader.h"
+#include "Shader.h"
 
-VehicleShader::VehicleShader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertexCode;
@@ -60,7 +60,7 @@ VehicleShader::VehicleShader(const char* vertexPath, const char* fragmentPath)
 
 }
 
-void VehicleShader::checkCompileErrors(GLuint shader, std::string type)
+void Shader::checkCompileErrors(GLuint shader, std::string type)
 {
     GLint success;
     GLchar infoLog[1024];

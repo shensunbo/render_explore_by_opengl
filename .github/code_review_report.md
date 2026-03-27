@@ -38,8 +38,8 @@
 ```
 src/
 ├── core/refactor/      # 核心渲染模块（重构版）
-│   ├── VehicleRenderer  # 主渲染器（调度中心）
-│   ├── VehicleShader    # 着色器管理
+│   ├── Renderer  # 主渲染器（调度中心）
+│   ├── Shader    # 着色器管理
 │   ├── RenderPass       # 渲染通道（Scene / Skybox / Post）
 │   ├── RenderGraph      # 渲染图调度
 │   ├── BufferObjectData  # VAO/VBO/UBO 管理
@@ -47,7 +47,7 @@ src/
 │   ├── TextureCache     # 纹理缓存
 │   ├── FboHandler       # FBO 管理与后处理
 │   ├── Skybox           # 天空盒
-│   └── VehicleVirCamera # 相机控制
+│   └── VirCamera # 相机控制
 ├── platform/           # 平台抽象层（GLFW）
 ├── rhi/                # 渲染硬件接口
 ├── configParser/       # JSON 配置解析
@@ -78,9 +78,9 @@ res/
 
 ### 2.2 🔴 关键架构问题
 
-#### 问题 1：VehicleRenderer 是「上帝对象」(God Object)
+#### 问题 1：Renderer 是「上帝对象」(God Object)
 
-`VehicleRenderer` 承担了过多职责（11 个成员变量），包括：着色器管理、模型渲染、FBO 处理、天空盒、纹理缓存、RenderGraph 构建等。
+`Renderer` 承担了过多职责（11 个成员变量），包括：着色器管理、模型渲染、FBO 处理、天空盒、纹理缓存、RenderGraph 构建等。
 
 **违反原则：** 单一职责原则 (SRP)
 
@@ -123,7 +123,7 @@ struct RenderState {
 
 #### 问题 5：include/learnopengl 与 src/core/refactor 功能重叠
 
-`include/learnopengl/` 下有 `shader.h`、`mesh.h`、`model.h`、`camera.h` 等类，与 `src/core/refactor/` 下的 `VehicleShader`、`BufferObjectData`、`ModelLoader`、`VehicleVirCamera` 功能高度重叠。存在两套并行的实现。
+`include/learnopengl/` 下有 `shader.h`、`mesh.h`、`model.h`、`camera.h` 等类，与 `src/core/refactor/` 下的 `Shader`、`BufferObjectData`、`ModelLoader`、`VirCamera` 功能高度重叠。存在两套并行的实现。
 
 **建议：** 统一为一套，将 `learnopengl/` 作为参考代码保留在独立目录中，不参与编译。
 
@@ -143,9 +143,9 @@ struct RenderState {
 
 | 位置 | 问题 |
 |------|------|
-| `VehicleRenderer` | `VehicleShader* activeShader_`、`Skybox* cubemap` 使用原始指针 |
+| `Renderer` | `Shader* activeShader_`、`Skybox* cubemap` 使用原始指针 |
 | `RenderPass` 各派生类 | `shader_`、`skybox_`、`meshes_` 均为原始指针 |
-| `renderer_api.cpp` | `new VehicleRenderer` 无配对 `delete`，`init()` 重复调用则内存泄漏 |
+| `renderer_api.cpp` | `new Renderer` 无配对 `delete`，`init()` 重复调用则内存泄漏 |
 | `shader.h` (learnopengl) | 无析构函数，GPU 上的 Shader Program 永不释放 |
 | `mesh.h` (learnopengl) | VAO/VBO/EBO 创建后无 `glDelete*`，GPU 资源泄漏 |
 | `model.h` | 纹理资源无析构清理 |
@@ -153,7 +153,7 @@ struct RenderState {
 **修复方案：**
 ```cpp
 // 使用 unique_ptr
-std::unique_ptr<VehicleShader> activeShader_;
+std::unique_ptr<Shader> activeShader_;
 std::unique_ptr<Skybox> cubemap_;
 
 // 或自定义 RAII 包装
@@ -174,16 +174,16 @@ public:
 
 #### (3) 线程安全
 
-- `VehicleRenderer` 中 `m_texture_paths` 和 `m_loaded_texture_data` 在线程 join 后访问，但加载过程中无同步
+- `Renderer` 中 `m_texture_paths` 和 `m_loaded_texture_data` 在线程 join 后访问，但加载过程中无同步
 - `multithreadLoadTest.cpp` 中多线程写入 `loadedTextures` 向量存在数据竞争，**无任何同步机制**
 - `TextureCache::textures_` map 无线程保护
 
 #### (4) 异常安全
 
-- `VehicleShader` 的 try/catch 只记录日志，不验证文件是否存在就打开
+- `Shader` 的 try/catch 只记录日志，不验证文件是否存在就打开
 - `ConfigParser` 使用 `.at()` 访问 JSON，会在键不存在时抛 `std::out_of_range`，但无 try/catch
 - `ModelLoader` 调用 Assimp 时无异常保护
-- `VehicleRenderer::renderFrame()` 不处理来自 RenderPass 的异常
+- `Renderer::renderFrame()` 不处理来自 RenderPass 的异常
 
 ### 3.2 🟡 中等问题
 
@@ -191,23 +191,23 @@ public:
 
 | 位置 | 问题 |
 |------|------|
-| `VehicleShader` | `use()` 方法应为 `const`（不修改成员） |
+| `Shader` | `use()` 方法应为 `const`（不修改成员） |
 | `TextureCache` | `getOrCreate()` 语义上应为 `const` 查询 |
 | `Skybox` | `Init()` 不修改外部状态应标记 `const` |
-| `VehicleVirCamera` | 运动方法未标记 side effect |
+| `VirCamera` | 运动方法未标记 side effect |
 | `BufferObjectData` | `VAO` 成员为 public |
 
 #### (2) Move 语义缺失
 
 以下类持有 GPU 资源但未实现 move 语义，拷贝会导致 double-free：
-- `VehicleShader`
+- `Shader`
 - `FboHandler`
 - `Skybox`（删除了 move 但拥有 GPU 资源）
 
 #### (3) 硬编码魔法数字
 
 ```cpp
-// VehicleVirCamera.cpp
+// VirCamera.cpp
 float jumpStrength = 5.0f;  // 应为可配置
 float gravity = 9.8f;
 
@@ -237,7 +237,7 @@ rhi::setClearColor(0.2f, 0.5f, 0.1f, 1.0f);  // 硬编码清屏颜色
 | 建议 | 说明 |
 |------|------|
 | 使用 C++17 | 当前为 C++14，升级后可用 `std::optional`、`std::filesystem`、结构化绑定 |
-| `assert` 在 Release 中消失 | `MY_ASSERT` 使用 `assert()` 在 Release 模式下无效；`VehicleShader` line 74/84 的 `assert(0)` 同理 |
+| `assert` 在 Release 中消失 | `MY_ASSERT` 使用 `assert()` 在 Release 模式下无效；`Shader` line 74/84 的 `assert(0)` 同理 |
 | `mylog.h` 固定 1024 缓冲区 | 长错误消息可能溢出 |
 | `animdata.h` 重复 `#pragma once` | line 14 |
 | `tool.h` 单函数不需要类 | 应为自由函数 |
@@ -268,7 +268,7 @@ rhi::setClearColor(0.2f, 0.5f, 0.1f, 1.0f);  // 硬编码清屏颜色
 
 | 位置 | 问题 |
 |------|------|
-| `VehicleShader::use()` | 改变全局 `glUseProgram` 但从不重置 |
+| `Shader::use()` | 改变全局 `glUseProgram` 但从不重置 |
 | `BufferObjectData::setupMesh()` | 绑定 VAO 后未解绑 |
 | `Skybox` | `glDepthFunc(GL_LEQUAL)` 会影响后续 Pass |
 | `FboHandler` | `glBindTexture()` 后未重置绑定 |
@@ -278,7 +278,7 @@ rhi::setClearColor(0.2f, 0.5f, 0.1f, 1.0f);  // 硬编码清屏颜色
 
 ### 4.3 🟡 Uniform Location 未缓存
 
-`VehicleShader` 和 `shader.h` 每帧每次设置 uniform 时都调用 `glGetUniformLocation()`，这是 O(n) 查询。
+`Shader` 和 `shader.h` 每帧每次设置 uniform 时都调用 `glGetUniformLocation()`，这是 O(n) 查询。
 
 **建议：** 首次获取后缓存到 `std::unordered_map<std::string, GLint>`。
 
@@ -452,7 +452,7 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 // 应统一为一个字段
 ```
 
-- 着色器路径字段为空字符串（`vehicleVsPath`、`vehicleFsPath`）
+- 着色器路径字段为空字符串（`vsPath`、`fsPath`）
 - 缺少阴影质量、MSAA 采样数、纹理压缩等配置
 
 ---
@@ -463,8 +463,8 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 
 | 文件 | 行数 | 评分 | 主要问题 |
 |------|------|------|----------|
-| VehicleRenderer.h/cpp | 91/314 | C+ | God Object；原始指针；状态泄漏 |
-| VehicleShader.h/cpp | 109/87 | C | 无 RAII；uniform 未缓存；assert 在 Release 无效 |
+| Renderer.h/cpp | 91/314 | C+ | God Object；原始指针；状态泄漏 |
+| Shader.h/cpp | 109/87 | C | 无 RAII；uniform 未缓存；assert 在 Release 无效 |
 | RenderPass.h/cpp | 111/49 | B- | 原始指针依赖；状态污染；硬编码清屏色 |
 | RenderGraph.h | 51 | B | 设计良好但缺依赖追踪和条件跳过 |
 | BufferObjectData.h/cpp | 166/98 | B+ | ✅ 正确 RAII；硬编码顶点属性布局 |
@@ -472,7 +472,7 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 | TextureCache.h/cpp | 57/52 | B | ✅ 正确 RAII；无线程安全；接口有限 |
 | FboHandler.h/cpp | 51/112 | C+ | `new[]`/`delete[]`；未验证 FBO；glReadPixels 同步阻塞 |
 | Skybox.h/cpp | 58/200 | B- | 代码重复；深度函数全局修改；printf 而非 mylog |
-| VehicleVirCamera.h/cpp | 87/161 | C+ | 物理与相机混合；全局常量；魔法数字 |
+| VirCamera.h/cpp | 87/161 | C+ | 物理与相机混合；全局常量；魔法数字 |
 | CommonDataStruct.h | 69 | B | 缺少 `alignas`；注释掉的骨骼数据 |
 | tool.h/cpp | 8/23 | C | 不需要类封装；assert 在 Release 无效 |
 | ConfigParser.h/cpp | 186/774 | C- | 严重代码重复；存在 Bug（错误的 coef 读取） |
@@ -514,7 +514,7 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 | # | 问题 | 位置 | 修复方案 |
 |---|------|------|----------|
 | 1 | GPU 资源泄漏 | shader.h, mesh.h, model.h | 添加析构函数释放 GL 资源 |
-| 2 | 原始指针无 RAII | VehicleRenderer, RenderPass | 改为 `unique_ptr` / `shared_ptr` |
+| 2 | 原始指针无 RAII | Renderer, RenderPass | 改为 `unique_ptr` / `shared_ptr` |
 | 3 | 多线程数据竞争 | multithreadLoadTest.cpp | 添加 `std::mutex` 保护共享数据 |
 | 4 | ConfigParser Bug | line 220/243/263 | 修正 `coef` 读取源为当前门/轮 |
 | 5 | GL 错误检查 | 全局 | 添加 `GL_CHECK` 宏包裹关键 GL 调用 |
@@ -525,7 +525,7 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 |---|------|------|----------|
 | 6 | 着色器分支发散 | with_texture.fs | 使用着色器变体或默认纹理消除分支 |
 | 7 | 顶点着色器 `inverse()` | basic.vs | 在 CPU 预计算传入 uniform |
-| 8 | Uniform location 未缓存 | VehicleShader, shader.h | 使用 `unordered_map` 缓存 |
+| 8 | Uniform location 未缓存 | Shader, shader.h | 使用 `unordered_map` 缓存 |
 | 9 | ConfigParser 代码重复 | ConfigParser.cpp | 用循环替代复制粘贴 |
 | 10 | 合并 shader 变体 | shader_c/m/s/t.h | 合并为一个可配置 Shader 类 |
 
@@ -533,7 +533,7 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 
 | # | 问题 | 修复方案 |
 |---|------|----------|
-| 11 | VehicleRenderer God Object | 拆分为子系统 |
+| 11 | Renderer God Object | 拆分为子系统 |
 | 12 | ModelLoader God Object | 拆分为 MeshLoader + TextureLoader + MaterialParser |
 | 13 | RenderGraph 依赖追踪 | 添加 Pass 依赖与条件执行 |
 | 14 | RenderState 管理 | 引入状态对象，每 Pass 自动设置/恢复 |
@@ -560,6 +560,6 @@ vec3 F = fresnelSchlick(max(dot(H, L), 0.0), F0);
 
 1. **资源管理优先**：先解决所有 GPU 资源泄漏和原始指针问题，这是最基本的 C++ 和 OpenGL 要求
 2. **消除着色器分支**：这是最大的运行时性能瓶颈，使用着色器变体或默认纹理方案
-3. **拆分 God Object**：VehicleRenderer 和 ModelLoader 职责过重，降低了可维护性和可测试性
+3. **拆分 God Object**：Renderer 和 ModelLoader 职责过重，降低了可维护性和可测试性
 4. **统一代码库**：消除 `learnopengl/` 与 `core/refactor/` 的重叠，合并 shader 变体
 5. **完善 PBR 管线**：当前 PBR 着色器质量高，但缺少 IBL、阴影、多光源等配套设施
