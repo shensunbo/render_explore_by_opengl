@@ -38,10 +38,18 @@ struct FrameParams {
 
 class Renderer {
 public:
+    Renderer() = default;
+    ~Renderer() = default;
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
+    Renderer(Renderer&&) = delete;
+    Renderer& operator=(Renderer&&) = delete;
+
     void create(const RendererConfig& cfg);
     void destroy();
     void update();
     void draw();
+
     void renderFrame(const FrameParams& params);
     void resize(unsigned int width, unsigned int height);
     void setTimingEnabled(bool enabled) { timingEnabled_ = enabled; }
@@ -61,7 +69,7 @@ private:
 public:
     std::unique_ptr<Shader> legacyShader_;
     std::unique_ptr<Shader> pbrShader_;
-    Shader* activeShader_{nullptr};
+    Shader* activeShader_{nullptr}; // non-owning pointer to currently active shader
     std::unique_ptr<MeshInfo> ourModel;
     // Skybox* cubemap;
     std::shared_ptr<Skybox> cubemap;
