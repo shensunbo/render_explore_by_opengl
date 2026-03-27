@@ -1,10 +1,10 @@
 #pragma once 
-#include "Shader.h"
-#include "Skybox.h"
-#include "MeshInfo.h"
+#include "shader/Shader.h"
+#include "scene/Skybox.h"
+#include "mesh/MeshInfo.h"
 #include "configParser/ConfigParser.h"
-#include "FboHandler.h"
-#include "TextureCache.h"
+#include "postprocess/FboHandler.h"
+#include "texture/TextureCache.h"
 #include "RenderPass.h"
 #include "RenderGraph.h"
 

@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include "gl/gl_headers.h"
-#include "CommonDataStruct.h"
+#include "common/CommonDataStruct.h"
 // #include "Shader.h"
 
 /**

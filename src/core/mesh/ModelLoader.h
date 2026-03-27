@@ -8,7 +8,7 @@
 
 // #include "../mesh.h"
 #include "BufferObjectData.h"
-#include "TextureCache.h"
+#include "texture/TextureCache.h"
 #include <configParser/ConfigParser.h>
 
 class ModelLoader {

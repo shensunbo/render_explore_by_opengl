@@ -12,26 +12,27 @@ target_sources(render_explore_by_opengl PRIVATE
 target_include_directories(render_explore_by_opengl PRIVATE 
     ${COMMON_INC_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
-    core/refactor
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
 )
 
 target_sources(render_explore_by_opengl PRIVATE 
     ${COMMON_DEP_SRC_FILES}
     platform/Platform.cpp
     rhi/Rhi.h
-    core/refactor/Renderer.cpp
-    core/refactor/VirCamera.cpp
-    core/refactor/Skybox.cpp
-    core/refactor/ModelLoader.cpp
-    core/refactor/MeshInfo.cpp
-    core/refactor/Shader.cpp
-    core/refactor/BufferObjectData.cpp
-    core/refactor/FboHandler.cpp
-    core/refactor/DataManager.cpp
-    core/refactor/AnimationHandler.cpp
-    core/refactor/TextureCache.cpp
-    core/refactor/RenderPass.cpp
-    core/refactor/RenderGraph.h
+    core/renderer/Renderer.cpp
+    core/camera/VirCamera.cpp
+    core/scene/Skybox.cpp
+    core/mesh/ModelLoader.cpp
+    core/mesh/MeshInfo.cpp
+    core/shader/Shader.cpp
+    core/mesh/BufferObjectData.cpp
+    core/postprocess/FboHandler.cpp
+    core/common/DataManager.cpp
+    core/common/AnimationHandler.cpp
+    core/texture/TextureCache.cpp
+    core/renderer/RenderPass.cpp
+    core/renderer/RenderGraph.h
+    core/common/tool.cpp
 )
 
 # for NDK29
@@ -68,7 +69,7 @@ if(NOT ANDROID)
     target_include_directories(android_test PRIVATE 
         ${COMMON_INC_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
-        core/refactor
+        ${CMAKE_CURRENT_SOURCE_DIR}/core
     )
 
     target_link_directories(android_test PRIVATE ${COMMON_LIB_DIR})

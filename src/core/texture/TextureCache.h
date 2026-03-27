@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include "gl/gl_headers.h"
-#include "CommonDataStruct.h"
+#include "common/CommonDataStruct.h"
 
 /**
  * @class TextureCache

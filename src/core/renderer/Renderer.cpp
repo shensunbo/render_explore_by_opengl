@@ -5,7 +5,7 @@
 #include <stb_image.h>
 #include <thread>
 #include <unordered_set>
-#include "tool.h"
+#include "common/tool.h"
 #include "RenderPass.h"
 #include "RenderGraph.h"
 

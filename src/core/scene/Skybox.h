@@ -3,8 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include "glm/glm.hpp"
-#include "Shader.h"
-#include "CommonDataStruct.h"
+#include "shader/Shader.h"
+#include "common/CommonDataStruct.h"
 
 // TODO: Use texture binding IDs starting at 10 to avoid conflicts with other textures.
 class Skybox {

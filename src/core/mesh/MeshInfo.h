@@ -1,10 +1,10 @@
 #pragma once
 // #include "../mesh.h"
 // #include "../shader.h"
-#include "Shader.h"
+#include "shader/Shader.h"
 #include "log/mylog.h"
 #include "ModelLoader.h"
-#include "CommonDataStruct.h"
+#include "common/CommonDataStruct.h"
 #include "BufferObjectData.h"
 
 /**

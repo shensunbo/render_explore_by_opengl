@@ -11,11 +11,11 @@
 #include <thread>
 
 // #include "core/shader.h"
-#include "core/refactor/VirCamera.h"
-#include "core/refactor/MeshInfo.h"
-#include "core/refactor/Shader.h"
-#include "core/refactor/Skybox.h"
-#include "core/refactor/Renderer.h"
+#include "core/camera/VirCamera.h"
+#include "core/mesh/MeshInfo.h"
+#include "core/shader/Shader.h"
+#include "core/scene/Skybox.h"
+#include "core/renderer/Renderer.h"
 #include "log/mylog.h"
 #include "configParser/ConfigParser.h"
 #include "platform/Platform.h"

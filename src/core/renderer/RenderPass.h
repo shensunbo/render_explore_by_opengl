@@ -2,11 +2,11 @@
 
 #include <memory>
 #include <vector>
-#include "Shader.h"
-#include "Skybox.h"
-#include "FboHandler.h"
-#include "CommonDataStruct.h"
-#include "BufferObjectData.h"
+#include "shader/Shader.h"
+#include "scene/Skybox.h"
+#include "postprocess/FboHandler.h"
+#include "common/CommonDataStruct.h"
+#include "mesh/BufferObjectData.h"
 #include <glm/glm.hpp>
 
 

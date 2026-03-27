@@ -9,8 +9,8 @@
 
 #include "BufferObjectData.h"
 #include "log/mylog.h"
-#include "Shader.h"
-#include "TextureCache.h"
+#include "shader/Shader.h"
+#include "texture/TextureCache.h"
 
 bool ModelLoader::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
     ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,

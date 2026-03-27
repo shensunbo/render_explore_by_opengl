@@ -1,6 +1,6 @@
 #include "renderer_api.h"
 #include "gl/gl_headers.h"
-#include "core/refactor/Renderer.h"
+#include "core/renderer/Renderer.h"
 #include "log/mylog.h"
 
 RendererAPI::RendererAPI() 
