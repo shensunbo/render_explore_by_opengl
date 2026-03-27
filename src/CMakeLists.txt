@@ -1,8 +1,11 @@
 
+#
+# build failed in Android now, ktx.h incompatible 
+#
 # add_executable(render_explore_by_opengl refactor_test.cpp)
 
 add_library(render_explore_by_opengl SHARED
-    renderer_api.cpp
+    android/renderer_api.cpp
 )
 
 target_sources(render_explore_by_opengl PRIVATE 
@@ -17,7 +20,6 @@ target_include_directories(render_explore_by_opengl PRIVATE
 
 target_sources(render_explore_by_opengl PRIVATE 
     ${COMMON_DEP_SRC_FILES}
-    platform/Platform.cpp
     rhi/Rhi.h
     core/renderer/Renderer.cpp
     core/camera/VirCamera.cpp
@@ -34,6 +36,7 @@ target_sources(render_explore_by_opengl PRIVATE
     core/renderer/RenderGraph.h
     core/common/tool.cpp
 )
+
 
 # for NDK29
 target_compile_options(render_explore_by_opengl PRIVATE

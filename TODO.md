@@ -20,6 +20,8 @@ Use GitHub Flavored Markdown
 
 - [X] android  platform 
 
+- [ ] NDK build error fix, currently error: `fatal error: ktx.h: No such file or directory`
+
 - [ ] NDK build by bazel
 
 - [ ] NDK build state control 
