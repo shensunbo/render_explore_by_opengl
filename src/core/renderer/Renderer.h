@@ -1,17 +1,12 @@
-#pragma once 
+#pragma once
 #include "FrameParams.h"
-#include "shader/Shader.h"
-#include "scene/Skybox.h"
-#include "mesh/MeshInfo.h"
-#include "configParser/ConfigParser.h"
-#include "postprocess/FboHandler.h"
-#include "texture/TextureCache.h"
-#include "RenderGraph.h"
 
 #include <array>
 #include <memory>
-#include <vector>
+#include <string>
 #include <glm/glm.hpp>
+
+class Shader;
 
 struct RendererConfig {
     unsigned int width{0};
@@ -29,8 +24,8 @@ struct RendererConfig {
 
 class Renderer {
 public:
-    Renderer() = default;
-    ~Renderer() = default;
+    Renderer();
+    ~Renderer();
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
     Renderer(Renderer&&) = delete;
@@ -43,48 +38,13 @@ public:
 
     void renderFrame(const FrameParams& params);
     void resize(unsigned int width, unsigned int height);
-    void setTimingEnabled(bool enabled) { timingEnabled_ = enabled; }
+    void setTimingEnabled(bool enabled);
     void setPbrEnabled(bool enabled);
-    bool isPbrEnabled() const { return usePbr_; }
-    Shader* activeShader() const { return activeShader_; }
+    bool isPbrEnabled() const;
+    Shader* activeShader() const;
     void setCubemapRotation(const glm::mat4& rotation);
 
 private:
-    void releaseTextureData();
-    void cleanupGpuTextures();
-    void rebuildGraphs();
-    void ensureFbo();
-    void rebuildFbo(unsigned int width, unsigned int height);
-    void applyCubemapRotation();
-
-public:
-    std::unique_ptr<Shader> legacyShader_;
-    std::unique_ptr<Shader> pbrShader_;
-    Shader* activeShader_{nullptr}; // non-owning pointer to currently active shader
-    std::unique_ptr<MeshInfo> ourModel;
-    // Skybox* cubemap;
-    std::shared_ptr<Skybox> cubemap;
-    std::shared_ptr<FboHandler> fbo_;
-    ConfigParser  cfgParser;
-    std::unique_ptr<TextureCache> textureCache_;
-
-    std::unique_ptr<RenderGraph> onscreenGraph_;
-    std::unique_ptr<RenderGraph> fboGraph_;
-
-    bool timingEnabled_{false};
-    std::vector<PassTiming> timings_;
-
-    // cached config needed for lazy FBO creation / graph rebuild
-    unsigned int width_{0};
-    unsigned int height_{0};
-    std::string resRoot_;
-    std::string fboVsPath_;
-    std::string fboFsPath_;
-    std::vector<std::string> skyboxFaces_;
-    std::string modelPath_;
-    glm::mat4 cubemapRotation_{1.0f};
-    bool usePbr_{false};
-
-    std::set<std::string> m_texture_paths;
-    std::unordered_map<std::string, imageParam> m_loaded_texture_data;
+    class Impl;
+    std::unique_ptr<Impl> pImpl_;
 };

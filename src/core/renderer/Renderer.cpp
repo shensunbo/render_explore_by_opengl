@@ -1,15 +1,85 @@
 #include "Renderer.h"
+#include "shader/Shader.h"
+#include "scene/Skybox.h"
+#include "mesh/MeshInfo.h"
+#include "configParser/ConfigParser.h"
+#include "postprocess/FboHandler.h"
+#include "texture/TextureCache.h"
+#include "RenderGraph.h"
+#include "RenderPass.h"
 #include "log/mylog.h"
+#include "common/tool.h"
+
 #include <memory>
 #include <mutex>
+#include <set>
 #include <stb_image.h>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
-#include "common/tool.h"
-#include "RenderPass.h"
-#include "RenderGraph.h"
+#include <vector>
+#include <glm/glm.hpp>
 
-void Renderer::create(const RendererConfig& cfg){
+// ---------------------------------------------------------------------------
+// Renderer::Impl – owns all private state and implements all logic
+// ---------------------------------------------------------------------------
+class Renderer::Impl {
+public:
+    // --- state (formerly Renderer private members) ---
+    std::unique_ptr<Shader> legacyShader_;
+    std::unique_ptr<Shader> pbrShader_;
+    Shader* activeShader_{nullptr}; // non-owning pointer to currently active shader
+    std::unique_ptr<MeshInfo> ourModel;
+    std::shared_ptr<Skybox> cubemap;
+    std::shared_ptr<FboHandler> fbo_;
+    ConfigParser cfgParser;
+    std::unique_ptr<TextureCache> textureCache_;
+
+    std::unique_ptr<RenderGraph> onscreenGraph_;
+    std::unique_ptr<RenderGraph> fboGraph_;
+
+    bool timingEnabled_{false};
+    std::vector<PassTiming> timings_;
+
+    // cached config needed for lazy FBO creation / graph rebuild
+    unsigned int width_{0};
+    unsigned int height_{0};
+    std::string resRoot_;
+    std::string fboVsPath_;
+    std::string fboFsPath_;
+    std::vector<std::string> skyboxFaces_;
+    std::string modelPath_;
+    glm::mat4 cubemapRotation_{1.0f};
+    bool usePbr_{false};
+
+    std::set<std::string> m_texture_paths;
+    std::unordered_map<std::string, imageParam> m_loaded_texture_data;
+
+    // --- forwarded public operations ---
+    void create(const RendererConfig& cfg);
+    void destroy();
+    void update();
+    void draw();
+    void renderFrame(const FrameParams& params);
+    void resize(unsigned int width, unsigned int height);
+    void setPbrEnabled(bool enabled);
+    void setCubemapRotation(const glm::mat4& rotation);
+
+private:
+    // --- private helpers (formerly Renderer private methods) ---
+    void releaseTextureData();
+    void cleanupGpuTextures();
+    void rebuildGraphs();
+    void ensureFbo();
+    void rebuildFbo(unsigned int width, unsigned int height);
+    void applyCubemapRotation();
+};
+
+// ---------------------------------------------------------------------------
+// Renderer::Impl method implementations
+// ---------------------------------------------------------------------------
+
+void Renderer::Impl::create(const RendererConfig& cfg){
 
     // Helper to prefix resource paths with an optional root (works for in-tree and out-of-tree runs).
     auto make_path = [](const std::string& root, const std::string& relative) {
@@ -136,7 +206,7 @@ void Renderer::create(const RendererConfig& cfg){
     LOG_I("Renderer::create");
 }
 
-void Renderer::destroy(){
+void Renderer::Impl::destroy(){
     LOG_I("Renderer::destroy");
     cleanupGpuTextures();
     if (textureCache_) {
@@ -152,11 +222,11 @@ void Renderer::destroy(){
     fbo_.reset();
 }
 
-void Renderer::update(){
+void Renderer::Impl::update(){
     LOG_I("Renderer::update");
 }
 
-void Renderer::draw(){
+void Renderer::Impl::draw(){
     if (!activeShader_) return;
     for(auto& v :  ourModel->meshes_){
         for (size_t i = 0; i < v.textures.size(); ++i) {
@@ -187,7 +257,7 @@ void Renderer::draw(){
     // LOG_I("Renderer::draw");
 }
 
-void Renderer::renderFrame(const FrameParams& params){
+void Renderer::Impl::renderFrame(const FrameParams& params){
     // Choose between onscreen render and offscreen FBO path.
     const bool wantFbo = params.enableFbo;
     const bool hasFbo = fbo_ != nullptr;
@@ -227,7 +297,7 @@ void Renderer::renderFrame(const FrameParams& params){
     }
 }
 
-void Renderer::resize(unsigned int width, unsigned int height){
+void Renderer::Impl::resize(unsigned int width, unsigned int height){
     width_ = width;
     height_ = height;
     if (width_ == 0 || height_ == 0) return;
@@ -237,7 +307,7 @@ void Renderer::resize(unsigned int width, unsigned int height){
     rebuildGraphs();
 }
 
-void Renderer::rebuildGraphs(){
+void Renderer::Impl::rebuildGraphs(){
     onscreenGraph_ = std::make_unique<RenderGraph>();
     onscreenGraph_->addPass("ScenePass", std::make_unique<ScenePass>(activeShader_, cubemap.get(), &ourModel->meshes_));
     onscreenGraph_->addPass("SkyboxPass", std::make_unique<SkyboxPass>(cubemap.get()));
@@ -248,14 +318,14 @@ void Renderer::rebuildGraphs(){
     fboGraph_->addPass("PostPass", std::make_unique<PostPass>(fbo_.get()));
 }
 
-void Renderer::ensureFbo(){
+void Renderer::Impl::ensureFbo(){
     if (fbo_) return;
     if (width_ == 0 || height_ == 0) return;
     fbo_ = std::make_shared<FboHandler>(width_, height_, fboVsPath_, fboFsPath_);
     fbo_->init();
 }
 
-void Renderer::rebuildFbo(unsigned int width, unsigned int height){
+void Renderer::Impl::rebuildFbo(unsigned int width, unsigned int height){
     // If FBO is not desired, just drop it; it will be recreated lazily when needed.
     if (!fbo_) {
         return;
@@ -264,12 +334,13 @@ void Renderer::rebuildFbo(unsigned int width, unsigned int height){
     fbo_ = std::make_shared<FboHandler>(width, height, fboVsPath_, fboFsPath_);
     fbo_->init();
 }
-void Renderer::cleanupGpuTextures(){
+
+void Renderer::Impl::cleanupGpuTextures(){
     if (!textureCache_) return;
     textureCache_->destroy();
 }
 
-void Renderer::setPbrEnabled(bool enabled) {
+void Renderer::Impl::setPbrEnabled(bool enabled) {
     bool wantPbr = enabled && pbrShader_ != nullptr;
     Shader* newShader = wantPbr ? pbrShader_.get() : legacyShader_.get();
     if (activeShader_ == newShader) {
@@ -282,12 +353,12 @@ void Renderer::setPbrEnabled(bool enabled) {
     applyCubemapRotation();
 }
 
-void Renderer::setCubemapRotation(const glm::mat4& rotation) {
+void Renderer::Impl::setCubemapRotation(const glm::mat4& rotation) {
     cubemapRotation_ = rotation;
     applyCubemapRotation();
 }
 
-void Renderer::applyCubemapRotation() {
+void Renderer::Impl::applyCubemapRotation() {
     if (activeShader_) {
         activeShader_->use();
         activeShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
@@ -302,7 +373,7 @@ void Renderer::applyCubemapRotation() {
     }
 }
 
-void Renderer::releaseTextureData(){
+void Renderer::Impl::releaseTextureData(){
     for (const auto& tex : m_loaded_texture_data) {
         if (tex.second.data) {
             stbi_image_free(tex.second.data);
@@ -312,3 +383,22 @@ void Renderer::releaseTextureData(){
     m_loaded_texture_data.clear();
     LOG_I("All texture data released.");
 }
+
+// ---------------------------------------------------------------------------
+// Renderer – thin delegation wrappers
+// ---------------------------------------------------------------------------
+
+Renderer::Renderer() : pImpl_(std::make_unique<Impl>()) {}
+Renderer::~Renderer() = default;
+
+void Renderer::create(const RendererConfig& cfg)              { pImpl_->create(cfg); }
+void Renderer::destroy()                                      { pImpl_->destroy(); }
+void Renderer::update()                                       { pImpl_->update(); }
+void Renderer::draw()                                         { pImpl_->draw(); }
+void Renderer::renderFrame(const FrameParams& params)         { pImpl_->renderFrame(params); }
+void Renderer::resize(unsigned int w, unsigned int h)         { pImpl_->resize(w, h); }
+void Renderer::setTimingEnabled(bool enabled)                 { pImpl_->timingEnabled_ = enabled; }
+void Renderer::setPbrEnabled(bool enabled)                    { pImpl_->setPbrEnabled(enabled); }
+bool Renderer::isPbrEnabled() const                           { return pImpl_->usePbr_; }
+Shader* Renderer::activeShader() const                        { return pImpl_->activeShader_; }
+void Renderer::setCubemapRotation(const glm::mat4& rotation)  { pImpl_->setCubemapRotation(rotation); }
