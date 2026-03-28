@@ -90,19 +90,19 @@ int main()
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        ourShader.set("projection", projection);
+        ourShader.set("view", view);
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(0.008f));	// it's a bit too big for our scene, so scale it down
         model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        ourShader.setMat4("model", model);
+        ourShader.set("model", model);
 
         glm::mat4 look = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         look = camera.GetViewMatrix();
-        ourShader.setMat4("look", look);
+        ourShader.set("look", look);
 
         ourModel.Draw(ourShader);
 

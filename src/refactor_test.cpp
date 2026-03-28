@@ -256,13 +256,13 @@ static void applyRenderToggles(Renderer &renderer, const RenderToggles &toggles)
     Shader* shader = renderer.activeShader();
     if (shader) {
         shader->use();
-        shader->setFloat("exposure", toggles.exposure);
-        shader->setBool("enableDiffuseTex", toggles.useDiffuse);
-        shader->setBool("enableSpecularTex", toggles.useSpecular);
-        shader->setBool("enableNormalTex", toggles.useNormal);
-        shader->setBool("enableAOTex", toggles.useAO);
-        shader->setBool("enableRoughnessTex", toggles.useRoughness);
-        shader->setBool("enableMetallicTex", toggles.useMetallic);
+        shader->set("exposure", toggles.exposure);
+        shader->set("enableDiffuseTex", toggles.useDiffuse);
+        shader->set("enableSpecularTex", toggles.useSpecular);
+        shader->set("enableNormalTex", toggles.useNormal);
+        shader->set("enableAOTex", toggles.useAO);
+        shader->set("enableRoughnessTex", toggles.useRoughness);
+        shader->set("enableMetallicTex", toggles.useMetallic);
     }
     renderer.setTimingEnabled(toggles.timing);
 }

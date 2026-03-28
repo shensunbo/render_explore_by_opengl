@@ -30,7 +30,7 @@ public:
     void drawSkybox();
     void updateMvpMatrix(const glm::mat4& mvp) {
         shader_.use();
-        shader_.setMat4("uMVP", mvp);
+        shader_.set("uMVP", mvp);
     }
 
 

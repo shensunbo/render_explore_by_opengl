@@ -232,17 +232,17 @@ void Renderer::Impl::draw(){
         for (size_t i = 0; i < v.textures.size(); ++i) {
             auto uniform = v.textures[i].type;
             glActiveTexture(GL_TEXTURE0 + v.textures[i].bindId);
-            activeShader_->setInt(uniform, v.textures[i].bindId);
+            activeShader_->set(uniform, v.textures[i].bindId);
             glBindTexture(GL_TEXTURE_2D, v.textures[i].id);
 
-            // activeShader_->setBool((uniform + "_load"), true);
-            // activeShader_->setBool("textureLoad", true);
+            // activeShader_->set((uniform + "_load"), true);
+            // activeShader_->set("textureLoad", true);
         }
 
         if(v.textures.size()){
-            activeShader_->setBool("textureLoad", true);
+            activeShader_->set("textureLoad", true);
         }else{
-            activeShader_->setBool("textureLoad", false);
+            activeShader_->set("textureLoad", false);
         }
 
     // Draw current mesh.
@@ -361,15 +361,15 @@ void Renderer::Impl::setCubemapRotation(const glm::mat4& rotation) {
 void Renderer::Impl::applyCubemapRotation() {
     if (activeShader_) {
         activeShader_->use();
-        activeShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
+        activeShader_->set("cubemapRotateMatrix", cubemapRotation_);
     }
     if (legacyShader_ && activeShader_ != legacyShader_.get()) {
         legacyShader_->use();
-        legacyShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
+        legacyShader_->set("cubemapRotateMatrix", cubemapRotation_);
     }
     if (pbrShader_ && activeShader_ != pbrShader_.get()) {
         pbrShader_->use();
-        pbrShader_->setMat4("cubemapRotateMatrix", cubemapRotation_);
+        pbrShader_->set("cubemapRotateMatrix", cubemapRotation_);
     }
 }
 
