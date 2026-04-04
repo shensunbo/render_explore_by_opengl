@@ -60,11 +60,16 @@ BufferObjectData& BufferObjectData::operator=(BufferObjectData&& other) noexcept
         VBO = other.VBO; other.VBO = 0;
         EBO = other.EBO; other.EBO = 0;
         UBO = other.UBO; other.UBO = 0;
+        instanceVBO = other.instanceVBO; other.instanceVBO = 0;
     }
     return *this;
 }
 
 void BufferObjectData::resetGlHandles(){
+    if (instanceVBO) {
+        glDeleteBuffers(1, &instanceVBO);
+        instanceVBO = 0;
+    }
     if (UBO) {
         glDeleteBuffers(1, &UBO);
         UBO = 0;
@@ -132,4 +137,26 @@ void BufferObjectData::setupMesh()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO);
+
+    // Setup per-instance model matrix buffer (mat4 = 4 vec4s at locations 5-8).
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
+    for (int col = 0; col < 4; ++col) {
+        glEnableVertexAttribArray(5 + col);
+        glVertexAttribPointer(5 + col, 4, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::mat4),
+                              reinterpret_cast<void*>(sizeof(glm::vec4) * col));
+        glVertexAttribDivisor(5 + col, 1);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void BufferObjectData::updateInstanceBuffer(const std::vector<glm::mat4>& matrices) const {
+    if (matrices.empty() || !instanceVBO) return;
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(matrices.size() * sizeof(glm::mat4)),
+                 matrices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

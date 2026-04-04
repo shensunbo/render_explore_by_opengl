@@ -54,6 +54,8 @@ $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip --strip-unneed
 2. skybox 作为环境光的时候应该与漫反射颜色相乘还是相加。-- 相乘作为环境光颜色看起来更好一些。
 
 # result
+## latest state(20260404)
+![instanced rendering](./readme_res/instanced.png)
 ## latest state(20260327)
 ![20260327](./readme_res/20260327.png)
 ## phong model effect

@@ -149,6 +149,7 @@ void Renderer::Impl::create(const RendererConfig& cfg){
     m_texture_paths.insert(faces[5]);
 
     // Multithreaded texture loading: gather raw pixel data up-front, then upload on the main thread.
+    LOG_I("Starting multithreaded texture loading for {} unique paths", m_texture_paths.size());
     std::mutex textureMutex;
     std::vector<std::thread> threads;
     threads.reserve(m_texture_paths.size());
@@ -167,6 +168,8 @@ void Renderer::Impl::create(const RendererConfig& cfg){
     for (auto& thread : threads) {
         thread.join();
     }
+
+    LOG_I("All texture-loading threads completed");
 
     // Build GPU meshes using the loaded texture data and cache.
     ourModel = std::make_unique<MeshInfo>(path, cfgParser, m_loaded_texture_data, *textureCache_);

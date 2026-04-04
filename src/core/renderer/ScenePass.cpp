@@ -10,9 +10,19 @@ void ScenePass::execute(const FrameParams& params) {
     shader_->use();
     if (skybox_) skybox_->ActiveCubeMap();
 
-    const glm::mat4 mvp = params.projection * params.view * params.model;
-    shader_->set("model", params.model);
-    shader_->set("uMVP", mvp);
+    // Build the effective instance list: use instanceModels if provided, else fall back to params.model.
+    const std::vector<glm::mat4>* instanceMatrices = nullptr;
+    std::vector<glm::mat4> fallback;
+    if (!params.instanceModels.empty()) {
+        instanceMatrices = &params.instanceModels;
+    } else {
+        fallback = {params.model};
+        instanceMatrices = &fallback;
+    }
+    const int instanceCount = static_cast<int>(instanceMatrices->size());
+
+    const glm::mat4 vp = params.projection * params.view;
+    shader_->set("uVP", vp);
     shader_->set("viewPosition", params.eye);
     shader_->set("cubemap", skybox_ ? skybox_->GetBindingPoint() : 0u);
 
@@ -24,8 +34,9 @@ void ScenePass::execute(const FrameParams& params) {
             rhi::bindTexture2D(v.textures[i].id);
         }
         shader_->set("textureLoad", !v.textures.empty());
+        v.updateInstanceBuffer(*instanceMatrices);
         v.bindVao();
         v.bindUbo();
-        rhi::drawIndexedTriangles(v.getIndicesSize());
+        rhi::drawIndexedTrianglesInstanced(v.getIndicesSize(), instanceCount);
     }
 }

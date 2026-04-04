@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <chrono>
 #include <cfloat>
 #include <fstream>
@@ -57,6 +58,9 @@ struct RenderToggles {
     bool useMetallic{true};
     bool limitFPS{false};
     int targetFPS{60};
+    int instanceCount{3};
+    float instanceSpacing{3.0f};  ///< Lateral spacing between back-row instances (world units).
+    float instanceDepth{2.0f};    ///< Depth offset separating front and back row (world units).
 };
 
 static FrameParams buildFrameParams(const glm::mat4& model,
@@ -202,6 +206,31 @@ static FrameParams buildFrameParams(const glm::mat4& model,
     params.eye = glm::vec3(invLook[3]);
     params.enableFbo = tgs.fboEnable;
     params.dumpOnce = tgs.dumpRes;
+
+    // Build per-instance model matrices:
+    //   Instance 0  – front center (offset toward camera along +Z)
+    //   Instances 1..N-1 – back row (offset away from camera along -Z, spaced along X)
+    const int count = std::max(1, tgs.instanceCount);
+    params.instanceModels.reserve(static_cast<size_t>(count));
+
+    // Front instance
+    glm::vec3 frontOffset(0.0f, 0.0f, tgs.instanceDepth);
+    params.instanceModels.push_back(glm::translate(glm::mat4(1.0f), frontOffset) * model);
+
+    // Back-row instances centered at X=0
+    const int backCount = count - 1;
+    if (backCount > 0) {
+        const float rowHalfWidth = static_cast<float>(backCount - 1) * tgs.instanceSpacing * 0.5f;
+        for (int i = 0; i < backCount; ++i) {
+            glm::vec3 backOffset(
+                -rowHalfWidth + static_cast<float>(i) * tgs.instanceSpacing,
+                0.0f,
+                -tgs.instanceDepth);
+            params.instanceModels.push_back(
+                glm::translate(glm::mat4(1.0f), backOffset) * model);
+        }
+    }
+
     return params;
 }
 
@@ -237,6 +266,13 @@ static void drawControlWindow(RenderToggles &toggles, float frameDuration) {
             ImGui::Checkbox("Metallic", &toggles.useMetallic);
             ImGui::EndTable();
         }
+
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Instanced rendering");
+        ImGui::Separator();
+        ImGui::SliderInt("Instance count", &toggles.instanceCount, 1, 20);
+        ImGui::SliderFloat("Lateral spacing", &toggles.instanceSpacing, 0.5f, 10.0f, "%.1f");
+        ImGui::SliderFloat("Depth offset", &toggles.instanceDepth, 0.5f, 10.0f, "%.1f");
 
         ImGui::Spacing();
         ImGui::TextUnformatted("Performance");

@@ -200,4 +200,14 @@ inline void drawIndexedTriangles(std::size_t indexCount) {
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
 }
 
+/**
+ * @brief Draws indexed triangles using instanced rendering.
+ * @param indexCount Number of indices per instance.
+ * @param instanceCount Number of instances to render.
+ */
+inline void drawIndexedTrianglesInstanced(std::size_t indexCount, int instanceCount) {
+    glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(indexCount),
+                            GL_UNSIGNED_INT, nullptr, instanceCount);
+}
+
 } // namespace rhi

@@ -68,6 +68,12 @@ public:
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBO);
     }
 
+    /**
+     * @brief Updates the per-instance model matrix buffer for instanced rendering.
+     * @param matrices Vector of model matrices, one per instance.
+     */
+    void updateInstanceBuffer(const std::vector<glm::mat4>& matrices) const;
+
 private:
     void resetGlHandles();
 
@@ -91,4 +97,5 @@ private:
     GLuint VBO{0};
     GLuint EBO{0};
     GLuint UBO{0};
+    GLuint instanceVBO{0}; ///< Per-instance model matrix buffer for instanced rendering.
 };

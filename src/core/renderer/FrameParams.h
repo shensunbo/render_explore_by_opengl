@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vector>
 
 /**
  * @struct FrameParams
@@ -13,4 +14,7 @@ struct FrameParams {
     glm::vec3 eye{0.0f, 0.0f, 0.0f};
     bool enableFbo{false};
     bool dumpOnce{false};
+    /// Per-instance model matrices for instanced rendering.
+    /// When non-empty, overrides the single params.model; each element is one instance.
+    std::vector<glm::mat4> instanceModels;
 };

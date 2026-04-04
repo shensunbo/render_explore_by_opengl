@@ -15,8 +15,8 @@ PERF_SCRIPT="$PERF_DIR/perf.script"
 PERF_SVG="$PERF_DIR/perf.svg"
 
 # record performance data
-sudo /usr/lib/linux-tools/5.15.0-161-generic/perf record  -g -o $PERF_DATA -- $BIN_PATH
-sudo /usr/lib/linux-tools/5.15.0-161-generic/perf script  -i $PERF_DATA > $PERF_SCRIPT
+sudo /usr/lib/linux-tools/5.15.0-173-generic/perf record  -g -o $PERF_DATA -- $BIN_PATH
+sudo /usr/lib/linux-tools/5.15.0-173-generic/perf script  -i $PERF_DATA > $PERF_SCRIPT
 
 # generate flame graph
 /home/shensunbo/FlameGraph/stackcollapse-perf.pl < $PERF_SCRIPT | /home/shensunbo/FlameGraph/flamegraph.pl > $PERF_SVG
