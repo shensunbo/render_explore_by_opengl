@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "shader/Shader.h"
 #include "common/CommonDataStruct.h"
+#include <ktx.h>
 
 // TODO: Use texture binding IDs starting at 10 to avoid conflicts with other textures.
 class Skybox {
@@ -21,6 +22,10 @@ public:
     Skybox(Skybox&&) = delete;
     Skybox& operator=(Skybox&&) = delete;
 
+    /**
+     * @brief Initialise the skybox from PNG faces pre-loaded into textureData.
+     * If any face path ends in .ktx or .ktx2, the KTX path is used automatically.
+     */
     bool Init(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData);
 
     void ActiveCubeMap() const;
@@ -45,8 +50,10 @@ public:
 private:
     // Load skybox textures from disk (slow path).
     unsigned int LoadCubemap(const std::vector<std::string>& faces) const;
-    // Load skybox textures from preloaded buffers.
+    // Load skybox textures from preloaded stb buffers.
     unsigned int LoadCubemap(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData) const;
+    // Load skybox textures from KTX2 files (CPU transcode → RGBA32 → GL upload per face).
+    unsigned int LoadCubemapKtx(const std::vector<std::string>& faces) const;
 
     unsigned int cubemap_{0};
     unsigned int bind_point_{0};

@@ -606,36 +606,31 @@ std::vector<Texture> ModelLoader::Impl::LoadTextures(aiMaterial* mat,
         if(!skip)
         {   // if texture hasn't been loaded already, load it
             Texture texture;
-            
-            // Check the file extension to decide the loading path (legacy logic retained for reference).
-            // std::string texPath = textureName;
-            // bool isKTX = false;
-            // if (texPath.length() >= 4) {
-            //     std::string ext = texPath.substr(texPath.length() - 4);
-            //     if (ext == ".ktx" || ext == ".KTX") {
-            //         isKTX = true;
-            //     } else if (texPath.length() >= 5) {
-            //         ext = texPath.substr(texPath.length() - 5);
-            //         if (ext == ".ktx2" || ext == ".KTX2") {
-            //             isKTX = true;
-            //         }
-            //     }
-            // }
-            
-            // if (isKTX) {
-            //     texture.id = TextureFromKTXFile(textureName.c_str(), directory);
-            //     mylog(LogLevel::I, "Loaded KTX texture: %s", textureName.c_str());
-            // } else {
-            //     texture.id = TextureFromFile(textureName.c_str(), directory);
-            // }
 
-            const bool isSrgb = (type == aiTextureType_DIFFUSE || type == aiTextureType_SPECULAR);
-            auto texIt = textureData.find(textureName);
-            if (texIt == textureData.end()) {
-                LOG_W("Texture data missing for {}", textureName);
-                texture.id = 0;
+            // Dispatch to KTX or stb path based on file extension.
+            auto endsWithKtx = [](const std::string& p) {
+                if (p.size() >= 5 &&
+                    (p.compare(p.size()-5, 5, ".ktx2") == 0 ||
+                     p.compare(p.size()-5, 5, ".KTX2") == 0))
+                    return true;
+                if (p.size() >= 4 &&
+                    (p.compare(p.size()-4, 4, ".ktx") == 0 ||
+                     p.compare(p.size()-4, 4, ".KTX") == 0))
+                    return true;
+                return false;
+            };
+
+            if (endsWithKtx(textureName)) {
+                texture.id = textureCache.getOrCreateKtx(textureName);
             } else {
-                texture.id = textureCache.getOrCreate(textureName, texIt->second, isSrgb);
+                const bool isSrgb = (type == aiTextureType_DIFFUSE || type == aiTextureType_SPECULAR);
+                auto texIt = textureData.find(textureName);
+                if (texIt == textureData.end()) {
+                    LOG_W("Texture data missing for {}", textureName);
+                    texture.id = 0;
+                } else {
+                    texture.id = textureCache.getOrCreate(textureName, texIt->second, isSrgb);
+                }
             }
             if(texture.id == 0){
                 LOG_E("Failed to load texture: {} for mesh {} ", textureName, meshName);

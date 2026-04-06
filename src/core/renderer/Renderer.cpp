@@ -141,27 +141,59 @@ void Renderer::Impl::create(const RendererConfig& cfg){
 
     skyboxFaces_ = faces;
 
-    m_texture_paths.insert(faces[0]);
-    m_texture_paths.insert(faces[1]);
-    m_texture_paths.insert(faces[2]);
-    m_texture_paths.insert(faces[3]);
-    m_texture_paths.insert(faces[4]);
-    m_texture_paths.insert(faces[5]);
+    // Only add skybox faces to the preload set if they are PNG (stb path).
+    // KTX skybox faces are loaded directly by Skybox::LoadCubemapKtx on the main thread.
+    auto isSkyboxKtx = !faces.empty() && [&faces](){
+        const auto& p = faces[0];
+        return (p.size() >= 5 && (p.compare(p.size()-5,5,".ktx2")==0||p.compare(p.size()-5,5,".KTX2")==0)) ||
+               (p.size() >= 4 && (p.compare(p.size()-4,4,".ktx") ==0||p.compare(p.size()-4,4,".KTX") ==0));
+    }();
+
+    if (!isSkyboxKtx) {
+        m_texture_paths.insert(faces[0]);
+        m_texture_paths.insert(faces[1]);
+        m_texture_paths.insert(faces[2]);
+        m_texture_paths.insert(faces[3]);
+        m_texture_paths.insert(faces[4]);
+        m_texture_paths.insert(faces[5]);
+    }
 
     // Multithreaded texture loading: gather raw pixel data up-front, then upload on the main thread.
     LOG_I("Starting multithreaded texture loading for {} unique paths", m_texture_paths.size());
     std::mutex textureMutex;
     std::vector<std::thread> threads;
     threads.reserve(m_texture_paths.size());
+    // TODO: isKtxPath duplicated 
+    auto isKtxPath = [](const std::string& p) {
+        if (p.size() >= 5 &&
+            (p.compare(p.size()-5, 5, ".ktx2") == 0 ||
+             p.compare(p.size()-5, 5, ".KTX2") == 0))
+            return true;
+        if (p.size() >= 4 &&
+            (p.compare(p.size()-4, 4, ".ktx") == 0 ||
+             p.compare(p.size()-4, 4, ".KTX") == 0))
+            return true;
+        return false;
+    };
+
     for(auto const& texture_path : m_texture_paths) {
-        threads.emplace_back([this, &textureMutex, texture_path]() {
-            imageParam img{};
-            auto result = Tool::ImageFromFile(texture_path, img);
-            if (result == 0) {
-                std::lock_guard<std::mutex> lock(textureMutex);
-                m_loaded_texture_data[texture_path] = img;
-            }
-        });
+        if (isKtxPath(texture_path)) {
+            // KTX: file I/O + UASTC→BC7 transcode on worker thread (no GL needed).
+            // The fast GL upload happens later on the main thread in getOrCreateKtx().
+            threads.emplace_back([this, texture_path]() {
+                textureCache_->preloadKtx(texture_path);
+            });
+        } else {
+            // PNG/JPG: decode via stb_image on worker thread.
+            threads.emplace_back([this, &textureMutex, texture_path]() {
+                imageParam img{};
+                auto result = Tool::ImageFromFile(texture_path, img);
+                if (result == 0) {
+                    std::lock_guard<std::mutex> lock(textureMutex);
+                    m_loaded_texture_data[texture_path] = img;
+                }
+            });
+        }
     }
 
     // Wait for all texture-loading threads to complete.

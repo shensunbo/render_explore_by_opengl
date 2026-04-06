@@ -11,9 +11,25 @@
  * 
  */
 
+static bool isKtxPath(const std::string& p) {
+    if (p.size() >= 5 &&
+        (p.compare(p.size()-5, 5, ".ktx2") == 0 ||
+         p.compare(p.size()-5, 5, ".KTX2") == 0))
+        return true;
+    if (p.size() >= 4 &&
+        (p.compare(p.size()-4, 4, ".ktx") == 0 ||
+         p.compare(p.size()-4, 4, ".KTX") == 0))
+        return true;
+    return false;
+}
+
 // Skybox for glass material.
 bool Skybox::Init(const std::vector<std::string>& faces, const std::unordered_map<std::string, imageParam>& textureData){
-    cubemap_ = LoadCubemap(faces, textureData);
+    if (!faces.empty() && isKtxPath(faces[0])) {
+        cubemap_ = LoadCubemapKtx(faces);
+    } else {
+        cubemap_ = LoadCubemap(faces, textureData);
+    }
 
     initSkybox();
     return true;
@@ -120,6 +136,58 @@ unsigned int Skybox::LoadCubemap(const std::vector<std::string>& faces,
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     CHECK_GLES_STATUS();
 
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    CHECK_GLES_STATUS();
+
+    return textureID;
+}
+
+unsigned int Skybox::LoadCubemapKtx(const std::vector<std::string>& faces) const {
+    unsigned int textureID = 0;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    CHECK_GLES_STATUS();
+
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        ktxTexture* ktxTex = nullptr;
+        KTX_error_code result = ktxTexture_CreateFromNamedFile(
+            faces[i].c_str(), KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTex);
+        if (result != KTX_SUCCESS) {
+            LOG_E("KTX skybox load failed: {} — {}", faces[i], ktxErrorString(result));
+            glDeleteTextures(1, &textureID);
+            return 0;
+        }
+
+        // Transcode to RGBA32 so pixel data can be uploaded face-by-face with glTexImage2D.
+        if (ktxTex->classId == ktxTexture2_c) {
+            ktxTexture2* ktxTex2 = reinterpret_cast<ktxTexture2*>(ktxTex);
+            if (ktxTexture2_NeedsTranscoding(ktxTex2)) {
+                result = ktxTexture2_TranscodeBasis(ktxTex2, KTX_TTF_RGBA32, 0);
+                if (result != KTX_SUCCESS) {
+                    LOG_E("KTX skybox transcode failed: {} — {}", faces[i], ktxErrorString(result));
+                    ktxTexture_Destroy(ktxTex);
+                    glDeleteTextures(1, &textureID);
+                    return 0;
+                }
+            }
+        }
+
+        const uint8_t* data = ktxTexture_GetData(ktxTex);
+        const int w = static_cast<int>(ktxTex->baseWidth);
+        const int h = static_cast<int>(ktxTex->baseHeight);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB8_ALPHA8,
+                     w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        CHECK_GLES_STATUS();
+        ktxTexture_Destroy(ktxTex);
+
+        LOG_I("KTX skybox face {} loaded: {}x{}", i, w, h);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     CHECK_GLES_STATUS();
 

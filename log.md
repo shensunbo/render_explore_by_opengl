@@ -3,6 +3,100 @@
 2. Renderer
 
 # loading time
+## 2026-4-4 (dell precision 5570, 64GB RAM with ktx textures)
+- total loading time: 1.299s(1.2s faster than png version)
+```
+[13:16:22.579][info ][refactor_test.cpp:78] Starting Refactor
+[13:16:22.579][info ][refactor_test.cpp:452] Loaded config from res/config/render_config_ktx.json
+[13:16:22.733][info ][Renderer.cpp:101] Loading config file: res/model/halo/vehicle_info_ktx.json
+[13:16:22.733][info ][ConfigParser.cpp:334] ---> diffuse texture
+[13:16:22.734][info ][ConfigParser.cpp:353] ---> specular texture
+[13:16:22.734][info ][ConfigParser.cpp:373] ---> normal texture
+[13:16:22.734][info ][ConfigParser.cpp:393] ---> ao texture
+[13:16:22.734][info ][ConfigParser.cpp:427] ---> no alpha texture
+[13:16:22.734][info ][ConfigParser.cpp:431] ---> roughness texture
+[13:16:22.734][info ][ConfigParser.cpp:450] ---> metallic texture
+[13:16:22.734][info ][ConfigParser.cpp:469] total texture files: 44
+[13:16:22.746][info ][Renderer.cpp:152] Starting multithreaded texture loading for 50 unique paths
+[13:16:22.860][info ][tool.cpp:12] Texture loaded at path: res/model/skybox/py.png, width 1024, height 1024, channels: 3
+[13:16:22.860][info ][tool.cpp:12] Texture loaded at path: res/model/skybox/ny.png, width 1024, height 1024, channels: 3
+[13:16:22.864][info ][tool.cpp:12] Texture loaded at path: res/model/skybox/nz.png, width 1024, height 1024, channels: 3
+[13:16:22.868][info ][tool.cpp:12] Texture loaded at path: res/model/skybox/nx.png, width 1024, height 1024, channels: 3
+[13:16:22.872][info ][tool.cpp:12] Texture loaded at path: res/model/skybox/px.png, width 1024, height 1024, channels: 3
+[13:16:22.900][info ][tool.cpp:12] Texture loaded at path: res/model/skybox/pz.png, width 1024, height 1024, channels: 3
+[13:16:23.351][info ][Renderer.cpp:194] All texture-loading threads completed
+[13:16:23.570][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Helmet_Mat_BaseColor.ktx2 id=1
+[13:16:23.573][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Helmet_Mat_Specular.ktx2 id=2
+[13:16:23.578][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Helmet_Mat_Normal.ktx2 id=3
+[13:16:23.584][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Helmet_Mat_AO.ktx2 id=4
+[13:16:23.589][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Helmet_Mat_Roughness.ktx2 id=5
+[13:16:23.594][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Helmet_Mat_Metallic.ktx2 id=6
+[13:16:23.594][info ][ModelLoader.cpp:263] [ModelLoader] mesh Helmet material Spartan_Helmet_Mat texture load cost: 29 ms
+[13:16:23.598][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Ears_Mat_BaseColor.ktx2 id=7
+[13:16:23.602][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Ears_Mat_Specular.ktx2 id=8
+[13:16:23.607][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Ears_Mat_Normal.ktx2 id=9
+[13:16:23.609][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Ears_Mat_AO.ktx2 id=10
+[13:16:23.611][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Ears_Mat_Roughness.ktx2 id=11
+[13:16:23.614][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Ears_Mat_Metallic.ktx2 id=12
+[13:16:23.614][info ][ModelLoader.cpp:263] [ModelLoader] mesh Helmet material Spartan_Ear_Mat texture load cost: 18 ms
+[13:16:23.629][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Undersuit_Mat_BaseColor.ktx2 id=13
+[13:16:23.641][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Undersuit_Mat_Specular.ktx2 id=14
+[13:16:23.654][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Undersuit_Mat_Normal.ktx2 id=15
+[13:16:23.664][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Undersuit_Mat_AO.ktx2 id=16
+[13:16:23.676][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Undersuit_Mat_Roughness.ktx2 id=17
+[13:16:23.688][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Undersuit_Mat_Metallic.ktx2 id=18
+[13:16:23.688][info ][ModelLoader.cpp:263] [ModelLoader] mesh Armour_LP material Spartan_Undersuit_Mat texture load cost: 70 ms
+[13:16:23.694][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Chest_Mat_BaseColor.ktx2 id=19
+[13:16:23.699][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Chest_Mat_Specular.ktx2 id=20
+[13:16:23.706][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Chest_Mat_Normal.ktx2 id=21
+[13:16:23.710][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Chest_Mat_AO.ktx2 id=22
+[13:16:23.715][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Chest_Mat_Roughness.ktx2 id=23
+[13:16:23.721][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Chest_Mat_Metallic.ktx2 id=24
+[13:16:23.721][info ][ModelLoader.cpp:263] [ModelLoader] mesh Armour material chest_Mat texture load cost: 31 ms
+[13:16:23.729][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Arms_Mat_BaseColor.ktx2 id=25
+[13:16:23.736][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Arms_Mat_Specular.ktx2 id=26
+[13:16:23.740][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Arms_Mat_Normal.ktx2 id=27
+[13:16:23.743][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Arms_Mat_AO.ktx2 id=28
+[13:16:23.749][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Arms_Mat_Roughness.ktx2 id=29
+[13:16:23.756][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Arms_Mat_Metallic.ktx2 id=30
+[13:16:23.756][info ][ModelLoader.cpp:263] [ModelLoader] mesh Armour material arms_Mat texture load cost: 32 ms
+[13:16:23.764][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Legs_Mat_BaseColor.ktx2 id=31
+[13:16:23.770][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Legs_Mat_Specular.ktx2 id=32
+[13:16:23.775][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Legs_Mat_Normal.ktx2 id=33
+[13:16:23.779][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Legs_Mat_AO.ktx2 id=34
+[13:16:23.785][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Legs_Mat_Roughness.ktx2 id=35
+[13:16:23.790][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/Spartan_Legs_Mat_Metallic.ktx2 id=36
+[13:16:23.790][info ][ModelLoader.cpp:263] [ModelLoader] mesh Armour material Spartan_Legs_Mat texture load cost: 31 ms
+[13:16:23.796][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/ODST_Shoulder_Mat_BaseColor.ktx2 id=37
+[13:16:23.802][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/ODST_Shoulder_Mat_Specular.ktx2 id=38
+[13:16:23.807][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/ODST_Shoulder_Mat_Normal.ktx2 id=39
+[13:16:23.811][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/ODST_Shoulder_Mat_AO.ktx2 id=40
+[13:16:23.815][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/ODST_Shoulder_Mat_Roughness.ktx2 id=41
+[13:16:23.821][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/ODST_Shoulder_Mat_Metallic.ktx2 id=42
+[13:16:23.821][info ][ModelLoader.cpp:263] [ModelLoader] mesh Armour material Spartan_Shoulders_Mat texture load cost: 28 ms
+[13:16:23.826][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/lambert1_Colour-Opacity.ktx2 id=43
+[13:16:23.830][info ][TextureCache.cpp:158] KTX texture loaded: res/model/halo/textures_ktx/lambert1_Roughness.ktx2 id=44
+[13:16:23.830][info ][ModelLoader.cpp:263] [ModelLoader] mesh Armour material lambert1 texture load cost: 8 ms
+[13:16:23.832][info ][ModelLoader.cpp:263] [ModelLoader] mesh polySurface436 material Spartan_Ear_Mat texture load cost: 0 ms
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Floor, MaterialName: lambert2
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Helmet, MaterialName: Spartan_Helmet_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Helmet, MaterialName: Spartan_Ear_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Armour_LP, MaterialName: Spartan_Undersuit_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Armour, MaterialName: chest_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Armour, MaterialName: arms_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Armour, MaterialName: Spartan_Legs_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Armour, MaterialName: Spartan_Shoulders_Mat
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: Armour, MaterialName: lambert1
+[13:16:23.834][debug][Renderer.cpp:209] Renderer::create: mesh name: polySurface436, MaterialName: Spartan_Ear_Mat
+[13:16:23.871][info ][Skybox.cpp:190] Skybox created
+[13:16:23.871][error][Shader.cpp:43] gl error: 0x502
+[13:16:23.896][info ][Renderer.cpp:409] All texture data released.
+[13:16:23.896][info ][Renderer.cpp:231] Renderer::create
+[13:16:26.960][info ][refactor_test.cpp:386] FPS: 61
+[13:16:29.970][info ][refactor_test.cpp:386] FPS: 61
+[13:16:32.986][info ][refactor_test.cpp:386] FPS: 61
+[13:16:35.998][info ][refactor_test.cpp:386] FPS: 61
+```
 ## 2026-4-4 (dell precision 5570, 64GB RAM)
 - total loading time: 2.483s
     - textures: 1.275s

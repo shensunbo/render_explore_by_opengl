@@ -9,6 +9,7 @@ cc_library(
         "//dependency/glm:glm",
         "//dependency/stb:stb",
         "//dependency/glad:glad",
+        "//dependency/ktx:ktx",
     ],
     visibility = ["//visibility:public"],
 )

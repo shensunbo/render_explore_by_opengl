@@ -3,6 +3,14 @@
   "height": 900,
   "resourceRoot": "",
   "modelPath": "res/model/halo/halo.fbx",
+  "skyboxFaces": [
+    "res/model/skybox/px.png",
+    "res/model/skybox/nx.png",
+    "res/model/skybox/py.png",
+    "res/model/skybox/ny.png",
+    "res/model/skybox/pz.png",
+    "res/model/skybox/nz.png"
+  ],
   "vehicleInfoPath": "res/model/halo/vehicle_info.json",
   "vehicleVsPath": "",
   "vehicleFsPath": "",

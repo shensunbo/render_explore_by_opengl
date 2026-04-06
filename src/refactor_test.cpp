@@ -77,7 +77,7 @@ int main()
     Log::init();
     LOG_I("Starting Refactor");
     RendererConfig config{};
-    loadConfigFromJson("res/config/render_config.json", config, toggles);
+    loadConfigFromJson("res/config/render_config_ktx.json", config, toggles);
     // Fallback defaults if config did not set dimensions
     if (config.width == 0) config.width = 1600;
     if (config.height == 0) config.height = 900;
@@ -435,6 +435,14 @@ static void loadConfigFromJson(const std::string& path, RendererConfig& config, 
     get_string("fsPath", config.fsPath);
     get_string("pbrFsPath", config.pbrFsPath);
     get_bool("enableFbo", config.enableFbo);
+
+    // Optional: skybox faces (array of 6 file paths, order: px,nx,py,ny,pz,nz)
+    if (j.contains("skyboxFaces") && j["skyboxFaces"].is_array()) {
+        const auto& arr = j["skyboxFaces"];
+        for (size_t i = 0; i < arr.size() && i < config.skyboxFaces.size(); ++i) {
+            if (arr[i].is_string()) config.skyboxFaces[i] = arr[i].get<std::string>();
+        }
+    }
 
     get_bool("usePbr", toggles.usePbr);
     get_float("exposure", toggles.exposure);
