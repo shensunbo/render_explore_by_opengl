@@ -35,6 +35,7 @@ BufferObjectData::BufferObjectData(std::vector<Vertex> vertices,
 
     // now that we have all the required data, set the vertex buffers and its attribute pointers.
     setupMesh();
+    releaseCpuGeometryData();
 }
 
 BufferObjectData::~BufferObjectData() {
@@ -55,6 +56,8 @@ BufferObjectData& BufferObjectData::operator=(BufferObjectData&& other) noexcept
         meshName = std::move(other.meshName);
         mMaterial = other.mMaterial;
         mUboMat = other.mUboMat;
+        indexCount_ = other.indexCount_;
+        other.indexCount_ = 0;
 
         VAO = other.VAO; other.VAO = 0;
         VBO = other.VBO; other.VBO = 0;
@@ -90,6 +93,8 @@ void BufferObjectData::resetGlHandles(){
 
 void BufferObjectData::setupMesh()
 {
+    indexCount_ = indices.size();
+
     // create buffers/arrays
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -101,10 +106,10 @@ void BufferObjectData::setupMesh()
     // A great thing about structs is that their memory layout is sequential for all its items.
     // The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
     // again translates to 3/2 floats which translates to a byte array.
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);  
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
     // set the vertex attribute pointers
     // vertex Positions
@@ -159,4 +164,9 @@ void BufferObjectData::updateInstanceBuffer(const std::vector<glm::mat4>& matric
                  static_cast<GLsizeiptr>(matrices.size() * sizeof(glm::mat4)),
                  matrices.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void BufferObjectData::releaseCpuGeometryData() {
+    std::vector<Vertex>().swap(vertices);
+    std::vector<unsigned int>().swap(indices);
 }

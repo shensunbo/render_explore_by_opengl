@@ -1,6 +1,53 @@
-# pimpl practice
+# pimpl practice 2026-4-4
 1. ModelLoader
 2. Renderer
+
+# memory usage analysis and optimism 2026-4-11
+## before
+### TOP
+24561 shensun+  20   0 2908200 750700  93952 S 334.7   4.6   7:53.70 refactor_test
+
+### heap track
+```
+total runtime: 57.95s.
+calls to allocation functions: 959512 (16558/s)
+temporary memory allocations: 196971 (3399/s)
+peak heap memory consumption: 737.16M
+peak RSS (including heaptrack overhead): 784.24M
+total memory leaked: 60.98K
+suppressed leaks: 185.76K
+```
+
+## after
+### 结论
+```
+ - RSS/HWM 峰值约 625MB（另一次 smaps_rollup RSS ~673MB，Private_Dirty ~585MB，Anonymous ~579MB）。
+ - heaptrack.after_opt.* 显示应用侧主要峰值：
+ - stbi 纹理解码峰值约 12–19MB（加载期临时）
+ - 模型/纹理上传路径未见大额长期堆占用
+ - 大头在 libgallium + libLLVM（调用栈经 rhi::drawIndexedTrianglesInstanced），说明主要是 Mesa/LLVM
+软件栈（驱动/JIT/缓存）占用，不是你的模型 CPU 副本
+```
+
+> wsl2 上显卡无法使用，使用软件渲染，所以内存占用很大
+```
+glxinfo -B | grep -E "OpenGL renderer|OpenGL version|OpenGL core profile"
+OpenGL renderer string: llvmpipe (LLVM 20.1.2, 256 bits)
+OpenGL core profile version string: 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.1
+OpenGL core profile shading language version string: 4.50
+OpenGL core profile context flags: (none)
+OpenGL core profile profile mask: core profile
+OpenGL version string: 4.5 (Compatibility Profile) Mesa 25.2.8-0ubuntu0.24.04.1
+```
+> 更新GPU驱动，设置`export GALLIUM_DRIVER=d3d12`,解决了这个问题 ✅️
+
+### top
+29815 shensun+  20   0 2905376 678820  93696 S 377.4   4.2   2:22.06 refactor_test
+
+### top GPU acceleration
+` 2701 shensun+  20   0 2578356 267680 117376 S  32.3   1.6   0:29.99 refactor_test`
+
+
 
 # loading time
 ## 2026-4-4 (dell precision 5570, 64GB RAM with ktx textures)

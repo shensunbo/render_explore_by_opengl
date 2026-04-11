@@ -24,6 +24,22 @@ bazel build //src:refactor_test
 bazel build --cxxopt="-g" --strip=never  //src:refactor_test 
 ```
 
+## GPU
+- 在wsl2中默认使用集显进行渲染或者软件模拟渲染,速度很慢，内存占用很大
+```
+glxinfo -B | grep -E "OpenGL renderer"
+OpenGL renderer string: llvmpipe (LLVM 20.1.2, 256 bits)
+```
+
+### 测试使用GPU渲染
+- export GALLIUM_DRIVER=d3d12
+```
+glxinfo -B | grep -E "OpenGL renderer"
+OpenGL renderer string: D3D12 (NVIDIA GeForce GTX 1060)
+```
+- 实测可行，perfect！！！
+` 2701 shensun+  20   0 2578356 267680 117376 S  32.3   1.6   0:29.99 refactor_test`
+
 # NDK build for x86 lib
 ```
 mkdir build

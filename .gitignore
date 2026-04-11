@@ -6,3 +6,5 @@ dump.png
 render_result.raw
 perf/
 log.txt
+heap_track
+heaptrack.refactor_test

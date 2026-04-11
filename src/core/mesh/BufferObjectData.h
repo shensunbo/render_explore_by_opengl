@@ -48,7 +48,7 @@ public:
      * @return Number of indices.
      */
     size_t getIndicesSize() const {
-        return indices.size();
+        return indexCount_;
     }
 
     /**
@@ -76,6 +76,7 @@ public:
 
 private:
     void resetGlHandles();
+    void releaseCpuGeometryData();
 
     /**
      * @brief Initializes all OpenGL buffer objects and attribute pointers for the mesh.
@@ -93,6 +94,7 @@ public:
     UboMat mUboMat{};
 
 private:
+    size_t indexCount_{0};
 
     GLuint VBO{0};
     GLuint EBO{0};

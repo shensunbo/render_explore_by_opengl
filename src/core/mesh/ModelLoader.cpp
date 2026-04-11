@@ -137,6 +137,7 @@ BufferObjectData ModelLoader::Impl::processMesh(aiMesh *mesh, const aiScene *sce
     // glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(translationMatrix);
 
     // walk through each of the mesh's vertices
+    vertices.reserve(mesh->mNumVertices);
     for(unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
@@ -203,9 +204,10 @@ BufferObjectData ModelLoader::Impl::processMesh(aiMesh *mesh, const aiScene *sce
     }
 
     // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+    indices.reserve(mesh->mNumFaces * 3);
     for(unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
-        aiFace face = mesh->mFaces[i];
+        const aiFace& face = mesh->mFaces[i];
         // retrieve all indices of the face and store them in the indices vector
         for(unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);        
@@ -646,4 +648,3 @@ std::vector<Texture> ModelLoader::Impl::LoadTextures(aiMaterial* mat,
 
     return textures;
 }
-
