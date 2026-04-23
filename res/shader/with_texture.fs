@@ -87,9 +87,10 @@ void main()
             realMaterialDiffuseColor = texture(texture_diffuse, index).rgb;
         }
 
-        if(material.texture_specular_load != 0 && enableSpecularTex){
-            realShininess = texture(texture_specular, index).r * 128.0;
-        }
+        // TODO: make result dark
+        // if(material.texture_specular_load != 0 && enableSpecularTex){
+        //     realShininess = texture(texture_specular, index).r * 128.0;
+        // }
 
         if(material.texture_ao_load != 0 && enableAOTex){
             diffCoef = texture(texture_ao, index).r;
@@ -145,7 +146,8 @@ void main()
     // with roughness
     // vec3 resultColor = diffuse  + (specular + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
     vec3 baseAmbient = realMaterialDiffuseColor * 0.05;
-    vec3 resultColor = diffuse * attenuation + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness) + baseAmbient;
+    // vec3 resultColor = diffuse * attenuation + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness) + baseAmbient;
+    vec3 resultColor = diffuse * attenuation + (specular * attenuation + realAmbientColor * realMaterialDiffuseColor) * (1.0 - roughness);
     // vec3 resultColor = diffuse  + (specular) * (1.0 - roughness);
 
 
@@ -154,7 +156,7 @@ void main()
     resultColor = diffCoef * resultColor;
 
     // 测试镜面反射
-    // resultColor = specular;
+    // resultColor = baseAmbient;
 
     // 测试AO贴图效果
     // resultColor = vec3(diffCoef);
