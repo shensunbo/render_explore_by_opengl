@@ -1,6 +1,6 @@
 {
     "vehicleName": "halo",
-    "format": "fbx",
+    "format": "glb",
 
     "texture":{
         "diffuse":{

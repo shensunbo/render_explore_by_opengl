@@ -1,64 +1,180 @@
 #include "ModelLoader.h"
 #include "gl/gl_headers.h"
-#include <stb_image.h>
-#include <ktx.h>
 #include <string>
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include <vector>
+#include <algorithm>
+#include <chrono>
+
+// tinygltf — implementation compiled separately in tinygltf_impl.cc
+#include "tiny_gltf.h"
+
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "BufferObjectData.h"
 #include "log/mylog.h"
-#include "shader/Shader.h"
 #include "texture/TextureCache.h"
+
+// ---- static helpers ------------------------------------------------
+
+static glm::mat4 GetNodeLocalTransform(const tinygltf::Node& node) {
+    if (node.matrix.size() == 16) {
+        // Column-major matrix stored directly in glTF
+        return glm::make_mat4(node.matrix.data());
+    }
+    glm::mat4 T(1.0f), R(1.0f), S(1.0f);
+    if (node.translation.size() == 3) {
+        T = glm::translate(glm::mat4(1.0f),
+                           glm::vec3((float)node.translation[0],
+                                     (float)node.translation[1],
+                                     (float)node.translation[2]));
+    }
+    if (node.rotation.size() == 4) {
+        // glTF stores [x, y, z, w]; glm::quat ctor takes (w, x, y, z)
+        glm::quat q((float)node.rotation[3],
+                    (float)node.rotation[0],
+                    (float)node.rotation[1],
+                    (float)node.rotation[2]);
+        R = glm::mat4_cast(q);
+    }
+    if (node.scale.size() == 3) {
+        S = glm::scale(glm::mat4(1.0f),
+                       glm::vec3((float)node.scale[0],
+                                 (float)node.scale[1],
+                                 (float)node.scale[2]));
+    }
+    return T * R * S;
+}
+
+static std::vector<glm::vec3> ReadVec3Accessor(const tinygltf::Model& model, int idx) {
+    const auto& acc = model.accessors[idx];
+    const auto& bv  = model.bufferViews[acc.bufferView];
+    const auto& buf = model.buffers[bv.buffer];
+    const uint8_t* base = buf.data.data() + bv.byteOffset + acc.byteOffset;
+    size_t stride = bv.byteStride > 0 ? bv.byteStride : sizeof(float) * 3;
+    std::vector<glm::vec3> out;
+    out.reserve(acc.count);
+    for (size_t i = 0; i < acc.count; ++i) {
+        const float* f = reinterpret_cast<const float*>(base + i * stride);
+        out.push_back({f[0], f[1], f[2]});
+    }
+    return out;
+}
+
+static std::vector<glm::vec4> ReadVec4Accessor(const tinygltf::Model& model, int idx) {
+    const auto& acc = model.accessors[idx];
+    const auto& bv  = model.bufferViews[acc.bufferView];
+    const auto& buf = model.buffers[bv.buffer];
+    const uint8_t* base = buf.data.data() + bv.byteOffset + acc.byteOffset;
+    size_t stride = bv.byteStride > 0 ? bv.byteStride : sizeof(float) * 4;
+    std::vector<glm::vec4> out;
+    out.reserve(acc.count);
+    for (size_t i = 0; i < acc.count; ++i) {
+        const float* f = reinterpret_cast<const float*>(base + i * stride);
+        out.push_back({f[0], f[1], f[2], f[3]});
+    }
+    return out;
+}
+
+static std::vector<glm::vec2> ReadTexCoordAccessor(const tinygltf::Model& model, int idx) {
+    const auto& acc = model.accessors[idx];
+    const auto& bv  = model.bufferViews[acc.bufferView];
+    const auto& buf = model.buffers[bv.buffer];
+    const uint8_t* base = buf.data.data() + bv.byteOffset + acc.byteOffset;
+    std::vector<glm::vec2> out;
+    out.reserve(acc.count);
+    if (acc.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) {
+        size_t stride = bv.byteStride > 0 ? bv.byteStride : sizeof(float) * 2;
+        for (size_t i = 0; i < acc.count; ++i) {
+            const float* f = reinterpret_cast<const float*>(base + i * stride);
+            out.push_back({f[0], f[1]});
+        }
+    } else if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE) {
+        size_t stride = bv.byteStride > 0 ? bv.byteStride : 2;
+        for (size_t i = 0; i < acc.count; ++i) {
+            const uint8_t* p = base + i * stride;
+            out.push_back({p[0] / 255.0f, p[1] / 255.0f});
+        }
+    } else if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
+        size_t stride = bv.byteStride > 0 ? bv.byteStride : 4;
+        for (size_t i = 0; i < acc.count; ++i) {
+            const uint16_t* p = reinterpret_cast<const uint16_t*>(base + i * stride);
+            out.push_back({p[0] / 65535.0f, p[1] / 65535.0f});
+        }
+    }
+    return out;
+}
+
+static std::vector<unsigned int> ReadIndices(const tinygltf::Model& model, int idx) {
+    const auto& acc = model.accessors[idx];
+    const auto& bv  = model.bufferViews[acc.bufferView];
+    const auto& buf = model.buffers[bv.buffer];
+    const uint8_t* base = buf.data.data() + bv.byteOffset + acc.byteOffset;
+    std::vector<unsigned int> out;
+    out.reserve(acc.count);
+    if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
+        for (size_t i = 0; i < acc.count; ++i)
+            out.push_back(reinterpret_cast<const uint32_t*>(base)[i]);
+    } else if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
+        for (size_t i = 0; i < acc.count; ++i)
+            out.push_back(reinterpret_cast<const uint16_t*>(base)[i]);
+    } else if (acc.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE) {
+        for (size_t i = 0; i < acc.count; ++i)
+            out.push_back(base[i]);
+    }
+    return out;
+}
+
+// ---- Impl ----------------------------------------------------------
 
 struct ModelLoader::Impl {
     std::vector<Texture> m_textures_loaded;
-    std::string directory;
 
-    bool LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
-                                        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
-                                        TextureCache& textureCache);
-    void processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, 
-        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
-    
-    BufferObjectData processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4& translationMatrix, 
-        ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache);
-    
-    myMaterial loadMaterial(aiMaterial* mat);
-    
-    unsigned int TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData);
-    unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma);
-    unsigned int TextureFromKTXFile(const char *path, const std::string &directory);
-    std::vector<Texture> LoadTextures(aiMaterial* mat,
-                                        aiTextureType type,
-                                        const char* typeName,
-                                        std::string meshName,
-                                        ConfigParser& vehInfo,
-                                        const std::unordered_map<std::string, imageParam>& textureData,
-                                        TextureCache& textureCache);
-    
-    glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4& from) {
-        glm::mat4 to;
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                to[i][j] =
-                    from[j][i];  // Transpose matrix by swapping rows and columns
-            }
-        }
-        return to;
-    }
+    bool LoadModel(const std::string& resPath,
+                   std::vector<BufferObjectData>& meshInfo,
+                   ConfigParser& vehInfo,
+                   const std::unordered_map<std::string, imageParam>& textureData,
+                   TextureCache& textureCache);
 
+    void ProcessNode(const tinygltf::Model& model,
+                     int nodeIdx,
+                     const glm::mat4& parentTransform,
+                     std::vector<BufferObjectData>& meshInfo,
+                     ConfigParser& vehInfo,
+                     const std::unordered_map<std::string, imageParam>& textureData,
+                     TextureCache& textureCache);
+
+    void ProcessPrimitive(const tinygltf::Model& model,
+                          const tinygltf::Primitive& prim,
+                          const glm::mat4& worldTransform,
+                          const std::string& meshName,
+                          const tinygltf::Material& mat,
+                          int matIndex,
+                          std::vector<BufferObjectData>& meshInfo,
+                          ConfigParser& vehInfo,
+                          const std::unordered_map<std::string, imageParam>& textureData,
+                          TextureCache& textureCache);
+
+    std::vector<Texture> LoadTexturesByConfig(
+        const std::string& meshName,
+        const std::string& matName,
+        ConfigParser& vehInfo,
+        const std::unordered_map<std::string, imageParam>& textureData,
+        TextureCache& textureCache);
+
+    Texture LoadSingleTexture(const std::string& textureName,
+                               unsigned int bindId,
+                               const char* typeName,
+                               const std::unordered_map<std::string, imageParam>& textureData,
+                               TextureCache& textureCache,
+                               bool isSrgb);
+
+    myMaterial BuildMaterial(const tinygltf::Material& mat, int matIndex);
 };
 
-/*
- * use the Pimpl idiom to hide implementation details and reduce compile-time dependencies.
- * The ModelLoader class provides a clean interface for loading models, while the Impl class contains the actual implementation logic. This separation allows for easier maintenance and potential future enhancements without affecting the public interface.
- */
+// ---- public interface ----------------------------------------------
 
 ModelLoader::ModelLoader() : pImpl_(std::make_unique<Impl>()) {}
 ModelLoader::~ModelLoader() = default;
@@ -71,580 +187,291 @@ bool ModelLoader::LoadModel(const std::string& resPath,
     return pImpl_->LoadModel(resPath, meshInfo, cfgInfo, textureData, textureCache);
 }
 
+// ---- Impl definitions ----------------------------------------------
 
-/*
- * impl definitions ************************************
- */
+bool ModelLoader::Impl::LoadModel(const std::string& resPath,
+                                  std::vector<BufferObjectData>& meshInfo,
+                                  ConfigParser& vehInfo,
+                                  const std::unordered_map<std::string, imageParam>& textureData,
+                                  TextureCache& textureCache) {
+    tinygltf::TinyGLTF loader;
+    // No-op image loader: textures are supplied via ConfigParser/TextureCache, not embedded.
+    loader.SetImageLoader(
+        [](tinygltf::Image*, const int, std::string*, std::string*,
+           int, int, const unsigned char*, int, void*) -> bool { return true; },
+        nullptr);
 
-bool ModelLoader::Impl::LoadModel(const std::string& resPath, std::vector<BufferObjectData>& meshInfo, 
-                                    ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData,
-                                    TextureCache& textureCache){
-    // read file via ASSIMP
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(resPath, aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_ValidateDataStructure);
-    // check for errors
-    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
-    {
-        LOG_E("ASSIMP error: {}, ", importer.GetErrorString());
+    tinygltf::Model model;
+    std::string err, warn;
+    bool ok = loader.LoadBinaryFromFile(&model, &err, &warn, resPath);
+    if (!warn.empty()) LOG_W("[ModelLoader] {}", warn);
+    if (!ok) {
+        LOG_E("[ModelLoader] Failed to load GLB: {} — {}", resPath, err);
         return false;
     }
 
-    // process ASSIMP's root node recursively
-    processNode(scene->mRootNode, scene, meshInfo, vehInfo, textureData, textureCache);
+    LOG_I("[ModelLoader] GLB loaded: {} mesh(es), {} material(s), {} node(s)",
+          model.meshes.size(), model.materials.size(), model.nodes.size());
 
+    if (model.scenes.empty()) {
+        LOG_E("[ModelLoader] No scenes in {}", resPath);
+        return false;
+    }
+    int sceneIdx = model.defaultScene >= 0 ? model.defaultScene : 0;
+    for (int nodeIdx : model.scenes[sceneIdx].nodes) {
+        ProcessNode(model, nodeIdx, glm::mat4(1.0f), meshInfo, vehInfo, textureData, textureCache);
+    }
     return true;
 }
 
-  // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-void ModelLoader::Impl::processNode(aiNode *node, const aiScene *scene, std::vector<BufferObjectData>& meshInfo, 
-    ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache)
-{
-    aiMatrix4x4 mTransformation = node->mTransformation;
+void ModelLoader::Impl::ProcessNode(const tinygltf::Model& model,
+                                    int nodeIdx,
+                                    const glm::mat4& parentTransform,
+                                    std::vector<BufferObjectData>& meshInfo,
+                                    ConfigParser& vehInfo,
+                                    const std::unordered_map<std::string, imageParam>& textureData,
+                                    TextureCache& textureCache) {
+    const tinygltf::Node& node = model.nodes[nodeIdx];
+    const glm::mat4 world = parentTransform * GetNodeLocalTransform(node);
 
-    aiNode* parent = node->mParent;
-    while (parent) {
-        mTransformation = parent->mTransformation * mTransformation;
-        parent = parent->mParent;
+    if (node.mesh >= 0) {
+        const tinygltf::Mesh& mesh = model.meshes[node.mesh];
+        // Use node name for config lookup so it matches the original FBX/OBJ naming.
+        // Blender GLB export preserves node names while Assimp would append "-0", "-1"
+        // suffixes for multi-primitive meshes, which broke config lookups.
+        const std::string meshName = !node.name.empty() ? node.name : mesh.name;
+
+        for (const auto& prim : mesh.primitives) {
+            if (prim.mode != TINYGLTF_MODE_TRIANGLES) continue;
+            if (prim.material < 0 || prim.material >= (int)model.materials.size()) continue;
+            const tinygltf::Material& mat = model.materials[prim.material];
+            ProcessPrimitive(model, prim, world, meshName, mat, prim.material,
+                             meshInfo, vehInfo, textureData, textureCache);
+        }
     }
 
-    glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(mTransformation);
-
-    // process each mesh located at the current node
-    for(unsigned int i = 0; i < node->mNumMeshes; i++)
-    {
-        // the node object only contains indices to index the actual objects in the scene. 
-        // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-    meshInfo.push_back(processMesh(mesh, scene, glmTranslationMatrix, vehInfo, textureData, textureCache));
+    for (int child : node.children) {
+        ProcessNode(model, child, world, meshInfo, vehInfo, textureData, textureCache);
     }
-    // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-    for(unsigned int i = 0; i < node->mNumChildren; i++)
-    {
-        processNode(node->mChildren[i], scene, meshInfo, vehInfo, textureData, textureCache);
-    }
-
 }
 
+void ModelLoader::Impl::ProcessPrimitive(const tinygltf::Model& model,
+                                          const tinygltf::Primitive& prim,
+                                          const glm::mat4& worldTransform,
+                                          const std::string& meshName,
+                                          const tinygltf::Material& mat,
+                                          int matIndex,
+                                          std::vector<BufferObjectData>& meshInfo,
+                                          ConfigParser& vehInfo,
+                                          const std::unordered_map<std::string, imageParam>& textureData,
+                                          TextureCache& textureCache) {
+    // ---- positions ----
+    auto posIt = prim.attributes.find("POSITION");
+    if (posIt == prim.attributes.end()) {
+        LOG_W("[ModelLoader] Primitive in mesh '{}' has no POSITION — skipped", meshName);
+        return;
+    }
+    auto positions = ReadVec3Accessor(model, posIt->second);
+    std::vector<Vertex> vertices(positions.size());
+    for (size_t i = 0; i < positions.size(); ++i) {
+        glm::vec4 p = worldTransform * glm::vec4(positions[i], 1.0f);
+        vertices[i].Position  = glm::vec3(p);
+        vertices[i].Normal    = glm::vec3(0.0f, 1.0f, 0.0f);
+        vertices[i].TexCoords = glm::vec2(0.0f);
+        vertices[i].Tangent   = glm::vec3(0.0f);
+        vertices[i].Bitangent = glm::vec3(0.0f);
+    }
 
-BufferObjectData ModelLoader::Impl::processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4& translationMatrix, 
-    ConfigParser& vehInfo, const std::unordered_map<std::string, imageParam>& textureData, TextureCache& textureCache)
-{
-    // data to fill
-    std::vector<Vertex> vertices;
+    // ---- normals ----
+    auto normIt = prim.attributes.find("NORMAL");
+    if (normIt != prim.attributes.end()) {
+        auto normals = ReadVec3Accessor(model, normIt->second);
+        for (size_t i = 0; i < normals.size() && i < vertices.size(); ++i)
+            vertices[i].Normal = normals[i];
+    }
+
+    // ---- texcoords (flip V for OpenGL top-left → bottom-left) ----
+    auto uvIt = prim.attributes.find("TEXCOORD_0");
+    if (uvIt != prim.attributes.end()) {
+        auto uvs = ReadTexCoordAccessor(model, uvIt->second);
+        for (size_t i = 0; i < uvs.size() && i < vertices.size(); ++i)
+            vertices[i].TexCoords = glm::vec2(uvs[i].x, 1.0f - uvs[i].y);
+    }
+
+    // ---- tangents (VEC4: xyz = tangent, w = handedness) ----
+    auto tanIt = prim.attributes.find("TANGENT");
+    if (tanIt != prim.attributes.end()) {
+        auto tangents = ReadVec4Accessor(model, tanIt->second);
+        for (size_t i = 0; i < tangents.size() && i < vertices.size(); ++i) {
+            vertices[i].Tangent   = glm::vec3(tangents[i]);
+            vertices[i].Bitangent = glm::cross(vertices[i].Normal,
+                                                glm::vec3(tangents[i])) * tangents[i].w;
+        }
+    } else {
+        LOG_I("[ModelLoader] {} — no TANGENT attribute, will compute from geometry", meshName);
+    }
+
+    // ---- indices ----
     std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
+    if (prim.indices >= 0)
+        indices = ReadIndices(model, prim.indices);
 
-    // glm::mat4 glmTranslationMatrix = aiMatrix4x4ToGlm(translationMatrix);
-
-    // walk through each of the mesh's vertices
-    vertices.reserve(mesh->mNumVertices);
-    for(unsigned int i = 0; i < mesh->mNumVertices; i++)
-    {
-        Vertex vertex;
-        glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-        // positions
-        vector.x = mesh->mVertices[i].x;
-        vector.y = mesh->mVertices[i].y;
-        vector.z = mesh->mVertices[i].z;
-        vertex.Position = vector;
-        // normals
-        if (mesh->HasNormals())
-        {
-            vector.x = mesh->mNormals[i].x;
-            vector.y = mesh->mNormals[i].y;
-            vector.z = mesh->mNormals[i].z;
-            vertex.Normal = vector;
+    // ---- compute tangent basis when not provided (prevents NaN in shader) ----
+    if (tanIt == prim.attributes.end() && !indices.empty()) {
+        std::vector<glm::vec3> accum_t(vertices.size(), glm::vec3(0.0f));
+        std::vector<glm::vec3> accum_b(vertices.size(), glm::vec3(0.0f));
+        for (size_t i = 0; i + 2 < indices.size(); i += 3) {
+            const uint32_t i0 = indices[i], i1 = indices[i + 1], i2 = indices[i + 2];
+            const glm::vec3 dp1 = vertices[i1].Position - vertices[i0].Position;
+            const glm::vec3 dp2 = vertices[i2].Position - vertices[i0].Position;
+            const glm::vec2 duv1 = vertices[i1].TexCoords - vertices[i0].TexCoords;
+            const glm::vec2 duv2 = vertices[i2].TexCoords - vertices[i0].TexCoords;
+            const float det = duv1.x * duv2.y - duv1.y * duv2.x;
+            if (std::abs(det) < 1e-8f) continue;
+            const float r = 1.0f / det;
+            const glm::vec3 t = (dp1 * duv2.y - dp2 * duv1.y) * r;
+            const glm::vec3 b = (dp2 * duv1.x - dp1 * duv2.x) * r;
+            accum_t[i0] += t; accum_t[i1] += t; accum_t[i2] += t;
+            accum_b[i0] += b; accum_b[i1] += b; accum_b[i2] += b;
         }
-        // texture coordinates
-        if(mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
-        {
-            glm::vec2 vec;
-            // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't 
-            // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
-            vec.x = mesh->mTextureCoords[0][i].x; 
-            vec.y = mesh->mTextureCoords[0][i].y;
-            vertex.TexCoords = vec;
-           
-        }
-        else{
-            vertex.TexCoords = glm::vec2(0.0f, 0.0f);
-        }
-
-        if (mesh->HasTangentsAndBitangents()) {
-            // tangent
-            vector.x = mesh->mTangents[i].x;
-            vector.y = mesh->mTangents[i].y;
-            vector.z = mesh->mTangents[i].z;
-            vertex.Tangent = vector;
-            // bitangent
-            vector.x = mesh->mBitangents[i].x;
-            vector.y = mesh->mBitangents[i].y;
-            vector.z = mesh->mBitangents[i].z;
-            vertex.Bitangent = vector;
-        } else {
-            // tangent
-            vertex.Tangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            // bitangent
-            vertex.Bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
-            LOG_I("{} No TangentsAndBitangents", mesh->mName.C_Str());
-        }
-
-        vertices.push_back(vertex);
-    }
-
-    for (unsigned int i = 0; i < vertices.size(); i++) {
-        Vertex& vertex = vertices[i];
-
-        glm::vec4 position =
-            glm::vec4(vertex.Position, 1.0f);  // Convert to homogeneous coordinates.
-        position = translationMatrix * position;
-
-        // Update vertex position after transform.
-        vertex.Position = glm::vec3(position.x, position.y, position.z);
-    }
-
-    // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
-    indices.reserve(mesh->mNumFaces * 3);
-    for(unsigned int i = 0; i < mesh->mNumFaces; i++)
-    {
-        const aiFace& face = mesh->mFaces[i];
-        // retrieve all indices of the face and store them in the indices vector
-        for(unsigned int j = 0; j < face.mNumIndices; j++)
-            indices.push_back(face.mIndices[j]);        
-    }
-    // process materials
-    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];    
-
-    // texture_diffuse:  0
-    // texture_specular: 1
-    // texture_normal:   2
-    // texture_ao:       3
-    // texture_alpha:    4
-    // texture_roughness:5
-    // texture_metallic: 6
-    if(vehInfo.needTexture(std::string(mesh->mName.C_Str()), material->GetName().C_Str())){
-        auto start_time = std::chrono::high_resolution_clock::now();
-
-        std::vector<Texture> diffuseMaps =
-            LoadTextures(material, aiTextureType_DIFFUSE, "texture_diffuse",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-        std::vector<Texture> specularMaps =
-            LoadTextures(material, aiTextureType_SPECULAR, "texture_specular",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-        std::vector<Texture> normalMaps =
-            LoadTextures(material, aiTextureType_NORMALS, "texture_normal",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-
-        std::vector<Texture> aoMaps =
-            LoadTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_ao",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
-
-        std::vector<Texture> alphaMaps =
-            LoadTextures(material, aiTextureType_OPACITY, "texture_alpha",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), alphaMaps.begin(), alphaMaps.end());
-
-        std::vector<Texture> roughnessMaps =
-            LoadTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
-
-        std::vector<Texture> metallicMaps =
-            LoadTextures(material, aiTextureType_METALNESS, "texture_metallic",
-                         std::string(mesh->mName.C_Str()), vehInfo, textureData, textureCache);
-        textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
-
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        LOG_I("[ModelLoader] mesh {} material {} texture load cost: {} ms", mesh->mName.C_Str(), material->GetName().C_Str(), cost);
-    }
-
-    myMaterial mMaterial;
-    mMaterial = loadMaterial(material);
-    mMaterial.MaterialIndex = mesh->mMaterialIndex;
-
-    std::string meshName = std::string(mesh->mName.C_Str());
-    
-    // return a mesh object created from the extracted mesh data
-    return BufferObjectData(vertices, indices, textures, mMaterial, meshName);
-}
-
-myMaterial ModelLoader::Impl::loadMaterial(aiMaterial* mat)
-{
-    // Sensible defaults so texture-less materials still render visibly.
-    myMaterial material = {};
-    material.diffuseColor = glm::vec3(0.8f);
-    material.specularColor = glm::vec3(0.2f);
-    material.ambientColor = glm::vec3(0.05f);
-    material.shininess = 32.0f;
-
-    aiColor3D diffuseColor;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor)) {
-        material.diffuseColor = glm::vec3(diffuseColor.r, diffuseColor.g, diffuseColor.b);
-    }
-
-    aiColor3D specularColor;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, specularColor)) {
-        material.specularColor = glm::vec3(specularColor.r, specularColor.g, specularColor.b);
-    }
-
-    aiColor3D ambientColor;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor)) {
-        material.ambientColor = glm::vec3(ambientColor.r, ambientColor.g, ambientColor.b);
-    }
-
-    float shininess;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess)) {
-        material.shininess = shininess;
-    }
-
-    float opacity = 1.0f;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_OPACITY, opacity)) {
-        material.Opacity = opacity;
-    }
-
-    float transparencyFactor = 1.0f;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_TRANSPARENCYFACTOR, transparencyFactor)) {
-        material.TransparencyFactor = 1.0f - transparencyFactor;
-    }
-
-    float shininessStrength = 1.0f;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS_STRENGTH, shininessStrength)) {
-        material.ShininessStrength = 1.0f - shininessStrength;
-    }
-
-    aiColor3D transparentColor;
-    if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_TRANSPARENT, transparentColor)) {
-        material.TransparentColor = glm::vec3(transparentColor.r, transparentColor.g, transparentColor.b);
-    }
-
-    // int shadingModel;
-    // if (AI_SUCCESS == mat->Get(AI_MATKEY_SHADING_MODEL, shadingModel)) {
-    //     if (shadingModel == aiShadingMode_Phong) {
-    //         // Use Phong shading model.
-    //     } else if (shadingModel == aiShadingMode_Gouraud) {
-    //         // Use Gouraud shading model.
-    //     }
-    // }
-
-    material.MaterialName = std::string(mat->GetName().C_Str());
-
-    return material;
-}
-
-unsigned int ModelLoader::Impl::TextureFromBuffer(const std::string& path, const std::unordered_map<std::string, imageParam>& textureData){
-    // Retrieve preloaded texture data from the in-memory map.
-    auto it = textureData.find(path);
-    if (it == textureData.end()) {
-        LOG_E("Texture data not found in buffer: {}", path);
-        assert(false);
-        return 0;
-    }
-
-    const imageParam& imgData = it->second;
-    
-    // Ensure the texture payload is valid.
-    if (!imgData.data) {
-        LOG_E("Texture data is null for path: {}", path);
-        assert(false);
-        return 0;
-    }
-
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    GLenum format;
-    if (imgData.nrChannels == 1)
-        format = GL_RED;
-    else if (imgData.nrChannels == 3)
-        format = GL_RGB;
-    else if (imgData.nrChannels == 4)
-        format = GL_RGBA;
-    else {
-        LOG_E("Unsupported channel count {} for texture: {}", imgData.nrChannels, path);
-        return 0;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, imgData.width, imgData.height, 0, format, GL_UNSIGNED_BYTE, imgData.data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    LOG_I("Texture created from buffer: {}, {}x{}, channels: {}", path, imgData.width, imgData.height, imgData.nrChannels);
-
-    return textureID;
-}
-
-unsigned int ModelLoader::Impl::TextureFromFile(const char *path, const std::string &directory, bool gamma)
-{
-    std::string filename = std::string(path);
-    filename = directory + '/' + filename;
-
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-    if (data)
-    {
-    // TODO: Shader path cannot distinguish single-channel from multi-channel textures.
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-
-        LOG_I("Texture loaded at path: {}, channels: {}", path, nrComponents);
-    }
-    else
-    {
-        LOG_E("Texture failed to load at path: {}", path);
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
-unsigned int ModelLoader::Impl::TextureFromKTXFile(const char *path, const std::string &directory)
-{
-    auto total_start = std::chrono::high_resolution_clock::now();
-    
-    std::string filename = std::string(path);
-    filename = directory + '/' + filename;
-
-    LOG_I("Loading KTX texture: {}", filename);
-    
-    auto load_start = std::chrono::high_resolution_clock::now();
-    ktxTexture* texture = nullptr;
-    KTX_error_code result = ktxTexture_CreateFromNamedFile(filename.c_str(),
-                                                            KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
-                                                            &texture);
-    auto load_end = std::chrono::high_resolution_clock::now();
-    auto load_cost = std::chrono::duration_cast<std::chrono::milliseconds>(load_end - load_start).count();
-    
-    if (result != KTX_SUCCESS) {
-        LOG_E("Failed to load KTX file: {}, error: {}", filename, ktxErrorString(result));
-        return 0;
-    }
-    
-    LOG_I("KTX file read cost: {} ms - Dimensions: {}x{}, Levels: {}, Layers: {}, Faces: {}", load_cost, texture->baseWidth, texture->baseHeight, texture->numLevels, texture->numLayers, texture->numFaces);
-    
-    GLuint textureID = 0;  // Initialize texture handle.
-    GLenum target = 0;     // Initialize target placeholder.
-    GLenum glerror = GL_NO_ERROR;  // Initialize GL error placeholder.
-    
-    // Upload to OpenGL; ktxTexture_GLUpload creates the texture and fills data.
-    auto upload_start = std::chrono::high_resolution_clock::now();
-    result = ktxTexture_GLUpload(texture, &textureID, &target, &glerror);
-    auto upload_end = std::chrono::high_resolution_clock::now();
-    auto upload_cost = std::chrono::duration_cast<std::chrono::milliseconds>(upload_end - upload_start).count();
-    
-    if (result != KTX_SUCCESS) {
-        LOG_E("Failed to upload KTX texture to OpenGL: {}", ktxErrorString(result));
-        if (glerror != GL_NO_ERROR) {
-            LOG_E("OpenGL error during upload: {:#x}", glerror);
-        }
-        ktxTexture_Destroy(texture);
-        return 0;
-    }
-    
-    // Check for GL errors reported by ktxTexture_GLUpload.
-    if (glerror != GL_NO_ERROR) {
-        LOG_E("GL error reported by ktxTexture_GLUpload: {:#x}", glerror);
-        ktxTexture_Destroy(texture);
-        return 0;
-    }
-    
-    LOG_I("KTX GPU upload cost: {} ms - Texture ID: {}, Target: {:#x}", upload_cost, textureID, target);
-    
-    // Validate the returned texture ID.
-    GLboolean isTexture = glIsTexture(textureID);
-    if (!isTexture) {
-        LOG_E("ktxTexture_GLUpload returned invalid texture ID: {}", textureID);
-        ktxTexture_Destroy(texture);
-        return 0;
-    }
-    
-    // Inspect GL error state after upload.
-    GLenum err1 = glGetError();
-    if (err1 != GL_NO_ERROR) {
-        LOG_E("GL error after ktxTexture_GLUpload: {:#x}", err1);
-    }
-    
-    // Configure texture sampling parameters.
-    auto param_start = std::chrono::high_resolution_clock::now();
-    glBindTexture(target, textureID);
-    GLenum err2 = glGetError();
-    if (err2 != GL_NO_ERROR) {
-        LOG_E("GL error after glBindTexture: {:#x}", err2);
-    }
-    
-    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    GLenum err3 = glGetError();
-    if (err3 != GL_NO_ERROR) {
-        LOG_E("GL error after glTexParameteri: {:#x}", err3);
-    }
-    
-    glBindTexture(target, 0);
-    auto param_end = std::chrono::high_resolution_clock::now();
-    auto param_cost = std::chrono::duration_cast<std::chrono::milliseconds>(param_end - param_start).count();
-
-    ktxTexture_Destroy(texture);
-
-    CHECK_GLES_STATUS();
-    
-    auto total_end = std::chrono::high_resolution_clock::now();
-    auto total_cost = std::chrono::duration_cast<std::chrono::milliseconds>(total_end - total_start).count();
-    
-    LOG_I("KTX total cost: {} ms (read: {}, upload: {}, param: {})", total_cost, load_cost, upload_cost, param_cost);
-    
-    return textureID;
-}
-
-/**
- * Load textures when the model file does not contain any textures
- *
- * Texture types:
- *   - 0: texture_diffuse
- *   - 1: texture_specular
- *   - 2: texture_normal
- *   - 3: texture_ao
- *   - 4: texture_alpha
- *   - 5: texture_roughness
- *   - 6: texture_metallic
- *
- * @note typename will be used to bind the texture to the shader
- */
-std::vector<Texture> ModelLoader::Impl::LoadTextures(aiMaterial* mat,
-                                                    aiTextureType type,
-                                                    const char* typeName,
-                                                    std::string meshName,
-                                                    ConfigParser& vehInfo,
-                                                    const std::unordered_map<std::string, imageParam>& textureData,
-                                                    TextureCache& textureCache) {
-    std::vector<Texture> textures;
-    bool skip = false;
-    std::string INVALID_TEXTURE_NAME = "";
-    std::string textureName = INVALID_TEXTURE_NAME;
-    unsigned int texId = 0;
-    switch (type) {
-        case aiTextureType_DIFFUSE:
-            texId = 0;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).diffuse;
-            break;
-        case aiTextureType_SPECULAR:
-            texId = 1;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).specular;
-            break;
-        case aiTextureType_NORMALS:
-            texId = 2;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).normal;
-            break;
-        case aiTextureType_AMBIENT_OCCLUSION:
-            texId = 3;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).ao;
-            break;
-        case aiTextureType_OPACITY:
-            texId = 4;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).alpha;
-            break;
-        case aiTextureType_DIFFUSE_ROUGHNESS:
-            texId = 5;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).roughness;
-            break;
-        case aiTextureType_METALNESS:
-            texId = 6;
-            textureName =
-                vehInfo.getTextureData(meshName, mat->GetName().C_Str()).metallic;
-            break;
-        default:
-            textureName = INVALID_TEXTURE_NAME;
-            LOG_E("couldn't load typeName {} for mesh {} ", typeName, meshName);
-            break;
-    }
-
-    if (textureName != INVALID_TEXTURE_NAME) {
-        for (unsigned int j = 0; j < m_textures_loaded.size(); j++) {
-            if (std::strcmp(m_textures_loaded[j].path.data(),
-                            textureName.c_str()) == 0) {
-                textures.push_back(m_textures_loaded[j]);
-                skip =
-                    true;  // a texture with the same filepath has already been
-                           // loaded, continue to next one. (optimization)
-                break;
-            }
-        }
-        if(!skip)
-        {   // if texture hasn't been loaded already, load it
-            Texture texture;
-
-            // Dispatch to KTX or stb path based on file extension.
-            auto endsWithKtx = [](const std::string& p) {
-                if (p.size() >= 5 &&
-                    (p.compare(p.size()-5, 5, ".ktx2") == 0 ||
-                     p.compare(p.size()-5, 5, ".KTX2") == 0))
-                    return true;
-                if (p.size() >= 4 &&
-                    (p.compare(p.size()-4, 4, ".ktx") == 0 ||
-                     p.compare(p.size()-4, 4, ".KTX") == 0))
-                    return true;
-                return false;
-            };
-
-            if (endsWithKtx(textureName)) {
-                texture.id = textureCache.getOrCreateKtx(textureName);
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const glm::vec3& n = vertices[i].Normal;
+            const glm::vec3& t = accum_t[i];
+            if (glm::dot(t, t) < 1e-8f) {
+                // Degenerate UV island — build arbitrary orthonormal basis from normal
+                const glm::vec3 up = std::abs(n.y) < 0.999f ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+                vertices[i].Tangent   = glm::normalize(glm::cross(up, n));
+                vertices[i].Bitangent = glm::cross(n, vertices[i].Tangent);
             } else {
-                const bool isSrgb = (type == aiTextureType_DIFFUSE || type == aiTextureType_SPECULAR);
-                auto texIt = textureData.find(textureName);
-                if (texIt == textureData.end()) {
-                    LOG_W("Texture data missing for {}", textureName);
-                    texture.id = 0;
-                } else {
-                    texture.id = textureCache.getOrCreate(textureName, texIt->second, isSrgb);
-                }
+                // Gram-Schmidt orthogonalization
+                const glm::vec3 tangent = glm::normalize(t - n * glm::dot(n, t));
+                const float sign = (glm::dot(glm::cross(n, t), accum_b[i]) < 0.0f) ? -1.0f : 1.0f;
+                vertices[i].Tangent   = tangent;
+                vertices[i].Bitangent = glm::cross(n, tangent) * sign;
             }
-            if(texture.id == 0){
-                LOG_E("Failed to load texture: {} for mesh {} ", textureName, meshName);
-                assert(false);
-            }
-            texture.bindId = texId;
-            texture.type = typeName;
-            texture.path = textureName;
-            textures.push_back(texture);
-            m_textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
         }
     }
+
+    // ---- textures ----
+    std::vector<Texture> textures;
+    if (vehInfo.needTexture(meshName, mat.name)) {
+        auto t0 = std::chrono::high_resolution_clock::now();
+        textures = LoadTexturesByConfig(meshName, mat.name, vehInfo, textureData, textureCache);
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                      std::chrono::high_resolution_clock::now() - t0).count();
+        LOG_I("[ModelLoader] mesh {} material {} texture load cost: {} ms",
+              meshName, mat.name, ms);
+    }
+
+    // ---- material ----
+    myMaterial mMaterial = BuildMaterial(mat, matIndex);
+
+    meshInfo.emplace_back(std::move(vertices), std::move(indices),
+                          std::move(textures), mMaterial, meshName);
+}
+
+std::vector<Texture> ModelLoader::Impl::LoadTexturesByConfig(
+    const std::string& meshName,
+    const std::string& matName,
+    ConfigParser& vehInfo,
+    const std::unordered_map<std::string, imageParam>& textureData,
+    TextureCache& textureCache) {
+
+    std::vector<Texture> textures;
+    const TextureData td = vehInfo.getTextureData(meshName, matName);
+
+    auto addTex = [&](const std::string& path, unsigned int slot,
+                      const char* typeName, bool isSrgb) {
+        if (path.empty()) return;
+        Texture t = LoadSingleTexture(path, slot, typeName, textureData, textureCache, isSrgb);
+        if (t.id) textures.push_back(t);
+    };
+
+    addTex(td.diffuse,   0, "texture_diffuse",   true);
+    addTex(td.specular,  1, "texture_specular",  true);
+    addTex(td.normal,    2, "texture_normal",     false);
+    addTex(td.ao,        3, "texture_ao",         false);
+    addTex(td.alpha,     4, "texture_alpha",      false);
+    addTex(td.roughness, 5, "texture_roughness",  false);
+    addTex(td.metallic,  6, "texture_metallic",   false);
 
     return textures;
+}
+
+Texture ModelLoader::Impl::LoadSingleTexture(
+    const std::string& textureName,
+    unsigned int bindId,
+    const char* typeName,
+    const std::unordered_map<std::string, imageParam>& textureData,
+    TextureCache& textureCache,
+    bool isSrgb) {
+
+    Texture texture{};
+    texture.bindId = bindId;
+    texture.type   = typeName;
+    texture.path   = textureName;
+
+    // Return cached texture if already uploaded.
+    for (const auto& cached : m_textures_loaded) {
+        if (cached.path == textureName) {
+            texture.id = cached.id;
+            return texture;
+        }
+    }
+
+    auto endsWithKtx = [](const std::string& p) {
+        if (p.size() >= 5 && (p.compare(p.size()-5, 5, ".ktx2") == 0 ||
+                               p.compare(p.size()-5, 5, ".KTX2") == 0)) return true;
+        if (p.size() >= 4 && (p.compare(p.size()-4, 4, ".ktx") == 0  ||
+                               p.compare(p.size()-4, 4, ".KTX") == 0))  return true;
+        return false;
+    };
+
+    if (endsWithKtx(textureName)) {
+        texture.id = textureCache.getOrCreateKtx(textureName);
+    } else {
+        auto it = textureData.find(textureName);
+        if (it == textureData.end()) {
+            LOG_W("[ModelLoader] Texture data missing for {}", textureName);
+            return texture;
+        }
+        texture.id = textureCache.getOrCreate(textureName, it->second, isSrgb);
+    }
+
+    if (texture.id == 0) {
+        LOG_E("[ModelLoader] Failed to upload texture: {}", textureName);
+        assert(false);
+        return texture;
+    }
+
+    m_textures_loaded.push_back(texture);
+    return texture;
+}
+
+myMaterial ModelLoader::Impl::BuildMaterial(const tinygltf::Material& mat, int matIndex) {
+    myMaterial m{};
+    m.diffuseColor      = glm::vec3(0.8f);
+    m.specularColor     = glm::vec3(0.2f);
+    m.ambientColor      = glm::vec3(0.05f);
+    m.shininess         = 32.0f;
+    m.Opacity           = 1.0f;
+    m.TransparencyFactor = 0.0f;
+    m.ShininessStrength  = 1.0f;
+    m.MaterialName      = mat.name;
+    m.MaterialIndex     = static_cast<unsigned int>(matIndex);
+
+    // Map PBR baseColorFactor → diffuseColor + opacity
+    const auto& pbr = mat.pbrMetallicRoughness;
+    if (pbr.baseColorFactor.size() >= 3) {
+        m.diffuseColor = glm::vec3((float)pbr.baseColorFactor[0],
+                                   (float)pbr.baseColorFactor[1],
+                                   (float)pbr.baseColorFactor[2]);
+    }
+    if (pbr.baseColorFactor.size() >= 4) {
+        m.Opacity = (float)pbr.baseColorFactor[3];
+    }
+    if (mat.alphaMode == "BLEND") {
+        m.TransparencyFactor = 1.0f - m.Opacity;
+    }
+    return m;
 }

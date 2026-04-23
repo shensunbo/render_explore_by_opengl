@@ -19,7 +19,7 @@ cc_library(
         "//include:gl_headers",
         "//dependency/glm:glm",
         "//dependency/stb:stb",
-        "//dependency/assimp:assimp",
+        "//dependency/tinygltf:tinygltf",
         "//dependency/ktx:ktx",
         "//src:configParser",
     ],

@@ -108,7 +108,7 @@ int main()
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, -0.7f, -0.5f)); // Translate to center the asset.
-    model = glm::scale(model, glm::vec3(0.0001f));                // Scale the asset down to fit the scene.
+    model = glm::scale(model, glm::vec3(0.01f));                // Scale the asset down to fit the scene.
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     // Model matrix is applied per frame via FrameParams
 
