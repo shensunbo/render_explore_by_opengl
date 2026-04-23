@@ -295,7 +295,7 @@ void ModelLoader::Impl::ProcessPrimitive(const tinygltf::Model& model,
     if (uvIt != prim.attributes.end()) {
         auto uvs = ReadTexCoordAccessor(model, uvIt->second);
         for (size_t i = 0; i < uvs.size() && i < vertices.size(); ++i)
-            vertices[i].TexCoords = glm::vec2(uvs[i].x, 1.0f - uvs[i].y);
+            vertices[i].TexCoords = glm::vec2(uvs[i].x, uvs[i].y);
     }
 
     // ---- tangents (VEC4: xyz = tangent, w = handedness) ----
